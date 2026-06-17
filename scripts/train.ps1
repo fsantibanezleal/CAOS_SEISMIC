@@ -7,7 +7,7 @@
 
 [CmdletBinding()]
 param(
-  [string]$Region = 'chile'
+  [string]$Region = 'global'
 )
 
 . (Join-Path $PSScriptRoot '_common.ps1')

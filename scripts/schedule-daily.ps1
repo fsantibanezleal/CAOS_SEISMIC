@@ -18,7 +18,7 @@
 
 [CmdletBinding()]
 param(
-  [string]$Region = 'chile',
+  [string]$Region = 'global',
   [string]$Time,                              # HH:mm; default: from configs/publish.yaml
   [string]$TaskName = 'CAOS_SEISMIC daily forecast',
   [switch]$Remove

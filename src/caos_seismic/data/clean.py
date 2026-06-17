@@ -145,6 +145,7 @@ class TLSFit:
     n: int
     rms: float
     mag_type: str = ""
+    source: str = "total_least_squares_deming"
 
     def apply(self, m_native: np.ndarray | float) -> np.ndarray | float:
         """Convert native magnitudes to Mw with this line."""
@@ -159,8 +160,35 @@ class TLSFit:
             "delta": self.delta,
             "n": self.n,
             "rms": self.rms,
-            "method": "total_least_squares_deming",
+            "method": self.source,
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Literature-default conversions (fallback so NO event is dropped for lack of Mw)
+# ─────────────────────────────────────────────────────────────────────────────
+
+#: Published global empirical ``native → Mw`` conversions, used as a FALLBACK for any magnitude family
+#: that has no data-driven (ISC-GEM/GCMT-anchored) line in a given run — so a worldwide ComCat spine
+#: (dominated by ``mb`` teleseismic readings, with no Mw reference fetched yet) is homogenized instead
+#: of having ~80% of its events dropped for a missing conversion. Data-driven fits, when available,
+#: always take precedence over these.
+#:
+#: * mb→Mw and Ms→Mw: Scordilis, E. M. (2006), *J. Seismology* 10, 225–236,
+#:   doi:10.1007/s10950-006-9012-4 — the canonical global relations (mb valid 3.5–6.2; the Ms low
+#:   branch 3.0–6.1 covers the bulk of an M≥4.5 spine; large events almost always carry a direct Mw).
+#: * ML→Mw / Md→Mw: a documented small-magnitude approximation (ML ≈ Mw to first order in this range;
+#:   Md treated as ML); refine per region when a regional Mw anchor is available.
+LITERATURE_DEFAULTS: dict[str, "TLSFit"] = {
+    "mb": TLSFit(slope=0.85, intercept=1.03, delta=1.0, n=0, rms=float("nan"),
+                 mag_type="mb", source="scordilis2006"),
+    "ms": TLSFit(slope=0.67, intercept=2.07, delta=1.0, n=0, rms=float("nan"),
+                 mag_type="ms", source="scordilis2006"),
+    "ml": TLSFit(slope=1.0, intercept=0.0, delta=1.0, n=0, rms=float("nan"),
+                 mag_type="ml", source="ml_approx_identity"),
+    "md": TLSFit(slope=1.0, intercept=0.0, delta=1.0, n=0, rms=float("nan"),
+                 mag_type="md", source="md_approx_identity"),
+}
 
 
 def tls_regression(
@@ -643,6 +671,7 @@ def clean_catalog(
     min_pairs: int = 20,
     anchor_dt_s: float = 30.0,
     anchor_dist_km: float = 50.0,
+    use_literature_defaults: bool = True,
 ) -> CleanResult:
     """Run the full clean stage: cross-provider dedupe → Mw homogenization (TLS) → validation.
 
@@ -692,6 +721,15 @@ def clean_catalog(
         )
         fits = fit_conversions(pairs, delta=tls_delta, min_pairs=min_pairs)
 
+    # Fallback so NO event is dropped for a missing conversion: fill any non-moment family that has no
+    # data-driven (ISC-GEM/GCMT-anchored) line with a published global default (Scordilis 2006; see
+    # LITERATURE_DEFAULTS). Data-driven fits always take precedence — `setdefault` only fills the gaps.
+    # This is what turns a worldwide ComCat spine (≈80% `mb`, with no Mw reference fetched yet) from a
+    # decimated 16k-event catalog into the full ~hundreds-of-thousands the GR tail and ETAS need.
+    if use_literature_defaults:
+        for _fam, _lit in LITERATURE_DEFAULTS.items():
+            fits.setdefault(_fam, _lit)
+
     clean = homogenize_to_mw(deduped, fits, keep_native=True)
 
     fam = clean["mag_type"].map(normalize_mag_type)
@@ -706,6 +744,10 @@ def clean_catalog(
             str(k): int(v) for k, v in fam.value_counts(dropna=False).items()
         },
         "conversion_families": sorted(fits.keys()),
+        "default_families": sorted(
+            f for f, fit in fits.items()
+            if getattr(fit, "source", "total_least_squares_deming") != "total_least_squares_deming"
+        ),
     }
     if n_unconverted:
         logger.warning(

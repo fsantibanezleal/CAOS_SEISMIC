@@ -99,6 +99,13 @@ class BackAnalysisConfig:
     issue_hour_utc: int = 0
     rng_seed: int = 20260616
     cell_deg: float | None = None
+    #: Full-MLE refit cadence in days (configs/publish.yaml ``train_cadence.full_refit`` = weekly). The
+    #: model family is re-fit from scratch every ``refit_every_days`` issue dates; on the intermediate
+    #: dates it is only RE-CONDITIONED (parents/ages updated, parameters held), exactly as the live
+    #: system runs (fit weekly, condition daily). This is leakage-safe (recondition admits only the
+    #: lawful past) and turns the per-day cost from a full per-tile MLE into an O(N) update. Set to 1 to
+    #: force a full refit every day (the old, exhaustive-but-slow behaviour).
+    refit_every_days: int = 7
 
 
 @dataclass
@@ -242,9 +249,18 @@ def run_back_analysis(
     n_issue_days = 0
     n_scored_days = 0
     n_failed_days = 0
+    # Fit on a cadence, recondition daily (configs/publish.yaml ``train_cadence.full_refit``): the full
+    # per-tile MLE runs every ``refit_every`` issue dates; between refits the held fit is re-conditioned
+    # to the lawful past in O(N) (parameters + long-term background stable over the window). This mirrors
+    # how the live system runs and is leakage-safe — recondition admits only events strictly before
+    # t_issue. ``refit_every_days = 1`` recovers the old exhaustive full-refit-every-day behaviour.
+    refit_every = max(int(getattr(config, "refit_every_days", 7)), 1)
+    fit_state: dict[str, Any] | None = None
+    n_refits = 0
+    n_reconditions = 0
 
-    for t_issue, past in clock.daily_issues(
-        config.start, config.end, issue_hour_utc=config.issue_hour_utc
+    for issue_index, (t_issue, past) in enumerate(
+        clock.daily_issues(config.start, config.end, issue_hour_utc=config.issue_hour_utc)
     ):
         n_issue_days += 1
         issued_at = t_issue.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -254,15 +270,24 @@ def run_back_analysis(
             assert_no_leakage(past, t_issue)
             if past.empty or len(past) < 3:
                 raise ValueError(f"only {len(past)} lawful events before issue")
-            hygiene = _catalog_hygiene(past, reg, completeness_cfg)
-            models = _fit_model_family(
-                conditional_cat=past,
-                background_cat=hygiene["declustered"],
-                region=reg,
-                t_issue=t_issue,
-                mc=hygiene["mc"],
-                b_value=hygiene["b"],
-            )
+            need_refit = fit_state is None or (issue_index - fit_state["index"]) >= refit_every
+            if need_refit:
+                hygiene = _catalog_hygiene(past, reg, completeness_cfg)
+                models = _fit_model_family(
+                    conditional_cat=past,
+                    background_cat=hygiene["declustered"],
+                    region=reg,
+                    t_issue=t_issue,
+                    mc=hygiene["mc"],
+                    b_value=hygiene["b"],
+                )
+                fit_state = {"models": models, "index": issue_index}
+                n_refits += 1
+            else:
+                # Hold the parameters (stable across the cadence); refresh only the conditioning in O(N).
+                models = fit_state["models"]
+                _recondition_model_family(models, past, reg, t_issue)
+                n_reconditions += 1
             primary = models["primary"]
             null = models["smoothed"]
             # Catalog-only ETAS baseline for the THESIS context-gain channel. When the context
@@ -524,6 +549,30 @@ def _resolve_master_catalog(catalog: pd.DataFrame | None, region: Region) -> pd.
     from ..data.clean import load_clean_catalog
 
     return load_clean_catalog(region)
+
+
+def _recondition_model_family(
+    models: dict[str, Any], conditional_cat: pd.DataFrame, region: Region, t_issue: pd.Timestamp
+) -> None:
+    """Advance the held model family's conditioning to a new issue date without a full refit (in place).
+
+    Only the primary's triggering conditioning is refreshed (via its ``recondition`` method, if it has
+    one — the tiled/ETAS forecasters do). The smoothed null is a long-term Poisson rate held across the
+    cadence, and the catalog-only ETAS baseline is the primary while the context channel is off, so both
+    are covered. If the primary cannot be reconditioned (e.g. a Reasenberg–Jones fallback with no such
+    method, or a tile that lost its parents), the held conditioning is kept — the next cadence day
+    rebuilds it from scratch — rather than raising mid-clock.
+    """
+    primary = models.get("primary")
+    recond = getattr(primary, "recondition", None)
+    if not callable(recond):
+        return  # non-reconditionable primary (e.g. R-J fallback): held until the next cadence refit
+    try:
+        recond(conditional_cat, region, t_issue)  # TiledForecaster.recondition(catalog, region, t_issue)
+    except TypeError:
+        recond(conditional_cat, t_issue)  # ETASForecaster.recondition(catalog, t_issue)
+    except Exception as exc:  # pragma: no cover - defensive; keep the held conditioning
+        logger.debug("primary recondition skipped (%s); keeping held conditioning", exc)
 
 
 def _catalog_only_etas_baseline(models: dict[str, Any]) -> tuple[Any, bool]:

@@ -349,6 +349,41 @@ class ETASForecaster(BaseForecaster):
         }
         return self
 
+    def recondition(self, catalog: pd.DataFrame, t_issue: pd.Timestamp) -> "ETASForecaster":
+        """Advance the conditioning to a new issue time WITHOUT re-running the MLE.
+
+        The seven ETAS parameters (and ``Mc``/``b``) are physical and stable over a refit cadence
+        (configs/publish.yaml ``train_cadence.full_refit``); day-to-day only the *conditioning* changes —
+        which events are parents and their ages. This re-slices the lawful past and refreshes just the
+        parent arrays (``_ev_*``) against the new ``t_issue``, keeping the fitted ``params``/``Mc``/``b``
+        AND the smoothed background (the long-term declustered rate barely moves within a cadence
+        window). It lets the back-analysis / daily clock advance in O(N) per day instead of paying the
+        full L-BFGS-B MLE again. Requires a prior :meth:`fit`.
+
+        Leakage-safe: like :meth:`fit`, only events strictly before ``t_issue`` are admitted, so a
+        reconditioned forecast never sees its own scoring window.
+        """
+        if not self.params or self._ev_t is None:
+            raise RuntimeError("recondition() requires a prior fit()")
+        validate_catalog(catalog)
+        self._t_issue = pd.Timestamp(t_issue)
+        df = catalog.loc[catalog["time"] < self._t_issue]
+        complete = df.loc[df["mw"] >= self._mc - 1e-9].sort_values("time")
+        if complete.empty:
+            # No lawful parents at/above Mc: the field collapses to the (held) background. Keep params,
+            # empty the triggering parents so conditional_intensity returns just mu.
+            self._ev_t = np.empty(0, dtype=float)
+            self._ev_lat = np.empty(0, dtype=float)
+            self._ev_lon = np.empty(0, dtype=float)
+            self._ev_m = np.empty(0, dtype=float)
+            return self
+        t_days = (self._t_issue - complete["time"]).dt.total_seconds().to_numpy() / 86400.0
+        self._ev_t = np.clip(t_days, 0.0, None)
+        self._ev_lat = complete["latitude"].to_numpy(dtype=float)
+        self._ev_lon = complete["longitude"].to_numpy(dtype=float)
+        self._ev_m = complete["mw"].to_numpy(dtype=float)
+        return self
+
     # ── Likelihood machinery ──────────────────────────────────────────────────
     def _vector(self, params: dict[str, float]) -> np.ndarray:
         return np.array([params[k] for k in PARAM_NAMES], dtype=float)

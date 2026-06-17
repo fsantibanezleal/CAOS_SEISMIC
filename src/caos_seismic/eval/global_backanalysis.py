@@ -96,6 +96,13 @@ class GlobalBackAnalysisConfig:
     views: list[CountryView] | None = None
     issue_hour_utc: int = 0
     rng_seed: int = 20260616
+    #: Per-view back-analysis SCORING grid size (degrees). ``None`` ⇒ :data:`DEFAULT_SCORING_CELL_DEG`
+    #: (0.5°, coarser than the 0.1° production fit grid — M≥5 events are sparse, so a coarser scoring
+    #: grid gives better-powered CSEP tests AND ~25× cheaper daily inference). The global view coarsens
+    #: further automatically. Set finer (e.g. 0.25) for a denser study at a higher per-day cost.
+    scoring_cell_deg: float | None = None
+    #: Full-MLE refit cadence (days) forwarded to each per-view :class:`BackAnalysisConfig`.
+    refit_every_days: int = 7
 
 
 @dataclass
@@ -177,7 +184,7 @@ def run_global_back_analysis(
     """
     views = config.views if config.views is not None else all_views(include_global=config.include_global)
     master = validate_catalog(catalog) if catalog is not None else None
-    cell_deg_by_area = _grid_cell_deg_resolver()
+    cell_deg_by_area = _grid_cell_deg_resolver(scoring_cell_deg=config.scoring_cell_deg)
 
     view_results: list[ViewResult] = []
     pycsep_used = False
@@ -202,10 +209,13 @@ def run_global_back_analysis(
                 reliability_threshold=float(config.reliability_threshold),
                 issue_hour_utc=int(config.issue_hour_utc),
                 rng_seed=int(config.rng_seed),
-                # Coarsen the fit grid for large-bbox views (the whole-Earth GLOBAL window): the dense
-                # 0.1° global grid is ~6.5M cells and is never materialized (grid.yaml). Country views
-                # keep the fine grid (cell_deg=None ⇒ configured fit.cell_deg).
+                # Back-analysis SCORING grid (DEFAULT_SCORING_CELL_DEG = 0.5°, coarser than the 0.1°
+                # production fit grid — M≥5 events are sparse, so a coarser grid powers the CSEP tests
+                # better AND cuts the dominant per-day inference cost ~25×). The whole-Earth GLOBAL window
+                # coarsens further (the dense 0.1° global grid is ~6.5M cells, never materialized).
                 cell_deg=view_cell_deg,
+                # Fit the per-tile MLE weekly + recondition daily (mirrors the live cadence).
+                refit_every_days=int(config.refit_every_days),
             )
             # Per-view summaries are written too (one file per view) so each view is independently
             # auditable; the global summary is the cross-view reduction on top.
@@ -471,34 +481,44 @@ def _pool_class_by_horizon(members: list[ViewResult], horizons: list[int]) -> di
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _grid_cell_deg_resolver(max_country_cells: int = 200_000):
-    """Return ``region -> cell_deg | None`` that coarsens the fit grid for large-bbox views.
+#: Scoring-grid cell size (degrees) for the pseudo-prospective back-analysis. Deliberately COARSER than
+#: the 0.1° production fit grid: the back-analysis scores M≥5 events, which are spatially sparse, so a
+#: 0.1° grid is almost entirely empty cells — the CSEP S/L spatial tests are then under-powered AND there
+#: are ~25× more cells to infer over EVERY issue day (the dominant cost once the MLE is cadenced). A 0.5°
+#: (~55 km) grid gives better-populated cells (sounder CSEP tests for sparse large events) and a ~25×
+#: cheaper daily inference. The published daily FORECAST still uses the fine grid; only multi-day skill
+#: scoring coarsens. Override per run via GlobalBackAnalysisConfig.scoring_cell_deg.
+DEFAULT_SCORING_CELL_DEG: float = 0.5
 
-    A spatially-bounded country view keeps the configured fine fit grid (returns ``None`` ⇒
-    ``grid.yaml: fit.cell_deg``). The whole-Earth GLOBAL view — and any view whose dense-grid cell
-    count would exceed ``max_country_cells`` — coarsens to ``grid.yaml: fit.global_fit.world_cell_deg``
-    (1.0° by default), and coarsens further if even that exceeds the cap, so a back-analysis over the
-    global window never tries to materialize the ~6.5M-cell dense world grid (grid.yaml).
+
+def _grid_cell_deg_resolver(max_country_cells: int = 200_000, scoring_cell_deg: float | None = None):
+    """Return ``region -> cell_deg`` giving each view its back-analysis SCORING grid size.
+
+    A bounded country view scores on ``scoring_cell_deg`` (:data:`DEFAULT_SCORING_CELL_DEG` = 0.5°) —
+    coarser than the 0.1° production fit grid on purpose (see that constant). The whole-Earth GLOBAL
+    view — and any view whose cell count at ``scoring_cell_deg`` would still exceed ``max_country_cells``
+    — coarsens further toward ``grid.yaml: fit.global_fit.world_cell_deg`` (1.0°) and beyond, so the
+    global window never materializes the ~6.5M-cell dense world grid (grid.yaml).
     """
     from ..config import load
 
     grid_cfg = load("grid")
     fit = grid_cfg.get("fit", {}) if isinstance(grid_cfg, dict) else {}
-    fine_deg = float(fit.get("cell_deg", 0.1))
     world_deg = float(fit.get("global_fit", {}).get("world_cell_deg", 1.0))
+    base_deg = float(scoring_cell_deg if scoring_cell_deg is not None else DEFAULT_SCORING_CELL_DEG)
 
     def _n_cells(region: Region, deg: float) -> float:
         bb = region.bbox
         return ((bb.lat_max - bb.lat_min) / deg) * ((bb.lon_max - bb.lon_min) / deg)
 
-    def resolve(region: Region) -> float | None:
-        if _n_cells(region, fine_deg) <= max_country_cells:
-            return None  # fine grid is tractable for this bounded view
-        deg = world_deg
-        # Coarsen further (double the cell) until the count is under the cap — a safety valve for the
-        # whole-Earth window so a back-analysis never explodes the cell count.
-        while _n_cells(region, deg) > max_country_cells and deg < 90.0:
-            deg *= 2.0
+    def resolve(region: Region) -> float:
+        deg = base_deg
+        if _n_cells(region, deg) > max_country_cells:
+            # Large-bbox view (the whole-Earth window): coarsen toward the world grid and beyond until
+            # the cell count is under the cap — a safety valve so the global window never explodes.
+            deg = max(deg, world_deg)
+            while _n_cells(region, deg) > max_country_cells and deg < 90.0:
+                deg *= 2.0
         return deg
 
     return resolve

@@ -52,6 +52,7 @@ import pandas as pd
 from ..contracts import BaseForecaster, Cell, Region, validate_catalog
 from ._common import (
     DEG2KM,
+    EARTH_RADIUS_KM,
     LN10,
     bvalue_aki_utsu,
     gr_exceedance_fraction,
@@ -148,6 +149,19 @@ def spatial_density(
     zeta = spatial_scale(m, D, gamma, m0)
     r2 = np.asarray(r_deg, dtype=float) ** 2
     return (q - 1.0) / (np.pi * zeta**2) * np.power(1.0 + r2 / zeta**2, -q)
+
+
+def _unit_xyz(lat: np.ndarray | float, lon: np.ndarray | float) -> np.ndarray:
+    """Map geographic ``(lat, lon)`` in degrees to 3-D unit-sphere Cartesian coords for a KD-tree.
+
+    The Euclidean distance between two such unit vectors is the *chord*; the great-circle arc is
+    ``2 * arcsin(chord / 2)`` (radians). Same convention as the smoothed-seismicity KD-tree, so the
+    ETAS triggering cutoff and the background field agree geometrically.
+    """
+    latr = np.radians(np.asarray(lat, dtype=float))
+    lonr = np.radians(np.asarray(lon, dtype=float))
+    coslat = np.cos(latr)
+    return np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -643,25 +657,98 @@ class ETASForecaster(BaseForecaster):
         public probability is then ``1 - e^{-N}`` (see :meth:`forecast_probabilities`).
         """
         self._require_fit()
+        if not cells:
+            return []
         cell_area_deg2 = self._cell_area_deg2(cells)
         mag_frac = gr_exceedance_fraction(m_threshold, self._b, self._mc, region.m_max)
         if mag_frac <= 0.0:
             return [0.0] * len(cells)
 
-        # Time quadrature nodes over [0, horizon) (midpoint rule); background is time-constant so the
-        # only time-dependence is the Omori decay of the triggering term.
-        steps = max(int(self.integration_steps), 1)
-        edges = np.linspace(0.0, float(horizon_days), steps + 1)
-        mids = 0.5 * (edges[:-1] + edges[1:])
-        dts = np.diff(edges)
+        K, alpha, c, pp, D, gamma, q = self._vector(self.params)
+        H = float(horizon_days)
+        clat = np.fromiter((cell.lat for cell in cells), dtype=float, count=len(cells))
+        clon = np.fromiter((cell.lon for cell in cells), dtype=float, count=len(cells))
 
-        out: list[float] = []
-        for cell in cells:
-            integral = 0.0
-            for s, w in zip(mids, dts):
-                integral += self.conditional_intensity(float(s), cell.lat, cell.lon) * float(w)
-            n = integral * cell_area_deg2 * mag_frac
-            out.append(max(n, 0.0))
+        # Background mu(x, y) is time-flat over the window, so its window integral is mu * H. The
+        # smoothed field is queried per cell (k-nearest KD-tree); the tiled forecaster routes only a
+        # bounded subset of cells into each per-tile call, so this stays cheap.
+        mu = np.array(
+            [self._background_density_deg2(float(la), float(lo)) for la, lo in zip(clat, clon)],
+            dtype=float,
+        )
+        integral = mu * H  # events / deg^2 over [0, H) from the background
+
+        # Triggering term — fully vectorized, with the SAME neighbour cutoff as the fit. The window
+        # integral of the Omori kernel is closed-form (no quadrature, and exact):
+        #   ∫_0^H g(age_j + s) ds = G(age_j + H) - G(age_j)      with G the Omori-Utsu CDF,
+        # so a parent j of (pre-issue) age ``age_j`` contributes a window-integrated productivity
+        # ``kt_j = k(m_j) * [G(age_j + H) - G(age_j)]`` spread spatially by ``f(r_ij | m_j)``. Only
+        # parents within the temporal memory carry mass; the spatial cutoff is applied pairwise below.
+        ages = self._ev_t
+        in_mem = ages <= float(self.max_parent_days)
+        if np.any(in_mem):
+            pm = self._ev_m[in_mem]
+            page = ages[in_mem]
+            kt = utsu_productivity(pm, K, alpha, self.m0) * (
+                omori_utsu_cumulative(page + H, c, pp) - omori_utsu_cumulative(page, c, pp)
+            )
+            trig = self._triggering_field(
+                clat, clon, self._ev_lat[in_mem], self._ev_lon[in_mem], pm, kt, D, gamma, q
+            )
+            integral = integral + trig
+
+        counts = integral * cell_area_deg2 * mag_frac
+        return [float(v) if v > 0.0 else 0.0 for v in counts]
+
+    def _triggering_field(
+        self,
+        clat: np.ndarray,
+        clon: np.ndarray,
+        plat: np.ndarray,
+        plon: np.ndarray,
+        pm: np.ndarray,
+        kt: np.ndarray,
+        D: float,
+        gamma: float,
+        q: float,
+    ) -> np.ndarray:
+        """Window-integrated triggering rate at every cell — vectorized over cell↔parent pairs.
+
+        Returns ``Σ_j kt_j · f(r_ij | m_j)`` per cell ``i`` (events / day / deg^2 already integrated
+        over the window through ``kt_j``), where the sum runs over parent events within
+        ``max_parent_dist_km`` of the cell — the same spatial cutoff used by the fit. Pairs are found
+        with a unit-sphere :class:`scipy.spatial.cKDTree` and a single ``sparse_distance_matrix`` call
+        (chord radius), so there is no Python-level per-cell or per-parent loop; the per-pair spatial
+        density and the scatter-add are both vectorized. Falls back to a bounded per-cell numpy sweep
+        if SciPy is unavailable (cell sets routed per tile are small, so the fallback is still usable).
+        """
+        out = np.zeros(clat.size, dtype=float)
+        if clat.size == 0 or plat.size == 0:
+            return out
+        chord_cut = 2.0 * np.sin(min(float(self.max_parent_dist_km) / EARTH_RADIUS_KM, np.pi) / 2.0)
+        try:
+            from scipy.spatial import cKDTree
+        except ModuleNotFoundError:  # pragma: no cover - exercised only without scipy
+            for i in range(clat.size):
+                r_km = haversine_km(float(clat[i]), float(clon[i]), plat, plon)
+                keep = r_km <= float(self.max_parent_dist_km)
+                if np.any(keep):
+                    r_deg = r_km[keep] / DEG2KM
+                    f_r = spatial_density(r_deg, pm[keep], D, gamma, q, self.m0)
+                    out[i] = float(np.sum(kt[keep] * f_r))
+            return out
+
+        coo = (
+            cKDTree(_unit_xyz(clat, clon))
+            .sparse_distance_matrix(cKDTree(_unit_xyz(plat, plon)), chord_cut, output_type="coo_matrix")
+        )
+        ci, pj, chord = coo.row, coo.col, coo.data
+        if ci.size == 0:
+            return out
+        # chord (unit-sphere Euclidean) → great-circle arc → degrees, matching haversine + DEG2KM.
+        r_deg = (2.0 * np.arcsin(np.clip(chord / 2.0, 0.0, 1.0)) * EARTH_RADIUS_KM) / DEG2KM
+        f_r = spatial_density(r_deg, pm[pj], D, gamma, q, self.m0)
+        np.add.at(out, ci, kt[pj] * f_r)
         return out
 
     def forecast_probabilities(

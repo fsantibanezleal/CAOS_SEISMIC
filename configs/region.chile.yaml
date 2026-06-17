@@ -1,0 +1,38 @@
+# CAOS_SEISMIC — region config: Chile (subduction margin). v0 focus region.
+# All distances in km, times in days, magnitudes homogenized to Mw where possible.
+id: chile
+name: { en: "Chile (subduction margin)", es: "Chile (margen de subducción)" }
+
+# Geographic bounding box (lat/lon, WGS84). The Chilean convergent margin.
+bbox: { lat_min: -45.0, lat_max: -17.0, lon_min: -76.0, lon_max: -66.0 }
+
+# Sub-region of highest data quality / seismicity (used when --focus north is passed).
+focus_north: { lat_min: -32.0, lat_max: -17.0, lon_min: -72.0, lon_max: -68.0 }
+
+# Catalog sources for this region (see docs/data-and-pipelines.md for access + licenses).
+catalogs:
+  spine: usgs_comcat            # global real-time spine (FDSN, public domain)
+  regional: csn                 # Centro Sismológico Nacional (via EarthScope/IRIS FDSN, net C/C1)
+  long_term_anchor: isc_gem     # Mw-homogenized 1904–2021 (CC-BY-SA 3.0); b-value + Mw conversion
+  mechanisms: gcmt              # moment tensors for M>=5
+  cross_check: emsc             # independent dedup
+  # CSN network codes to confirm at build (C and/or C1); attribution to CSN is MANDATORY.
+
+# Tectonic enrichers relevant to a subduction margin (priority order; each gated on measured IGPE).
+enrichers: [slab2, gem_faults, bird_pb2002, ngl_gnss]
+notes:
+  - "Subduction megathrusts violate the isotropic-kernel / point-source assumptions of generic ETAS
+     for great earthquakes; use Slab2 geometry and consider anisotropic / finite-fault triggering."
+  - "Do NOT reuse California generic ETAS/Reasenberg–Jones parameters; refit on Chilean data."
+  - "Ocean tidal loading DOMINATES the tidal stress at this coastal/subduction margin."
+
+# Maximum magnitude bounding the exceedance integral (explicit, documented assumption).
+# Chile hosts the largest instrumentally recorded earthquake (1960 Valdivia, Mw 9.5).
+m_max: 9.5
+
+# Attribution required on any public surface that uses this region's data.
+attribution:
+  - "Centro Sismológico Nacional (CSN), Universidad de Chile"
+  - "USGS ComCat / ANSS"
+  - "ISC-GEM Global Instrumental Earthquake Catalogue (CC-BY-SA 3.0)"
+  - "Global CMT Project"

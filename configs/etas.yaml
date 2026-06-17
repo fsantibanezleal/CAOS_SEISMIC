@@ -1,0 +1,30 @@
+# CAOS_SEISMIC — space–time ETAS (Ogata 1998). Primary estimator AND the reference to beat.
+# Conditional intensity:
+#   lambda(t,x,y | H_t) = mu(x,y) + sum_{t_i<t} K e^{alpha(m_i-M0)} (1 + (t-t_i)/c)^{-p} f(x-x_i,y-y_i | m_i)
+# spatial kernel f(r|m) = (q-1)/(pi zeta^2) (1 + r^2/zeta^2)^{-q}, zeta = D e^{gamma(m-M0)}
+m0: 3.5                     # reference magnitude (>= target m_min)
+fit:
+  method: mle              # maximum-likelihood on the FULL un-declustered catalog
+  background: stochastic_declustering   # recover mu(x,y) (Zhuang et al. 2002)
+  bounds:
+    K:     [1.0e-6, 10.0]
+    alpha: [0.1, 2.5]
+    c:     [1.0e-4, 1.0]   # days
+    p:     [0.8, 1.5]
+    D:     [1.0e-4, 1.0]   # deg
+    gamma: [0.1, 2.0]
+    q:     [1.1, 3.0]
+stability:
+  # Two SEPARATE gates — reject a fit that violates either:
+  require_alpha_lt_beta: true   # alpha < beta (beta = b ln10) → finite branching ratio
+  reject_supercritical: true    # branching ratio n < 1 (n>=1 is explosive = mis-fit)
+
+background_model:
+  # Stationary smoothed-seismicity Poisson reference (Helmstetter–Kagan–Jackson class), the mandatory null.
+  method: adaptive_smoothed_seismicity
+  neighbors: 6             # adaptive bandwidth = distance to n-th nearest neighbor (region-tuned)
+  pin_kernel_to_reference: true   # exponent/normalization vary across HKJ papers — pin to pyCSEP/floatCSEP
+
+fallback:
+  # Transparent operational baseline / sanity check (USGS OAF shape).
+  reasenberg_jones: true

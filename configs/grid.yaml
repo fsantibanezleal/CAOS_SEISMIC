@@ -1,0 +1,17 @@
+# CAOS_SEISMIC — spatial discretization. Fit fine (CSEP-testable), display coarse.
+fit:
+  # Regular lat/lon cells for fitting + CSEP S-test/M-test (CSEP California convention).
+  cell_deg: 0.1            # 0.1° x 0.1° space cells
+  mag_bin: 0.1            # 0.1 magnitude bins
+display:
+  # The UI aggregates the fine grid into H3 hexbins (multi-resolution LOD via deck.gl).
+  h3_resolution_world: 3   # coarse world overview
+  h3_resolution_region: 5  # per-country / per-region drill-down
+sparsity:
+  # Store only cells inside the validated footprint and above a rate floor; the rest is implicit
+  # baseline (keeps the committed artifact to a few hundred KB – few MB).
+  rate_floor_quantile: 0.0
+coupling_note: >
+  Cell size must support enough events-per-cell-per-horizon to fit and run the S-test/M-test.
+  In sparse cells, borrow strength from the smoothed-seismicity background + regional priors
+  rather than shrinking cells until empty.

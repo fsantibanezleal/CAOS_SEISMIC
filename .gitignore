@@ -1,0 +1,56 @@
+# ── Python ───────────────────────────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# ── Secrets / local (NEVER commit; secrets live only in _CAOS_MANAGE vault) ─
+.env
+*.local
+*.secret
+
+# ── Heavy data, features, model weights — NEVER versioned ──────────────────
+# (rebuildable from manifests + code; see docs/data-and-pipelines.md)
+data/raw/
+data/clean/
+data/interim/
+data/mc/
+data/features/
+models/
+checkpoints/
+*.grd
+*.tenv3
+*.ndk
+*.parquet
+*.h5
+*.hdf5
+*.nc
+*.pt
+*.safetensors
+*.zst
+*.npy
+*.npz
+
+# ── Node / web build ──────────────────────────────────────────────────────
+app/node_modules/
+app/dist/
+app/.vite/
+node_modules/
+
+# ── OS / editor ───────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# ── KEEP (explicitly tracked) ─────────────────────────────────────────────
+# configs/, manifests/, docs/, src/, scripts/, app/src/, and the compact
+# daily forecast artifacts under results/ are versioned on purpose.
+!results/
+!results/.gitkeep
+!results/*.json
+!results/*.json.gz

@@ -1,0 +1,27 @@
+# CAOS_SEISMIC — magnitude of completeness (Mc) + b-value. Estimated per region on the TRAINING
+# window only and re-estimated on a rolling space–time window each inference. A global Mc injects
+# fake non-stationarity. Mc is a first-class versioned artifact (stored next to each catalog snapshot).
+mc:
+  primary: maxc            # maximum-curvature
+  maxc_correction: 0.2     # NOTE: the +0.2 offset is CALIFORNIA-tuned; RE-VALIDATE per region
+                           # (EMR / GFT cross-check + FMD inspection) and take the conservative value.
+  cross_check: [gft, emr]  # goodness-of-fit + entire-magnitude-range (for uncertainty)
+  rolling_window_days: 365
+  min_events: 50           # below this, fall back to the regional default below
+  regional_default: 3.5    # conservative target floor for Chile (CSN); refine from data
+
+b_value:
+  estimator: aki_utsu_mle  # binning-corrected: b_hat = log10(e) / (mean_m - (Mc - dM/2))
+  never_hardcode: true     # b is estimated, never fixed at 1.0
+  propagate_uncertainty: true
+
+target:
+  # Single uniform target magnitude at/above the worst regional Mc; identical to model + all baselines.
+  m_min: 3.5
+
+short_term_incompleteness:
+  # Right after a large mainshock Mc spikes for hours–days; a naive fit under-forecasts productivity
+  # exactly when a large aftershock is most likely. Use an incompleteness-aware likelihood.
+  enabled: true
+  method: time_dependent_mc   # detrended / Page–Omi–Hainzl-style Mc(t) post-mainshock
+  trigger_magnitude: 6.0

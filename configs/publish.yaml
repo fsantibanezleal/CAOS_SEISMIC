@@ -1,0 +1,23 @@
+# CAOS_SEISMIC — git-as-data publishing (the daily job). See docs/deploy.md.
+schedule:
+  # Daily, early morning ~03:00 local time (Felipe, 2026-06-16).
+  time_local: "03:00"
+  cadence: daily
+  catch_up_missed: true     # run on next wake if a fire was skipped (laptop may sleep/reboot)
+
+git:
+  publish_branch: main
+  remote: origin
+  # SCOPED allowlist — the auto-commit stages ONLY these paths. NEVER `git add -A`/`.` on a machine
+  # that also has data/, features/, models/, .venv/, .env present.
+  add_allowlist:
+    - results/
+    - manifests/
+  commit_message_prefix: "data: daily forecast"
+  # Push credential: a dedicated least-privilege deploy key / fine-grained PAT scoped to THIS repo,
+  # in the local git credential store — never committed. A pre-push hook hard-fails on out-of-allowlist paths.
+
+train_cadence:
+  # Full re-fit / re-training (incl. GPU challenger) on a slower cadence or when a large event occurs.
+  full_refit: weekly
+  event_triggered_magnitude: 6.5

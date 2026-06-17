@@ -1,0 +1,21 @@
+# CAOS_SEISMIC — declustering. THE DUAL-CATALOG RULE (the most common pipeline mistake made explicit):
+#   - background mu(x,y):  fit on a DECLUSTERED catalog (independent mainshocks only)
+#   - ETAS / conditional:  fed the FULL, UN-declustered catalog (triggering IS the predictable signal)
+#   - scoring:             on the NON-declustered catalog (we deliberately forecast clustering)
+background:
+  method: gardner_knopoff   # transparent windows (OpenQuake hmtk coefficients)
+  # space  L(M) = 10^(0.1238 M + 0.983) km
+  # time   T(M) = 10^(0.032 M + 2.7389) d for M>=6.5, else 10^(0.5409 M - 0.547) d
+  cross_check: zaliapin_ben_zion
+
+features:
+  # Zaliapin–Ben-Zion nearest-neighbor proximity as ML FEATURES (not just keep/drop labels):
+  #   eta_ij = t_ij * (r_ij)^d_f * 10^(-b m_i),  T_j = t_ij 10^(-q b m_i),  R_j = r_ij^d_f 10^(-(1-q) b m_i)
+  method: zaliapin_ben_zion
+  fractal_dimension: 1.6    # d_f, region-tunable
+  q: 0.5
+
+note: >
+  Because the target includes clustering, scored events are mostly aftershocks; a trivial
+  "aftershocks follow mainshocks" model already passes CONSISTENCY tests. Skill is therefore
+  established ONLY by winning COMPARISON tests against a real ETAS baseline (both capture Omori).

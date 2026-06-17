@@ -1,0 +1,29 @@
+# CAOS_SEISMIC — forecast output + daily run config.
+horizons_days: [1, 2, 7]   # re-issued daily; 7-day gain is near-zero outside active sequences (honest copy)
+
+# The model produces the FULL conditional magnitude distribution (GR/b-value term); the public scalar is
+# the exceedance probability at region-appropriate thresholds:  P(>=1 event >= M*) = 1 - e^{-N_{>=M*}}.
+magnitude_thresholds: [5.0, 6.0, 7.0]   # M* set for Chile (routine M>=5; consequential M>=6/7)
+
+ensemble:
+  # Catalog-based forecast: simulate >=10k synthetic catalogs/day (relaxes the Poisson assumption;
+  # Poisson grid tests over-reject during aftershock sequences). The GPU allows scaling up.
+  n_synthetic_catalogs: 10000
+  emit_gridded_rate: true        # Poisson CSEP tests
+  emit_catalog_based: true       # over-dispersion-honest tests
+
+bounds:
+  # Optimistic / expected / pessimistic — a REAL epistemic+aleatory decomposition (NOT a cosmetic
+  # Poisson interval): ETAS parameter uncertainty + Mc/b uncertainty + structural + over-dispersion.
+  quantiles: [0.10, 0.50, 0.90]
+  overdispersion: negative_binomial
+
+calibration:
+  method: isotonic          # recalibrate the public probability; reliability diagram per horizon
+  release_blocker: true     # an uncalibrated probability does not ship
+
+qa_gate:
+  # Auto-publish ONLY if checks pass; never serve a stale/corrupted artifact.
+  max_event_count_zscore: 5.0
+  forbid_duplicate_near_threshold: true
+  ntest_drift_window_days: 30

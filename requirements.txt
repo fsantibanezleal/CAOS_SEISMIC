@@ -1,0 +1,33 @@
+# CAOS_SEISMIC — Python dependencies (Python 3.12 recommended; matches the CAOS science family).
+# Pinned loosely with lower bounds; `scripts/setup` creates the .venv and installs this file.
+# Heavy science packages (obspy, pycsep, geopandas, pygtide) are grouped at the bottom and may be
+# installed on demand — the catalog spine works without them (raw FDSN over requests).
+
+# ── Core (always) ─────────────────────────────────────────────────────────
+numpy>=1.26
+pandas>=2.1
+pyarrow>=15.0          # Parquet stores
+scipy>=1.11            # optimization (ETAS MLE), stats
+requests>=2.31         # raw FDSN access (USGS ComCat) without obspy
+python-dateutil>=2.8
+PyYAML>=6.0            # configs
+pydantic>=2.6          # typed config + artifact schema
+pydantic-settings>=2.2
+h3>=4.1               # hexbin aggregation for the compact artifact
+scikit-learn>=1.4      # calibration (isotonic / Platt), utilities
+typer>=0.12            # CLI entry points used by scripts/
+rich>=13.7             # readable CLI output / progress
+
+# ── Science stack (full pipeline; install when running real fits/eval) ─────
+# obspy>=1.4            # FDSN clients for regional networks (CSN/EARTHSCOPE/ISC/INGV/GEONET)
+# libcomcat>=2.0        # USGS ComCat convenience layer
+# pycsep>=0.6           # CSEP consistency + comparison tests (N/M/S/L/CL, T/W, reliability)
+# geopandas>=0.14       # GEM faults, Bird PB2002 plate model joins
+# shapely>=2.0
+# netCDF4>=1.6          # Slab2 .grd grids
+# xarray>=2024.1
+# pygtide>=0.8          # solid-Earth body tide (ETERNA PREDICT) for the tidal covariate
+
+# ── Optional local-only preview server (NOT a deployed backend) ────────────
+# fastapi>=0.110
+# uvicorn>=0.29

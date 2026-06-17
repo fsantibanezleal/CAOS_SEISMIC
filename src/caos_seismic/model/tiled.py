@@ -271,6 +271,9 @@ class TiledForecaster(BaseForecaster):
             ),
             regime=regime.value,
             regime_prior=prior if self.use_regime_priors else None,
+            # Cheapest per-tile MLE: a single regime-prior-seeded start (the prior is informative, and
+            # there are hundreds of tiles). The neighbour cutoffs (etas.max_parent_*) keep each fit O(N·k).
+            n_restarts=0,
         )
         try:
             etas.fit(halo_df, tile_region, self._t_issue)

@@ -209,6 +209,20 @@ class ETASForecaster(BaseForecaster):
     reject_supercritical: bool = True
     background: SmoothedSeismicityForecaster | None = None
     integration_steps: int = 24
+    #: Triggering-sum neighbour cutoffs — the O(N^2) → O(N·k) accelerator that makes the global,
+    #: multi-decade, 10^5-event MLE tractable. A parent older than ``max_parent_days`` or farther than
+    #: ``max_parent_dist_km`` from a child has, by construction, a negligible Omori/spatial kernel value
+    #: (both kernels have decayed to ~0 there), so it is dropped from that child's triggering sum. The
+    #: approximation error is bounded by the kernel tails *at* the cutoffs and is recorded in the model
+    #: manifest. Defaults: 2 years of triggering memory, 500 km of aftershock-zone reach.
+    max_parent_days: float = 730.0
+    max_parent_dist_km: float = 500.0
+    #: MLE optimizer budget. ``n_restarts`` extra random restarts beyond the single data-informed
+    #: (regime-prior-seeded) start guard against shallow local optima; ``0`` keeps just the informed
+    #: start, which is the cheap default the global tiled fit uses across its hundreds of tiles. A
+    #: focused single-region fit can raise it for robustness.
+    n_restarts: int = 1
+    maxiter: int = 200
     regime: str | None = None
     regime_prior: object | None = None  # caos_seismic.model.regime.RegimePrior (avoids an import cycle)
 
@@ -225,6 +239,16 @@ class ETASForecaster(BaseForecaster):
     _ev_lat: np.ndarray | None = field(default=None, repr=False)
     _ev_lon: np.ndarray | None = field(default=None, repr=False)
     _ev_m: np.ndarray | None = field(default=None, repr=False)
+    # Precomputed neighbour pairs (parent→child, within the cutoffs) + per-event background, built ONCE
+    # at fit time so every MLE evaluation is an O(pairs) vectorized numpy sum with NO per-event Python
+    # loop — the second half of the O(N^2)→O(N·k) acceleration (the cutoffs bound k; this removes the
+    # Python overhead). ``_pair_child[p]`` is the child index of pair ``p``; the other arrays carry that
+    # pair's parent magnitude, age gap (days) and epicentral distance (deg).
+    _mu_ev: np.ndarray | None = field(default=None, repr=False)
+    _pair_child: np.ndarray | None = field(default=None, repr=False)
+    _pair_parent_m: np.ndarray | None = field(default=None, repr=False)
+    _pair_dt: np.ndarray | None = field(default=None, repr=False)
+    _pair_r_deg: np.ndarray | None = field(default=None, repr=False)
     _loglik: float = field(default=float("nan"), repr=False)
     params_used: dict = field(default_factory=dict, repr=False)
 
@@ -279,6 +303,10 @@ class ETASForecaster(BaseForecaster):
         elif self.background._ev_lat is None:  # not yet fit
             self.background.fit(catalog, region, t_issue)
 
+        # Precompute the bounded parent→child neighbour pairs + per-event background ONCE, so each of
+        # the thousands of MLE likelihood evaluations is a vectorized O(pairs) sum (no per-event loop).
+        self._precompute_pairs()
+
         # MLE over the bounded parameter box.
         best = self._maximize_likelihood(train_days)
         self.params = best
@@ -327,6 +355,61 @@ class ETASForecaster(BaseForecaster):
         km2_per_deg2 = (DEG2KM**2) * np.cos(np.radians(lat))
         return self.background.background_rate_density(lat, lon) * km2_per_deg2
 
+    def _precompute_pairs(self) -> None:
+        """Build the bounded parent→child neighbour pairs + per-event background ONCE for the MLE.
+
+        For each event ``j`` (a potential child) gather the strictly-older events within
+        ``max_parent_days`` (a contiguous tail of the time-descending ``age`` array, found in O(log N)
+        by ``searchsorted``) AND within ``max_parent_dist_km``. All surviving (parent, child) pairs are
+        flattened into the ``_pair_*`` arrays and the per-event smoothed background cached in
+        ``_mu_ev``. The likelihood then evaluates as one vectorized ``np.bincount`` over these pairs, so
+        the O(N·k) neighbour search runs **once** instead of on every one of the optimizer's thousands
+        of steps — the change that turns a multi-decade global fit from intractable into seconds/tile.
+        """
+        n = self._ev_t.size
+        age = self._ev_t
+        neg_age = -age  # ascending, for the O(log N) time-window search
+        t_cut = float(self.max_parent_days)
+        r_cut = float(self.max_parent_dist_km)
+
+        self._mu_ev = np.array(
+            [self._background_density_deg2(self._ev_lat[j], self._ev_lon[j]) for j in range(n)],
+            dtype=float,
+        )
+
+        child_parts: list[np.ndarray] = []
+        pm_parts: list[np.ndarray] = []
+        dt_parts: list[np.ndarray] = []
+        rdeg_parts: list[np.ndarray] = []
+        for j in range(n):
+            i_lo = int(np.searchsorted(neg_age, -(age[j] + t_cut), side="left"))
+            if j <= i_lo:
+                continue
+            sl = slice(i_lo, j)
+            dt = age[sl] - age[j]
+            r_km = haversine_km(
+                self._ev_lat[j], self._ev_lon[j], self._ev_lat[sl], self._ev_lon[sl]
+            )
+            keep = (dt > 1e-12) & (r_km <= r_cut)
+            if not np.any(keep):
+                continue
+            cnt = int(np.count_nonzero(keep))
+            child_parts.append(np.full(cnt, j, dtype=np.intp))
+            pm_parts.append(self._ev_m[sl][keep])
+            dt_parts.append(dt[keep])
+            rdeg_parts.append(r_km[keep] / DEG2KM)
+
+        if child_parts:
+            self._pair_child = np.concatenate(child_parts)
+            self._pair_parent_m = np.concatenate(pm_parts)
+            self._pair_dt = np.concatenate(dt_parts)
+            self._pair_r_deg = np.concatenate(rdeg_parts)
+        else:
+            self._pair_child = np.array([], dtype=np.intp)
+            self._pair_parent_m = np.array([], dtype=float)
+            self._pair_dt = np.array([], dtype=float)
+            self._pair_r_deg = np.array([], dtype=float)
+
     def _conditional_intensity_at_events(self, p: dict[str, float]) -> np.ndarray:
         """Background + triggering intensity evaluated at each observed event time/place (the sum term).
 
@@ -336,25 +419,17 @@ class ETASForecaster(BaseForecaster):
         intensity in the planar approximation), used in the first (log) term of the log-likelihood.
         """
         K, alpha, c, pp, D, gamma, q = self._vector(p)
-        n = self._ev_t.size
-        # Ages decrease with index because the catalog is time-sorted ascending; convert to forward
-        # time so that "earlier event" == "larger age". age[k] = days before t_issue.
-        age = self._ev_t
-        lam = np.empty(n, dtype=float)
-        for j in range(n):
-            # parents are events strictly older than j (age_i > age_j).
-            mask = age > age[j] + 1e-12
-            mu = self._background_density_deg2(self._ev_lat[j], self._ev_lon[j])
-            if not np.any(mask):
-                lam[j] = mu
-                continue
-            dt = age[mask] - age[j]  # days since each parent (positive)
-            r_km = haversine_km(self._ev_lat[j], self._ev_lon[j], self._ev_lat[mask], self._ev_lon[mask])
-            r_deg = r_km / DEG2KM
-            k_m = utsu_productivity(self._ev_m[mask], K, alpha, self.m0)
-            g_t = omori_utsu_density(dt, c, pp)
-            f_r = spatial_density(r_deg, self._ev_m[mask], D, gamma, q, self.m0)
-            lam[j] = mu + float(np.sum(k_m * g_t * f_r))
+        # Vectorized over the precomputed parent→child pairs (built once by :meth:`_precompute_pairs`,
+        # within the temporal + spatial cutoffs). Each pair's triggering contribution
+        # ``k(m_parent) g(dt) f(r | m_parent)`` is summed onto its child via ``np.bincount`` — an
+        # O(pairs) numpy reduction with no per-event Python loop. ``mu`` (the smoothed background) is
+        # fixed during the fit, so it is added per event from the precomputed ``_mu_ev``.
+        lam = self._mu_ev.copy()
+        if self._pair_child is not None and self._pair_child.size:
+            k_m = utsu_productivity(self._pair_parent_m, K, alpha, self.m0)
+            g_t = omori_utsu_density(self._pair_dt, c, pp)
+            f_r = spatial_density(self._pair_r_deg, self._pair_parent_m, D, gamma, q, self.m0)
+            lam += np.bincount(self._pair_child, weights=k_m * g_t * f_r, minlength=lam.size)
         return lam
 
     def _integrated_intensity(self, p: dict[str, float], train_days: float) -> float:
@@ -446,7 +521,7 @@ class ETASForecaster(BaseForecaster):
 
         starts = [x0]
         rng = np.random.default_rng(0)
-        for _ in range(3):
+        for _ in range(max(int(self.n_restarts), 0)):
             perturb = x0 * (1.0 + 0.25 * rng.standard_normal(x0.size))
             perturb = np.array([clamp(k, v) for k, v in zip(PARAM_NAMES, perturb)])
             starts.append(perturb)
@@ -459,7 +534,7 @@ class ETASForecaster(BaseForecaster):
                 args=(train_days,),
                 method="L-BFGS-B",
                 bounds=bnds,
-                options={"maxiter": 500, "ftol": 1e-9},
+                options={"maxiter": int(self.maxiter), "ftol": 1e-7},
             )
             if res.fun < best_f:
                 best_f, best_x = float(res.fun), res.x
@@ -534,12 +609,17 @@ class ETASForecaster(BaseForecaster):
         self._require_fit()
         K, alpha, c, pp, D, gamma, q = self._vector(self.params)
         mu = self._background_density_deg2(lat, lon)  # events / day / deg^2 (matches the spatial kernel)
-        dt = self._ev_t + float(t_days_ahead)  # elapsed days since each parent at the forecast time
+        # Same neighbour cutoff as the fit: only parents within the spatial reach and the temporal
+        # memory contribute a non-negligible kernel value, so the per-point triggering sum is bounded.
         r_km = haversine_km(lat, lon, self._ev_lat, self._ev_lon)
-        r_deg = r_km / DEG2KM
-        k_m = utsu_productivity(self._ev_m, K, alpha, self.m0)
+        keep = (r_km <= float(self.max_parent_dist_km)) & (self._ev_t <= float(self.max_parent_days))
+        if not np.any(keep):
+            return float(mu)
+        dt = self._ev_t[keep] + float(t_days_ahead)  # elapsed days since each parent at the forecast time
+        r_deg = r_km[keep] / DEG2KM
+        k_m = utsu_productivity(self._ev_m[keep], K, alpha, self.m0)
         g_t = omori_utsu_density(dt, c, pp)
-        f_r = spatial_density(r_deg, self._ev_m, D, gamma, q, self.m0)
+        f_r = spatial_density(r_deg, self._ev_m[keep], D, gamma, q, self.m0)
         return float(mu + np.sum(k_m * g_t * f_r))
 
     # ── Forecaster.expected_counts ─────────────────────────────────────────────

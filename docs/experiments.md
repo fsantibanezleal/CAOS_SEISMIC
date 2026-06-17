@@ -175,15 +175,42 @@ different rendering, never a new value or a danger ramp. Hexbins remain the defa
 
 ---
 
+## E8 — Ensemble forecaster: weighted linear opinion pool (2026-06-17)
+
+**Motivation.** The most reliable evidence-backed lever to beat any single short-term seismicity model is
+to **combine** them — the CSEP consensus across collaboratories is that a well-weighted ensemble matches
+or beats the best single component, because the components fail in different places (ETAS over-relies on
+recent triggering; smoothed-seismicity carries the stationary background; Reasenberg–Jones anchors the
+aftershock decay).
+
+**Change.** New `model/ensemble.py`: `EnsembleForecaster` combines the per-cell expected counts of
+already-fitted components as a linear opinion pool `λ_ens = Σ_k w_k λ_k` (weights normalized over the
+components that evaluate). `build_default_ensemble` wraps a fitted model family (tiled ETAS + smoothed
+null + R-J). Equal weights for now; score-weighted stacking deferred. 5 unit tests; 64 total green.
+
+**Result.** Implementation + unit tests only — **prospective skill not yet measured**. It will be scored
+by the same back-analysis harness (a new component alongside ETAS and the null) and only then gets a
+measured IGPE; recorded here so the change is traceable even before its result lands.
+
+**Decision/justification.** Linear (not log-linear) pooling is the CSEP-standard rate combination: it is
+conservative (the ensemble rate never collapses because one component does) and, with the mandatory
+smoothed null as a member, never reads below the long-term Poisson floor. The ensemble is a forecaster
+like any other — it earns a place in the public field ONLY if it shows prospective IGPE in the
+back-analysis, never by assertion.
+
+**Refs.** Marzocchi, Zechar & Jordan (2012), *BSSA* 102; Rhoades et al. (2014, 2018) hybrid CSEP models.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff (informed by the SOTA: ensembles are the most reliable lever; no
 single neural model has beaten ETAS prospectively as of 2024–2026). Each will get its own E-entry with
 measured results when executed.
 
-1. **Ensemble** (highest expected gain) — stack ETAS + adaptive smoothed-seismicity + Reasenberg–Jones
-   (later EEPAS/STEP), Bayesian model averaging / weighted log-score, scored by the same harness. The CSEP
-   consensus is that ensembles beat any single model.
+1. **Ensemble** (highest expected gain) — **IMPLEMENTED (E8)**; next step is to SCORE it in the
+   back-analysis (a component alongside ETAS + null) to get a prospective IGPE, then add score-weighted
+   stacking (weights from the rolling log-score) and EEPAS/STEP components.
 2. **GCMT data-driven Mw conversion** — replace the Scordilis literature default with fitted station-pair
    regressions; expected to correct the inflated b and sharpen the magnitude tail (→ closes E1's caveat).
 3. **Anisotropic / finite-fault aftershock kernel** — replace the isotropic spatial kernel for large

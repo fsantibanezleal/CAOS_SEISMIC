@@ -204,9 +204,11 @@ back-analysis, never by assertion.
 
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
-Ranked by expected prospective payoff (informed by the SOTA: ensembles are the most reliable lever; no
-single neural model has beaten ETAS prospectively as of 2024–2026). Each will get its own E-entry with
-measured results when executed.
+Ranked by expected prospective payoff, **grounded in the cited evidence base
+([improvement-evidence.md](improvement-evidence.md), deep-research 2026-06-17)**: score-weighted
+ETAS-family ensembles are the only proven prospective lever (and only by a *small* margin, +0.016 IGPE);
+NO neural / foundation TPP beats ETAS prospectively; geodetic covariates help globally but can *hurt*
+regionally. Each item gets its own E-entry with measured results when executed.
 
 1. **Ensemble** (highest expected gain) — **IMPLEMENTED (E8)**; next step is to SCORE it in the
    back-analysis (a component alongside ETAS + null) to get a prospective IGPE, then add score-weighted

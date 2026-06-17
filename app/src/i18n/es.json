@@ -233,6 +233,7 @@
     "tabs3": {
       "theory": "Enfoques teóricos",
       "analytical": "Métodos analíticos / ML",
+      "data": "Datos y features",
       "employed": "La versión empleada"
     },
     "theory": {
@@ -518,6 +519,233 @@
       "title": "Probabilidad de excedencia (lo que codifica la leyenda)",
       "body": "El escalar público es la probabilidad de al menos un evento a o sobre M* durante el horizonte, por el mapa de excedencia de Poisson. El conteo esperado integra la intensidad condicional contra el término de magnitud de Gutenberg–Richter hasta el Mmax acotante.",
       "caption": "Φ(M*) integra la distribución de magnitud en la tasa; este es el número que colorea el campo"
+    },
+    "data": {
+      "intro": "De dónde vienen los números, y qué se le entrega realmente al modelo. Esta página tiene dos partes: las Fuentes — los catálogos públicos que conducen el pronóstico y los enriquecedores globales que pueden agregar contexto — y los Tipos de datos y features — el registro del catálogo, la homogeneización de magnitud, la completitud, las features derivadas del catálogo y las covariables geofísicas. Todo aquí es reproducible a partir de datos públicos; la ingesta pesada corre offline una vez al día, nunca desde el navegador.",
+      "creedTitle": "El catálogo es la señal; todo lo demás es upside",
+      "creed": "La señal dominante en toda destreza de pronóstico de corto plazo publicada es el <b>catálogo sísmico mismo</b> — su agrupamiento (réplicas y premonitores). Geodesia, geometría de fallas, geometría de slab y mareas son <b>covariables de contexto</b>: cada una se entrega solo si muestra ganancia de información prospectiva positiva y significativa sobre una línea base ETAS de solo catálogo. Ninguna permite predecir un sismo; refinan tasas condicionales acotadas y calibradas.",
+      "subtabsAria": "Fuentes de datos y features",
+      "sources": {
+        "tab": "Fuentes",
+        "body": "El pronóstico se construye desde catálogos sísmicos abiertos y scriptables, accedidos principalmente a través del estándar de servicio web FDSN <i>event</i>, más un conjunto pequeño de capas geofísicas estáticas. Los catálogos son la base; los enriquecedores son contexto opcional. Cada fuente indica qué entrega, su licencia y con qué frecuencia cambia — las obligaciones de licencia se registran porque la app pública debe mostrar los créditos.",
+        "spineTitle": "La espina, el ancla, el contraste",
+        "spine": "Tres roles sostienen el stack de catálogos. La <b>espina</b> es USGS ComCat (FDSN <i>event</i>): tiempo real, sin autenticación, global, el conductor diario. El <b>ancla homogénea</b> es ISC-GEM (homogeneizado a Mw, relocalizado, 1904–2021) para el valor-b de largo plazo y el solape de conversión de magnitud. Una <b>red regional</b> (p. ej. CSN en Chile, SCEDC/NCEDC en California, GeoNet en Nueva Zelanda, INGV en Italia) aporta la completitud baja y estable que conduce la destreza de corto plazo; EMSC provee un contraste de de-duplicación independiente.",
+        "colName": "Fuente",
+        "colGives": "Qué entrega",
+        "colLicense": "Licencia",
+        "colCadence": "Cadencia",
+        "catalogsTitle": "Catálogos globales",
+        "catalogs": [
+          {
+            "name": "USGS ComCat",
+            "role": "FDSN event — la espina",
+            "gives": "Catálogo global de eventos en tiempo real: tiempo, ubicación, profundidad, magnitud y magType (de primera clase). Deltas incrementales updatedafter; tope de 20.000 eventos por solicitud, en mosaico.",
+            "license": "dominio público del Gobierno de EE. UU. (redes no-EE. UU. mantienen su atribución)",
+            "cadence": "tiempo real"
+          },
+          {
+            "name": "ISC-GEM",
+            "role": "ancla homogénea de largo plazo",
+            "gives": "Catálogo instrumental homogeneizado a Mw y relocalizado (1904–2021, M ≥ 5.5). Ancla para el valor-b, recurrencia de eventos grandes y el solape de conversión mb/ML → Mw.",
+            "license": "CC-BY-SA 3.0 (share-alike en derivados redistribuidos)",
+            "cadence": "versionado (con DOI)"
+          },
+          {
+            "name": "ISC Bulletin (Reviewed)",
+            "role": "boletín retrospectivo limpio",
+            "gives": "Boletín global relocalizado y revisado por analistas (subconjunto ISC-EHB para los hipocentros más limpios) — historia de calidad de entrenamiento, ~24 meses de retraso.",
+            "license": "abierto para investigación con atribución",
+            "cadence": "~24 meses de retraso"
+          },
+          {
+            "name": "GCMT",
+            "role": "enriquecedor de mecanismo",
+            "gives": "Tensores de momento de centroide para ~todos los eventos M ≳ 5 desde 1976: Mw, planos nodales, ejes P/T → features de mecanismo focal y de esfuerzo.",
+            "license": "libre para investigación con cita",
+            "cadence": "mensual + QuickCMT"
+          },
+          {
+            "name": "EMSC SeismicPortal",
+            "role": "contraste en tiempo real",
+            "gives": "Feed euro-mediterráneo + global independiente para de-duplicar contra ComCat; push WebSocket de baja latencia y reportes de percepción.",
+            "license": "abierto para investigación con atribución",
+            "cadence": "tiempo real"
+          }
+        ],
+        "regionalTitle": "Redes regionales (origen de la destreza de corto plazo)",
+        "regional": [
+          {
+            "name": "CSN (Chile)",
+            "role": "red C / C1",
+            "gives": "Catálogo nacional denso con Mc baja y estable a lo largo del margen de subducción; el GNSS diario es un enriquecedor geodésico incorporado para Chile. Accedido vía FDSN de EarthScope/IRIS o ISC.",
+            "license": "uso público con atribución obligatoria al CSN",
+            "cadence": "tiempo real"
+          },
+          {
+            "name": "SCEDC + NCEDC (California)",
+            "role": "redes CI / NC",
+            "gives": "Catálogos de 1932 al presente incl. tensores de momento y mecanismos focales; también en buckets de datos abiertos de AWS (no-sign-request).",
+            "license": "uso de investigación abierto + términos AWS Open Data",
+            "cadence": "diaria"
+          },
+          {
+            "name": "GeoNet (Nueva Zelanda)",
+            "role": "FDSN + casi tiempo real",
+            "gives": "Catálogo nacional (~20k sismos/año) con un feed NRT de menos de 5 minutos para los últimos 8 días.",
+            "license": "CC-BY 3.0 NZ (atribuir a Earth Sciences New Zealand)",
+            "cadence": "tiempo real + NRT"
+          },
+          {
+            "name": "INGV ISIDe (Italia)",
+            "role": "red IV",
+            "gives": "Boletín Sísmico Italiano revisado por analistas, M ≥ 1.5, QuakeML sobre FDSN.",
+            "license": "CC-BY (confirmar versión en la página del dataset)",
+            "cadence": "revisado"
+          }
+        ],
+        "enrichersBody": "Los enriquecedores son capas geofísicas globales estáticas (o de cambio lento) que el encoder de contexto espacial puede ingerir. Se ordenan por lift <b>esperado</b> para un pronóstico condicional de corto plazo — un orden que debe confirmarse con ganancia de información medida en datos retenidos antes de que cualquiera toque un número público. Ninguno sustituye al catálogo.",
+        "enrichersTitle": "Enriquecedores globales (covariables de contexto)",
+        "enrichers": [
+          {
+            "name": "Slab2",
+            "role": "geometría de subducción (la mayor)",
+            "gives": "Profundidad al slab, manteo, rumbo y distancia a la interfaz en grilla 0.05° — la geometría que el ETAS isótropo genérico ignora en márgenes de subducción.",
+            "license": "dominio público USGS",
+            "cadence": "estático (versionado)"
+          },
+          {
+            "name": "GEM Active Faults",
+            "role": "contexto de fallas",
+            "gives": "Distancia a falla y estilo de falla desde la base global de fallas activas (GeoJSON / GPKG).",
+            "license": "CC-BY-SA 4.0 (verificar LICENSE del repo)",
+            "cadence": "versionado"
+          },
+          {
+            "name": "Modelo de placas Bird PB2002",
+            "role": "contexto de placas",
+            "gives": "Distancia a borde, tipo de borde y velocidad relativa entre placas desde el modelo digital de bordes de placa.",
+            "license": "abierto para investigación",
+            "cadence": "estático"
+          },
+          {
+            "name": "GNSS NGL / MIDAS",
+            "role": "deformación geodésica",
+            "gives": "Velocidades de estación de largo plazo y un campo de tasa de deformación (término de fondo) desde las series del Nevada Geodetic Lab.",
+            "license": "abierto + atribución",
+            "cadence": "diaria–semanal"
+          },
+          {
+            "name": "World Stress Map",
+            "role": "orientación de esfuerzo in-situ",
+            "gives": "Orientaciones de esfuerzo cortical (azimut de SHmax, régimen) para resolver contexto normal/de cizalle a la falla y de esfuerzo de Coulomb, complementando los mecanismos GCMT.",
+            "license": "CC-BY (citar la versión de la base WSM)",
+            "cadence": "versionado"
+          },
+          {
+            "name": "Esfuerzo de marea (computado)",
+            "role": "covariable físicamente motivada",
+            "gives": "Marea sólida (pygtide) + carga de marea oceánica (SPOTL/TPXO) resuelta a un esfuerzo de Coulomb de marea, tasa de esfuerzo, fase circular y la envolvente quincenal Mf. No es un catálogo descargado — una feature computada.",
+            "license": "herramientas abiertas (TPXO tiene términos de uso académico)",
+            "cadence": "computado por emisión"
+          }
+        ],
+        "flowCap": "Figura 1 — el flujo de datos del catálogo: múltiples proveedores se de-duplican, se conserva magType, se estima la completitud Mc(x,y,t) y las magnitudes se homogeneizan a Mw, luego el catálogo se divide en una vista declusterizada (para el fondo de Poisson μ) y la vista completa sin declusterizar (para las features condicionales/de disparo). Declusterizar la entrada condicional es el error de pipeline más común — aquí nunca se hace.",
+        "flowAlt": "Un diagrama de flujo desde cuatro fuentes de catálogo crudas a través de limpieza-y-de-duplicación, completitud y homogeneización a Mw, hasta una división de catálogo dual en features de fondo y de catálogo completo.",
+        "flowSpine": "espina · tiempo real",
+        "flowRegional": "Mc baja y estable",
+        "flowAnchor": "ancla Mw + mecanismo",
+        "flowCross": "contraste de dedup",
+        "flowClean": "Limpiar + de-duplicar por origen preferido",
+        "flowKept": "conservado",
+        "flowMcMw": "Mc + homogeneizar a Mw",
+        "flowDecl": "Declusterizado (GK)",
+        "flowFull": "Catálogo completo (sin declusterizar)",
+        "flowFeatures": "features",
+        "stackCap": "Figura 2 — el stack de features de contexto global. El catálogo sísmico es la base ancha que sostiene; cada enriquecedor es una capa más delgada por encima, ordenada por lift esperado. El ancho es el punto: los enriquecedores son upside sobre el catálogo, nunca un reemplazo, y cada uno debe ganarse su capa con ganancia de información prospectiva medida.",
+        "stackAlt": "Un diagrama de capas apiladas con el catálogo sísmico como la capa base más ancha y capas enriquecedoras progresivamente más angostas (Slab2, fallas y placas, deformación GNSS, orientación de esfuerzo, mareas) encima.",
+        "stackCatalog": "Catálogo sísmico (base)",
+        "stackFaults": "Fallas GEM + placas Bird",
+        "stackStrain": "Deformación GNSS NGL",
+        "stackStress": "World Stress Map",
+        "stackTides": "mareas",
+        "stackUpside": "← más delgada = más especulativa",
+        "stackBase": "← más ancha = sostiene",
+        "licenseTitle": "Los créditos son una obligación, no una cortesía",
+        "license": "Varias fuentes traen términos de atribución o share-alike que la app pública debe honrar: <b>ISC-GEM</b> CC-BY-SA 3.0 (mantener la licencia en cualquier catálogo derivado redistribuido), y atribución para <b>CSN-Chile, GeoNet / Earth Sciences NZ, EMSC, GCMT, NGL, Slab2 / USGS, fallas GEM, el World Stress Map</b>, más los términos de uso académico de TPXO para el canal de marea. No son bloqueadores de redistribución, pero la página de créditos es parte del entregable."
+      },
+      "features": {
+        "tab": "Tipos de datos y features",
+        "body": "Desde el catálogo limpio el pipeline deriva las cantidades que el modelo realmente ve. Caen en tres familias: el <b>registro del catálogo</b> mismo (la lista de eventos homogeneizada y cortada por completitud), las <b>features derivadas del catálogo</b> (tasas recientes, intensidades ETAS, proximidades de vecino más cercano) y las <b>covariables de contexto</b> (las capas geofísicas unidas en la grilla de pronóstico). El orden en que se construyen es determinante: un modelo entrenado en un catálogo sucio aprende los cambios de detección de la red, no la Tierra.",
+        "recordTitle": "El registro del catálogo",
+        "record": "Cada evento lleva tiempo, longitud, latitud, profundidad, una magnitud con su <b>tipo de magnitud nativo</b> (ML, mb, Ms, Md, Mw — conservado, nunca fusionado en silencio), procedencia de origen/red y un id de origen preferido usado para de-duplicar entre proveedores. Mezclar tipos de magnitud distorsiona la cola de Gutenberg–Richter, así que magType es un campo de primera clase del que depende la homogeneización.",
+        "mwTitle": "Homogeneización de magnitud a Mw",
+        "mw": "Los catálogos mezclan escalas de magnitud con distinta saturación y física, así que todas se convierten a la magnitud de momento Mw (no saturante). Donde falta Mw para eventos pequeños, un ajuste regional de <b>mínimos cuadrados totales</b> (ambos ejes con error — no MCO) mapea ML → Mw y mb → Mw, anclado en el solape ISC-GEM / GCMT. Se almacenan ambas magnitudes (nativa y homogeneizada) y la conversión se versiona — una conversión errada corre toda la curva frecuencia–magnitud y todo pronóstico de tasa.",
+        "mwCap": "Conversión regional de magnitud por mínimos cuadrados totales, anclada en los catálogos de referencia homogéneos.",
+        "mcTitle": "Completitud Mc(x, y, t)",
+        "mc": "La magnitud de completitud <mc> — el umbral sobre el cual el catálogo registra todo evento — se estima <b>por celda espacial y época temporal</b>, no como un único número global (una Mc global inyecta no-estacionariedad falsa). Los eventos bajo la Mc local se cortan antes de declusterizar y construir features, y la grilla de Mc se almacena como artefacto versionado de primera clase junto a b(t).",
+        "mcCaveatTitle": "Incompletitud de réplicas de corto plazo — el momento de mayor riesgo",
+        "mcCaveat": "Justo después de un gran sismo principal — exactamente cuando el pronóstico más importa y más se consume — la Mc se dispara por horas-a-días y un modelo ingenuo <b>sub-pronostica</b> la productividad de réplicas. La actualización diaria usa por eso una verosimilitud consciente de la incompletitud con una Mc(t) dependiente del tiempo, no el ajuste de Mc estática. Es un método decidido y una limitación señalada de las actualizaciones de tiempo real más importantes.",
+        "zbzTitle": "Declustering — features, no solo etiquetas",
+        "zbz": "El catálogo se mantiene en una <b>vista dual</b>. Un catálogo declusterizado (ventanas de Gardner–Knopoff) alimenta solo la tasa de fondo de Poisson μ(x,y); el <b>catálogo completo sin declusterizar</b> alimenta el modelo condicional, porque el disparo de réplicas y premonitores <b>es</b> la señal predecible. La proximidad de vecino más cercano de Zaliapin–Ben-Zion se computa como features continuas (no solo etiquetas conservar/descartar) y como el etiquetador principista de clústeres.",
+        "zbzCap": "La proximidad de vecino más cercano de Baiesi–Paczuski / Zaliapin–Ben-Zion η y sus factores de tiempo (T) y distancia reescalada (R); df es la dimensión fractal y b la pendiente local de Gutenberg–Richter.",
+        "zbzBimodal": "En espacio logarítmico, <b>log₁₀ η es bimodal</b>: un modo de fondo y un modo agrupado, que separan eventos independientes de disparados. T y R entran directo al feature store, así que el modelo ve cuán cerca en tiempo y espacio reescalados se sitúa cada evento de su vecino más fuerte más cercano.",
+        "tableTitle": "El feature store",
+        "tableIntro": "Una porción representativa del vector de features por-celda y por-emisión evaluado en la grilla fina de pronóstico. Las features derivadas del catálogo dominan; las covariables de contexto se unen encima.",
+        "table": [
+          {
+            "group": "Actividad reciente",
+            "name": "Conteos / tasas por ventana",
+            "formula": "N(t−Δ, t) para Δ ∈ {1d, 7d, 30d}",
+            "meaning": "Conteos y tasas de eventos recientes por celda — la expresión más cruda de una secuencia activa."
+          },
+          {
+            "group": "Actividad reciente",
+            "name": "Valor-b rodante, Mc",
+            "formula": "b(t), Mc(x,y,t)",
+            "meaning": "Pendiente frecuencia–magnitud y completitud locales, re-estimadas en ventana espacio–temporal rodante."
+          },
+          {
+            "group": "Intensidad ETAS",
+            "name": "Intensidad condicional",
+            "formula": "λ(t,x,y | H_t)",
+            "meaning": "La tasa autoexcitante ETAS en la celda, sumada sobre la historia de disparo — el predictor central."
+          },
+          {
+            "group": "Intensidad ETAS",
+            "name": "Términos de productividad / Omori",
+            "formula": "k(m) e^{α(m−M₀)}, (t−t_i+c)^{−p}",
+            "meaning": "Fuerza de disparo por evento y su decaimiento temporal, los ingredientes de la intensidad condicional."
+          },
+          {
+            "group": "Proximidad ZBZ",
+            "name": "Vecino más cercano η, T, R",
+            "formula": "η_ij, T_j, R_j (q ≈ 0.5)",
+            "meaning": "Proximidad de tiempo/espacio reescalados al evento más fuerte cercano; separa fondo de agrupado."
+          },
+          {
+            "group": "Contexto",
+            "name": "Geometría de slab / falla / placa",
+            "formula": "prof., manteo, dist-a-falla, dist-a-borde",
+            "meaning": "Contexto geofísico estático unido por celda (Slab2, fallas GEM, placas Bird)."
+          },
+          {
+            "group": "Contexto",
+            "name": "Deformación geodésica",
+            "formula": "ε̇(x,y) de NGL/MIDAS",
+            "meaning": "Campo de tasa de carga de fondo; una covariable lenta y débilmente informativa."
+          },
+          {
+            "group": "Contexto",
+            "name": "Esfuerzo de Coulomb de marea",
+            "formula": "ΔCFS_marea, envolvente Mf, fase sin/cos",
+            "meaning": "Covariable físicamente motivada y regularizada que puede encogerse a ~0 en la mayoría de regiones."
+          }
+        ],
+        "contextTitle": "Covariables de contexto — unidas, con compuerta, honestas",
+        "context": "Las covariables de contexto de la Figura 2 se unen a la grilla de pronóstico y se ofrecen al encoder de contexto espacial. Cada una está <b>con compuerta</b>: entra a un pronóstico público solo tras mostrar ganancia de información prospectiva positiva y significativa sobre la línea base de solo catálogo. Para la mayoría de regiones los términos geodésico y de marea se esperan cuasi-nulos y se reportan como tales — el encoder es una capa de contexto, nunca un pronosticador autónomo.",
+        "clockTitle": "El reloj de pronóstico — ninguna feature puede ver el futuro",
+        "clock": "Cada feature se computa estrictamente desde la porción del catálogo hasta el tiempo de emisión t; la etiqueta son los eventos en el horizonte [t, t+H). En cada emisión diaria al modelo se le entregan solo datos previos a t, el pronóstico se sella y el estado de entrada se fotografía de forma inmutable. Esto hace la fuga temporal <b>estructuralmente imposible</b>, no una cuestión de disciplina — y es lo que permite re-puntuar honestamente un pronóstico pasado meses después."
+      }
     },
     "ml": {
       "intro": "Esta pestaña es teoría y estado del arte — no la versión que este producto entrega. Repasa los enfoques analíticos y aprendidos por máquina del pronóstico sísmico bajo la única lente que los unifica a todos: la intensidad condicional de un proceso puntual temporal. Cada método se presenta con sus supuestos, su ecuación clave y una lectura honesta de la evidencia. El titular contundente primero.",

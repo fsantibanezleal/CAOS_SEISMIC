@@ -1,0 +1,25 @@
+# caos-seismic-daily.timer — fire the daily forecast job at 03:00 local, with missed-run catch-up.
+#
+# Pairs with caos-seismic-daily.service. OnCalendar uses the system's *local* time zone; set the host's
+# timezone (e.g. `timedatectl set-timezone America/Santiago`) so 03:00 matches configs/publish.yaml
+# `schedule.time_local`. Persistent=true makes systemd run the job on next boot if the host was off at
+# the scheduled time (the catch-up backfill of missed issue dates lives in daily.sh as well).
+#
+#   systemctl enable --now caos-seismic-daily.timer
+#   systemctl list-timers caos-seismic-daily.timer
+
+[Unit]
+Description=Schedule CAOS_SEISMIC daily forecast (03:00 local, catch-up on missed runs)
+Documentation=https://github.com/fsantibanezleal/CAOS_SEISMIC
+
+[Timer]
+OnCalendar=*-*-* 03:00:00
+# If the machine was off/asleep at 03:00, run as soon as it is back up.
+Persistent=true
+# Small jitter so many hosts don't hammer the FDSN endpoints at the same instant.
+RandomizedDelaySec=300
+AccuracySec=1min
+Unit=caos-seismic-daily.service
+
+[Install]
+WantedBy=timers.target

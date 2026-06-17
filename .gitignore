@@ -3,12 +3,16 @@
 venv/
 __pycache__/
 *.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .ipynb_checkpoints/
 
-# ── Secrets / local (NEVER commit; secrets live only in _CAOS_MANAGE vault) ─
+# ── Secrets / local (NEVER commit; keep secrets in your own secret manager) ─
 .env
 *.local
 *.secret

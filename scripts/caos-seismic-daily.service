@@ -1,0 +1,57 @@
+# caos-seismic-daily.service — the daily forecast job (fetch -> infer -> scoped publish).
+#
+# Portable VPS fallback for the Windows Task Scheduler task (scripts/schedule-daily.ps1). Triggered by
+# caos-seismic-daily.timer (OnCalendar=*-*-* 03:00:00, Persistent=true). This is a oneshot: it runs the
+# pipeline once and exits; the timer owns the schedule.
+#
+# Install (user or system). Edit the two %-placeholders to your checkout, then:
+#
+#   # system-wide (recommended on a dedicated VPS), as root:
+#   #   1) clone the repo to e.g. /opt/caos-seismic and run scripts/setup.sh
+#   #   2) set INSTALL_DIR + RUN_USER below, copy both unit files to /etc/systemd/system/
+#   #   3) systemctl daemon-reload && systemctl enable --now caos-seismic-daily.timer
+#   #   4) verify:  systemctl list-timers caos-seismic-daily.timer
+#   #   5) test now: systemctl start caos-seismic-daily.service ; journalctl -u caos-seismic-daily -e
+#
+# The git push credential is a least-privilege deploy key / fine-grained PAT scoped to THIS repo, stored
+# in RUN_USER's git credential store — NEVER in this unit file. No secrets here (public-safe).
+
+[Unit]
+Description=CAOS_SEISMIC daily conditional seismic forecast (fetch + infer + scoped publish)
+Documentation=https://github.com/fsantibanezleal/CAOS_SEISMIC
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+
+# ── EDIT THESE TWO for your host ────────────────────────────────────────────
+# Absolute path to the cloned repo (the directory that contains scripts/, .venv/, results/).
+WorkingDirectory=/opt/caos-seismic
+# The unprivileged account that owns the checkout + holds the git push credential.
+User=caos
+Group=caos
+# ────────────────────────────────────────────────────────────────────────────
+
+# Run the same daily.sh the Windows side runs (catch-up missed days, scoped publish).
+ExecStart=/usr/bin/env bash scripts/daily.sh --region chile
+
+# Resilience: a daily job should not hang forever, and a transient network/git failure should retry.
+TimeoutStartSec=2h
+Restart=on-failure
+RestartSec=10min
+
+# Hardening (the job only needs to read the repo, write results/ + manifests/, and reach the network).
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/caos-seismic
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

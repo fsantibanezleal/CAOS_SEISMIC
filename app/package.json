@@ -1,0 +1,38 @@
+{
+  "name": "caos-seismic-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Static SPA for CAOS_SEISMIC — conditional probabilistic seismic forecasting (forecasts, never predictions).",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "lint": "tsc -b --noEmit"
+  },
+  "dependencies": {
+    "@deck.gl/core": "^9.0.0",
+    "@deck.gl/geo-layers": "^9.0.0",
+    "@deck.gl/layers": "^9.0.0",
+    "@deck.gl/mapbox": "^9.0.0",
+    "@deck.gl/react": "^9.0.0",
+    "h3-js": "^4.1.0",
+    "i18next": "^23.16.4",
+    "katex": "^0.16.21",
+    "maplibre-gl": "^4.7.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-i18next": "^15.1.1",
+    "react-katex": "^3.0.1",
+    "react-router-dom": "^7.0.1",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.1"
+  }
+}

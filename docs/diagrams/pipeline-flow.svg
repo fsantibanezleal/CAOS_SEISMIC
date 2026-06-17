@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">CAOS_SEISMIC daily pipeline: fetch, hygiene, fit, infer, artifact</title>
+  <desc id="desc">The versioned daily pipeline DAG. Stage A fetches the catalog; stage B-C-D run hygiene (Mc, Mw homogenization, dual-catalog declustering, features); stage E fits the smoothed-seismicity null and space-time ETAS; stage F runs the forecast-clock daily inference; stage G writes one compact gzipped artifact. The forecast clock makes temporal leakage structurally impossible. Configs and manifests are versioned in git; raw data, features, and weights are never versioned and are rebuildable.</desc>
+
+  <!-- palette: bg #0d1117 surface #161b22 border #30363d text #c9d1d9 accent #58a6ff good #3fb950 warn #d29922 bad #f85149 -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58a6ff"/>
+    </marker>
+    <style>
+      .node  { fill:#161b22; stroke:#30363d; stroke-width:1.5; rx:12; }
+      .stage { fill:#58a6ff; font-size:14px; font-weight:700; letter-spacing:.05em; }
+      .h     { fill:#c9d1d9; font-size:18px; font-weight:700; }
+      .t     { fill:#c9d1d9; font-size:14px; }
+      .m     { fill:#8b949e; font-size:13px; }
+      .edge  { stroke:#58a6ff; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+      .elbl  { fill:#58a6ff; font-size:13px; font-weight:600; }
+      .ver   { fill:#3fb950; font-size:13px; font-weight:600; }
+      .nover { fill:#d29922; font-size:13px; font-weight:600; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="800" fill="#0d1117"/>
+  <text x="40" y="52" fill="#58a6ff" font-size="26" font-weight="700">CAOS_SEISMIC — daily pipeline (versioned DAG)</text>
+  <text x="40" y="80" class="m" font-size="14">Each stage reads a versioned manifest and writes one; rebuildable from manifests + code + configs.</text>
+
+  <!-- configs banner -->
+  <rect class="node" x="40" y="110" width="1120" height="56" rx="10" fill="#0d1117"/>
+  <text class="stage" x="62" y="135">configs/  [VERSIONED]</text>
+  <text class="t" x="62" y="156" font-size="13">region &#183; grid (0.1&#176;, 0.1 M) &#183; completeness (Mc) &#183; declustering (dual-catalog) &#183; etas &#183; forecast (1d/2d/7d, M*) &#183; publish</text>
+
+  <!-- A: FETCH -->
+  <rect class="node" x="40" y="210" width="345" height="180"/>
+  <text class="stage" x="62" y="238">A &#183; FETCH</text>
+  <text class="h" x="62" y="266" font-size="16">Catalog pull</text>
+  <text class="t" x="62" y="294">ComCat (FDSN, updatedafter delta)</text>
+  <text class="t" x="62" y="318">+ CSN regional + EMSC cross-check</text>
+  <text class="t" x="62" y="342">tile around the 20k-event cap</text>
+  <text class="m" x="62" y="368">keep magType &#183; retry/backoff</text>
+
+  <!-- B/C/D: HYGIENE -->
+  <rect class="node" x="427" y="210" width="345" height="180"/>
+  <text class="stage" x="449" y="238">B&#183;C&#183;D &#183; HYGIENE</text>
+  <text class="h" x="449" y="266" font-size="16">Clean &#8594; Mc &#8594; features</text>
+  <text class="t" x="449" y="294">dedupe &#183; homogenize &#8594; Mw (TLS)</text>
+  <text class="t" x="449" y="318">rolling Mc(x,y,t) + b-value</text>
+  <text class="t" x="449" y="342">dual-catalog decluster (GK / ZBZ)</text>
+  <text class="m" x="449" y="368">order is load-bearing</text>
+
+  <!-- E: FIT -->
+  <rect class="node" x="815" y="210" width="345" height="180"/>
+  <text class="stage" x="837" y="238">E &#183; FIT</text>
+  <text class="h" x="837" y="266" font-size="16">Fit &#8594; condition</text>
+  <text class="t" x="837" y="294">smoothed-seismicity Poisson (null)</text>
+  <text class="t" x="837" y="318">MLE space-time ETAS (primary)</text>
+  <text class="t" x="837" y="342">gated NTPP challenger (flagged)</text>
+  <text class="m" x="837" y="368" fill="#d29922">reject if &#945;&#8805;&#946; or branching n&#8805;1</text>
+
+  <!-- F: INFER -->
+  <rect class="node" x="427" y="470" width="345" height="200"/>
+  <text class="stage" x="449" y="498">F &#183; INFER (forecast clock)</text>
+  <text class="h" x="449" y="526" font-size="16">Daily inference</text>
+  <text class="t" x="449" y="554">model sees ONLY catalog &lt; t_issue</text>
+  <text class="t" x="449" y="578">per-cell rate, 1d/2d/7d, at M*</text>
+  <text class="t" x="449" y="602">P10 / median / P90 bounds</text>
+  <text class="t" x="449" y="626">gridded-rate + &#8805;10k catalog-based</text>
+  <text class="m" x="449" y="652" fill="#3fb950">temporal leakage structurally impossible</text>
+
+  <!-- G: ARTIFACT -->
+  <rect class="node" x="815" y="470" width="345" height="200"/>
+  <text class="stage" x="837" y="498">G &#183; ARTIFACT</text>
+  <text class="h" x="837" y="526" font-size="16">Compact artifact</text>
+  <text class="t" x="837" y="554">sparsity floor + H3 + quantize + gzip</text>
+  <text class="t" x="837" y="578">rates + baseline + bounds +</text>
+  <text class="t" x="837" y="602">calibration + coverage mask + provenance</text>
+  <text class="ver" x="837" y="630">results/forecast-*.json.gz  [VERSIONED]</text>
+  <text class="m" x="837" y="652">+ index.json (latest + rolling CSEP)</text>
+
+  <!-- manifests strip -->
+  <rect class="node" x="40" y="470" width="345" height="200" rx="12" fill="#0d1117"/>
+  <text class="stage" x="62" y="498">MANIFESTS  [VERSIONED]</text>
+  <text class="t" x="62" y="528" font-size="13">fetch &#183; clean &#183; mc_decluster &#183;</text>
+  <text class="t" x="62" y="552" font-size="13">feature &#183; model provenance:</text>
+  <text class="m" x="62" y="578">source URLs, params, checksums,</text>
+  <text class="m" x="62" y="600">Mc grid version, model params,</text>
+  <text class="m" x="62" y="622">CSEP scores, code git SHA</text>
+  <text class="nover" x="62" y="652">raw data / features / weights: NEVER versioned</text>
+
+  <!-- config feeds (thin) -->
+  <path class="edge" d="M212 166 L212 208" opacity="0.6"/>
+  <path class="edge" d="M599 166 L599 208" opacity="0.6"/>
+  <path class="edge" d="M987 166 L987 208" opacity="0.6"/>
+
+  <!-- A -> B -->
+  <path class="edge" d="M385 300 L425 300"/>
+  <text class="elbl" x="388" y="290">raw</text>
+  <!-- B -> E -->
+  <path class="edge" d="M772 300 L813 300"/>
+  <text class="elbl" x="775" y="290">clean</text>
+  <!-- E -> F (down + left) -->
+  <path class="edge" d="M987 390 C 987 430, 600 430, 599 468"/>
+  <text class="elbl" x="700" y="424">fitted model</text>
+  <!-- F -> G -->
+  <path class="edge" d="M772 570 L813 570"/>
+  <text class="elbl" x="775" y="560">sealed forecast</text>
+  <!-- F -> manifests -->
+  <path class="edge" d="M427 570 L387 570"/>
+  <text class="elbl" x="392" y="560">snapshot</text>
+</svg>

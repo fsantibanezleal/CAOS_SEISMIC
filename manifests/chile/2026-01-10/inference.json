@@ -1,0 +1,54 @@
+{
+  "code_git_sha": "601073531190c1ed1e14849370b392b4cb80016c",
+  "config_hash": "6e9d8c022bb2",
+  "created_at": "2026-06-17T03:21:58Z",
+  "inputs": {
+    "b_value": 0.8910492484214396,
+    "catalog_snapshot_id": "cat-7f9511cf971553a4",
+    "declustering": "none(fallback)",
+    "mc": 3.85,
+    "mc_grid_version": "maxc+0.2/maxc",
+    "n_background_events": 1201,
+    "n_conditioning_events": 1201,
+    "t_issue": "2026-01-10T00:00:00Z"
+  },
+  "outputs": {
+    "horizons_days": [
+      1,
+      2,
+      7
+    ],
+    "magnitude_thresholds": [
+      5.0,
+      6.0,
+      7.0
+    ],
+    "model": {
+      "name": "reasenberg_jones",
+      "params": {
+        "a": -1.67,
+        "b": 0.8910492484214396,
+        "c": 0.05,
+        "caveat": "generic R-J constants are California-derived; refit for Chile (Page et al. 2016)",
+        "influence_km": 21.133890078313755,
+        "mainshock": {
+          "lat": -20.50923223081447,
+          "lon": -70.39950065158423,
+          "mw": 6.891541423564015,
+          "time": "2024-12-25T07:14:45.224551792+00:00"
+        },
+        "p": 1.08,
+        "source": "user"
+      },
+      "version": "0.1.0"
+    },
+    "n_cells": 100,
+    "n_synthetic_catalogs": 10000,
+    "qa_passed": true
+  },
+  "region_id": "chile",
+  "stage": "inference",
+  "stats": {
+    "qa_reasons": []
+  }
+}

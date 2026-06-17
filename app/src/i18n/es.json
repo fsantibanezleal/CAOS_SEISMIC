@@ -1,0 +1,421 @@
+{
+  "product": {
+    "name": "CAOS_SEISMIC",
+    "tagline": "Pronóstico sísmico probabilístico condicional",
+    "longTagline": "Probabilidades condicionales acotadas y calibradas sobre horizontes cortos — pronósticos, nunca predicciones, evaluados al estilo CSEP."
+  },
+  "nav": {
+    "introduction": "Introducción",
+    "problem": "El problema",
+    "methodology": "Metodología",
+    "implementation": "Implementación",
+    "backAnalysis": "Retroanálisis",
+    "monitoring": "Monitoreo"
+  },
+  "header": {
+    "github": "Código en GitHub",
+    "projects": "Más proyectos",
+    "toggleTheme": "Alternar tema claro / oscuro",
+    "toggleLanguage": "Cambiar idioma",
+    "lightThemeShort": "Claro",
+    "darkThemeShort": "Oscuro"
+  },
+  "footer": {
+    "attribution": "Herramienta independiente de investigación / educación de Felipe Santibáñez-Leal.",
+    "complement": "Complementa el Pronóstico Operacional de Terremotos oficial (USGS, INGV, CSN, GeoNet, JMA); no es una alarma autoritativa de protección civil.",
+    "license": "Código abierto — repositorio público.",
+    "version": "Versión",
+    "build": "Compilación",
+    "commit": "Commit"
+  },
+  "disclaimer": {
+    "short": "Este producto no predice terremotos. Emite probabilidades condicionales acotadas y calibradas, siempre mostradas junto a la línea base de largo plazo, evaluadas contra lo que efectivamente ocurre. Nunca es una alarma ni una promesa de seguridad.",
+    "creed": "Los terremotos no pueden predecirse, pero su probabilidad sí puede pronosticarse — reportada con honestidad, con incertidumbre, evaluada contra la realidad, nunca como alarma ni como promesa de seguridad."
+  },
+  "common": {
+    "comingSoon": "El contenido completo de esta página se agrega en la siguiente fase de construcción.",
+    "placeholder": "Página de andamiaje — solo cableado. El contenido real (texto, ecuaciones, diagramas y el campo de pronóstico en vivo) llega en la siguiente fase.",
+    "loading": "Cargando…",
+    "notFoundTitle": "Página no encontrada",
+    "notFoundBody": "Esa ruta no existe. Usa la navegación de arriba para volver al producto.",
+    "references": "Referencias"
+  },
+  "pages": {
+    "introduction": { "title": "Introducción", "intro": "Qué es este producto — y qué no es." },
+    "problem": { "title": "El problema", "intro": "La epistemología honesta del pronóstico sísmico: predecir no es pronosticar." },
+    "methodology": { "title": "Metodología", "intro": "Las teorías clásicas y los modelos analíticos, con las ecuaciones reales que los gobiernan." },
+    "implementation": { "title": "Implementación", "intro": "El modelo y la canalización diaria fuera de línea que produce un único artefacto compacto." },
+    "backAnalysis": { "title": "Retroanálisis", "intro": "Resultados CSEP retrospectivos y pseudo-prospectivos en regiones y periodos tectónicamente diversos." },
+    "monitoring": { "title": "Monitoreo", "intro": "El campo de pronóstico diario en vivo: tasa condicional elevada respecto de su propia línea base de largo plazo, con un horizonte y un umbral de magnitud explícitos." }
+  },
+  "intro": {
+    "title": "Introducción",
+    "lede": "Una herramienta independiente, honesta y calibrada de investigación y educación para el pronóstico sísmico probabilístico condicional — y una declaración cuidadosa de lo que deliberadamente no es.",
+    "creedTitle": "El credo",
+    "is": {
+      "title": "Qué es esto",
+      "items": [
+        "Una herramienta independiente y de código abierto de investigación y educación que complementa el Pronóstico Operacional de Terremotos oficial de las agencias (USGS, INGV, CSN, GeoNet, JMA).",
+        "Un productor de probabilidades condicionales: para una región, banda de magnitud y horizonte (1, 2 o 7 días), la probabilidad de uno o más eventos calificantes — siempre mostrada junto a la línea base de largo plazo, de modo que 'elevado' y 'aún pequeño' se vean a la vez.",
+        "Un registro de pronósticos: cada pronóstico diario se sella en el momento de emisión y se evalúa prospectivamente contra lo que efectivamente ocurre, de modo que cualquiera puede leer el diagrama de fiabilidad en vivo.",
+        "Transparente en el método: cada número publicado está acotado (P10 / mediana / P90), evaluado al estilo CSEP y es reproducible desde un artefacto diario versionado."
+      ]
+    },
+    "isNot": {
+      "title": "Qué no es esto",
+      "items": [
+        "No es una alarma autoritativa de protección civil — no reemplaza ni compite con las agencias oficiales.",
+        "No es un predictor: nunca nombra un tiempo, lugar y magnitud, y nunca emite una decisión binaria de 'ocurrirá / no ocurrirá'.",
+        "No es una señal de 'seguro': una celda en blanco significa sin pronóstico o fuera de cobertura, nunca que un área esté segura.",
+        "No es una cuenta regresiva, una sirena de alerta ni una decisión de evento único — el objeto es un campo continuo de probabilidad, no un punto en un mapa."
+      ]
+    },
+    "conditional": {
+      "title": "Probabilidades condicionales, no predicciones",
+      "body": "El producto reporta la probabilidad de al menos un terremoto calificante dentro de una región elegida, sobre un umbral de magnitud elegido, durante un horizonte corto elegido. La probabilidad es condicional a la sismicidad reciente — sube durante una secuencia activa y se relaja a medida que la secuencia decae — y siempre se reporta junto a su línea base de largo plazo.",
+      "example": "Por ejemplo: el campo podría leer una probabilidad <b>esperada</b> de <code>2%</code> para uno o más eventos <code>M≥5</code> en una celda dada durante las próximas <code>24 h</code>, frente a una línea base de largo plazo de <code>0,5%</code> — cerca de <b>4× la tasa habitual</b>, pero aún pequeña en términos absolutos. Ambos números se muestran juntos, por diseño."
+    },
+    "complement": {
+      "title": "Complementa a las agencias oficiales",
+      "body": "El Pronóstico Operacional de Terremotos es un servicio real y desplegado — los pronósticos de réplicas del USGS y el conjunto OEF-Italy del INGV son sistemas probabilísticos, no predicciones. Este producto se sitúa junto a ellos como una referencia independiente, transparente y evaluada abiertamente. Está posicionado para informar y enseñar, nunca para emitir guía de protección civil."
+    },
+    "credibility": {
+      "title": "El registro de fiabilidad es la credibilidad",
+      "body": "Un pronóstico probabilístico no puede validarse ni invalidarse por ningún resultado individual. Se juzga solo sobre muchos pronósticos, por si las cosas que llamó '10% probables' ocurrieron cerca del 10% de las veces. Ese registro de fiabilidad en vivo — actualizado a medida que crece el registro de pronósticos — es el artefacto central de credibilidad del producto.",
+      "cta": "Lee la epistemología honesta en <problem>El problema</problem>, los puntajes retrospectivos en <backAnalysis>Retroanálisis</backAnalysis>, y el campo en vivo en <monitoring>Monitoreo</monitoring>."
+    }
+  },
+  "problem": {
+    "title": "El problema",
+    "lede": "Por qué los terremotos no pueden predecirse, por qué su probabilidad sí puede pronosticarse, y cómo la comunicación honesta es la parte que de verdad le falla a la gente.",
+    "creedTitle": "El credo del producto",
+    "determinism": {
+      "title": "La predicción determinista es efectivamente imposible",
+      "body": "Nombrar el tiempo, lugar y magnitud de un terremoto con fiabilidad de nivel de alarma nunca se ha logrado. La falla es fuertemente no lineal, y si una pequeña ruptura cascada hacia una grande depende de un detalle inmensurablemente fino de la corteza <cite>.",
+      "soc": "El marco explicativo principal es la criticalidad auto-organizada — los terremotos como un fenómeno crítico en el que cualquier evento pequeño tiene una probabilidad larga y de cola pesada de crecer <cite>. Esta es la explicación principal, no física resuelta: las visiones de terremoto característico y de predictibilidad parcial coexisten."
+    },
+    "predVsForecast": {
+      "title": "Predicción versus pronóstico",
+      "body": "Esta es la distinción organizadora del campo <cite>. Una <b>predicción</b> es una afirmación determinista de sí/no de que un evento ocurrirá o no en una región, ventana y rango de magnitud. Un <b>pronóstico</b> da una probabilidad estrictamente entre 0 y 1. Este producto es estrictamente un pronosticador.",
+      "uiNote": "Por ello la interfaz nunca emite una decisión binaria, una alarma, una sirena de alerta ni una cuenta regresiva — solo una probabilidad continua con su incertidumbre y su línea base."
+    },
+    "scale": {
+      "title": "La escala absoluta honesta",
+      "body": "Las probabilidades sísmicas de corto plazo pueden variar en órdenes de magnitud, pero típicamente permanecen bajas en sentido absoluto — usualmente <b>por debajo de cerca del 1% por día</b> <cite>. La ganancia relativa durante una secuencia activa puede ser grande (uno a unos pocos órdenes de magnitud sobre el fondo), y sin embargo la probabilidad absoluta de un evento grande en el día siguiente sigue estando usualmente bien por debajo de unos pocos por ciento. El producto muestra ambas a la vez para que ninguna se confunda con la otra."
+    },
+    "cases": {
+      "title": "Tres casos de enseñanza",
+      "intro": "Cada caso enseña una lección específica sobre los límites de la predicción y la disciplina del pronóstico probabilístico.",
+      "parkfield": {
+        "title": "Parkfield",
+        "body": "Un modelo de recurrencia dio un pronóstico de cerca del 95%-para-1993 para un M6 característico en Parkfield <cite1>. El M6.0 llegó en 2004 — cerca de once años después de cerrarse la ventana — sin precursores de corto plazo diagnósticos en la falla más instrumentada de la Tierra <cite2>. El tiempo no es predecible ni siquiera con un modelo de recurrencia e instrumentación densa."
+      },
+      "ridgecrest": {
+        "title": "Ridgecrest 2019",
+        "body": "UCERF3-ETAS dio cerca de un <b>2,8% (~3%)</b> de probabilidad en la primera semana de un evento mayor; el M7.1 ocurrió luego cerca de 34 horas después <cite>. Un pronóstico de ~3% no está equivocado cuando ocurre el resultado del 3%. Un resultado individual ni valida ni invalida un pronóstico probabilístico."
+      },
+      "laquila": {
+        "title": "L'Aquila",
+        "body": "El daño en L'Aquila fue un <b>fallo de comunicación</b> — falsa tranquilidad — no un fallo de predicción. (La magnitud del evento principal se reporta de manera variable como Mw 6,1–6,3 en fuentes primarias.) Por esto exactamente este producto siempre muestra el número junto a su línea base, con incertidumbre explícita, y nunca ofrece un estado 'seguro'."
+      }
+    },
+    "achievable": {
+      "title": "Lo que sí es alcanzable: el Pronóstico Operacional de Terremotos",
+      "body": "Los sistemas reales desplegados son servicios probabilísticos, no supercomputadoras. Los pronósticos operacionales de réplicas del USGS crecieron desde Reasenberg & Jones <citeRJ> hasta la extensión global por régimen tectónico de Page et al. <citePage>. <b>OEF-Italy / INGV</b> es un conjunto de tres modelos distintos — ETAS, ETES y STEP <citeINGV>.",
+      "honestNote": "Reporta OEF-Italy con honestidad: ampliamente fiable a lo largo de cerca de diez años de operación verdaderamente prospectiva, pero con una subestimación documentada de la secuencia de Italia Central 2016–2017 (Amatrice–Norcia) causada por incompletitud del catálogo tras el evento principal. La calibración se gana y se matiza, nunca se asume."
+    }
+  },
+  "method": {
+    "title": "Metodología",
+    "lede": "Las ecuaciones reales y citables detrás del campo, y un veredicto honesto sobre si los modelos aprendidos por máquina las superan.",
+    "tabs": { "classical": "Teorías clásicas", "analytical": "Analítico y ML" },
+    "classical": {
+      "intro": "Cada bloque a continuación muestra la ecuación que lo gobierna y su referencia canónica. Ninguna de estas constantes está fija en el producto: el valor b, la completitud y los parámetros de ETAS se re-estiman en ventanas móviles."
+    },
+    "gr": {
+      "title": "Ley de Gutenberg–Richter",
+      "body": "La relación magnitud–frecuencia: el número de eventos a o sobre la magnitud M decae log-linealmente, con pendiente b cercana a 1. Fija la distribución de magnitud por bin usada en todo el sistema.",
+      "caption": "a fija la productividad; b ≈ 1 es la pendiente de la distribución de magnitud, re-estimada en ventana móvil"
+    },
+    "bvalue": {
+      "title": "Valor b de Aki–Utsu (MLE)",
+      "body": "El valor b de máxima verosimilitud a partir de la magnitud media sobre la completitud <mc>. Está fuertemente sesgado si <mc> se estima mal, por lo que <mc> se halla con MAXC más bondad de ajuste y su incertidumbre se propaga <cite1>; el estimador lleva una corrección por agrupamiento <cite2>.",
+      "caption": "corregido por agrupamiento; re-estimado en ventana móvil, nunca fijo"
+    },
+    "omori": {
+      "title": "Ley modificada de Omori–Utsu",
+      "body": "Decaimiento temporal de réplicas — el corazón del pronóstico operacional de réplicas. La tasa de réplicas decae como una ley de potencia en el tiempo desde el evento principal, con exponente p cercano a 1.",
+      "caption": "K es la productividad, c el desplazamiento temporal, p ≈ 1 el exponente de decaimiento"
+    },
+    "rj": {
+      "title": "Reasenberg–Jones (1989), extendido por Page et al. (2016)",
+      "body": "La línea base operacional transparente: la tasa de réplicas combina el término de magnitud de Gutenberg–Richter con el decaimiento temporal de Omori–Utsu; integrar la tasa sobre el horizonte da el conteo esperado N, y la probabilidad de excedencia se sigue del mapa de Poisson <cite1> <cite2>.",
+      "caption": "el respaldo bayesiano / chequeo de cordura junto al estimador central ETAS"
+    },
+    "etas": {
+      "title": "Intensidad condicional ETAS espacio-temporal",
+      "body": "El estimador central recomendado y el modelo de referencia obligatorio <cite>. La intensidad condicional es un fondo estacionario μ(x, y) más una suma de contribuciones de todos los eventos previos, cada uno con productividad de Utsu, decaimiento temporal de Omori, y un núcleo espacial de potencia inversa. El producto lo ajusta sobre el catálogo <b>completo, sin desagrupar</b>, porque el disparo es la señal predecible.",
+      "caption": "μ es el fondo de sismicidad suavizada; la suma es el término de disparo auto-excitante",
+      "gatesTitle": "Dos compuertas de estacionariedad (mantenidas separadas)",
+      "gate1": "La convergencia de la integral productividad × magnitud requiere <m> con <beta>, de modo que la razón de ramificación <n> sea finita.",
+      "gate2": "Dado eso, <n> es la condición subcrítica / estacionaria; todo ajuste con <nreject> se rechaza."
+    },
+    "smoothed": {
+      "title": "Sismicidad suavizada (fondo μ)",
+      "body": "El fondo espacial μ(x, y) es un campo adaptativo de sismicidad suavizada sobre el catálogo desagrupado (clase Helmstetter) <cite>. La forma exacta del núcleo, su exponente y su normalización se fijan a una implementación de referencia antes de programar — la literatura lleva núcleos de potencia tanto −1 como −3/2, y el ancho de banda por vecinos más cercanos es un hiperparámetro optimizado, no una constante fija."
+    },
+    "exceedance": {
+      "title": "Probabilidad de excedencia (lo que codifica la leyenda)",
+      "body": "El escalar público es la probabilidad de al menos un evento a o sobre M* durante el horizonte, por el mapa de excedencia de Poisson. El conteo esperado integra la intensidad condicional contra el término de magnitud de Gutenberg–Richter hasta el Mmax acotante.",
+      "caption": "Φ(M*) integra la distribución de magnitud en la tasa; este es el número que colorea el campo"
+    },
+    "ml": {
+      "intro": "Los procesos puntuales aprendidos por máquina se admiten solo si se ganan su lugar superando a ETAS en las pruebas CSEP — no por ser más nuevos.",
+      "verdictTitle": "Veredicto honesto sobre la clase de modelo",
+      "verdict": "Bajo pruebas prospectivas al estilo CSEP, <b>no se ha demostrado que ningún proceso puntual neuronal supere de forma fiable a un ETAS bien ajustado</b>. El benchmark EarthquakeNPP encontró que ninguno de cinco procesos puntuales neuronales superó a ETAS en un benchmark de California 1971–2021 con divisiones cronológicas y pruebas CSEP <cite>.",
+      "spatial": {
+        "title": "La brecha es mayor donde importa: el espacio",
+        "body": "En ese benchmark la brecha es mayor en la prueba <b>espacial</b> — la dimensión que más importa para un mapa (mejor NPP ≈ 68,6% vs ETAS ≈ 92,0% de tasa de aprobación). Esto se afirma como 'en el benchmark hasta la fecha' (los datos son solo de California), no como una ley universal."
+      },
+      "infogain": {
+        "title": "La ganancia de información depende del estado, y va en nats",
+        "body": "La ganancia de información de ETAS sobre Poisson <b>no es una constante fija</b>: es grande y positiva durante secuencias activas (ganancias de probabilidad de órdenes de magnitud en días pico) y cercana a cero en periodos tranquilos. Se mide en <b>nats</b> (unidades de log natural), nunca en bits, y no hay un valor estacionario estable que citar."
+      },
+      "requirement": {
+        "title": "Un requisito, no un veredicto contra el ML",
+        "body": "Algunos modelos híbridos y neuronales sí igualan o superan a ETAS en ganancia de información en escenarios específicos <cite>. La regla aquí es una compuerta, no una prohibición: <b>cualquier modelo de ML debe superar a ETAS en las pruebas CSEP antes de llegar al mapa público</b>. Los modelos de detección y selección de fases construyen un mejor catálogo de entrada — la detección no es pronóstico."
+      }
+    }
+  },
+  "impl": {
+    "title": "Implementación",
+    "lede": "El modelo v0 y la canalización diaria fuera de línea que convierte catálogos públicos en un único artefacto pequeño y reproducible.",
+    "model": {
+      "title": "El modelo (v0)",
+      "null": {
+        "title": "Nulo obligatorio",
+        "body": "Una referencia de Poisson de sismicidad suavizada estacionaria sobre el catálogo desagrupado. Cada pronóstico se mide contra esta línea base; 'elevado' solo significa 'elevado respecto de esto'."
+      },
+      "primary": {
+        "title": "Estimador primario + referencia",
+        "body": "El ETAS espacio-temporal de máxima verosimilitud <cite> es a la vez el estimador central y la referencia obligatoria. El modelo bayesiano de Reasenberg–Jones <citeRJ> es un respaldo transparente y chequeo de cordura."
+      },
+      "background": {
+        "title": "Fondo espacial μ(x, y)",
+        "body": "Sismicidad suavizada adaptativa sobre el catálogo desagrupado <cite>, con el núcleo fijado a una implementación de referencia antes de programar."
+      },
+      "magnitude": {
+        "title": "Término de magnitud",
+        "body": "Gutenberg–Richter con una completitud móvil <mc> y un <b> móvil, nunca fijos."
+      }
+    },
+    "dualCatalog": {
+      "title": "La regla del catálogo dual",
+      "body": "Dos catálogos alimentan dos roles. El catálogo <b>desagrupado</b> alimenta el fondo de Poisson; el catálogo <b>completo, sin desagrupar</b> alimenta el modelo condicional / ETAS — porque el disparo es la señal predecible, desagruparlo descartaría exactamente aquello para lo que existe el pronóstico."
+    },
+    "hygiene": {
+      "title": "Higiene de datos (obligatoria, ordenada)",
+      "intro": "La higiene corre en un orden fijo antes de cualquier ajuste:",
+      "steps": [
+        "Estimar una completitud variable en el tiempo Mc(x, y, t) con MAXC + bondad de ajuste (EMR para la incertidumbre).",
+        "Homogeneizar las magnitudes a Mw mediante una regresión de mínimos cuadrados totales anclada en ISC-GEM / GCMT.",
+        "Desagrupar (catálogo dual): el catálogo desagrupado alimenta el fondo, el catálogo completo alimenta ETAS."
+      ],
+      "mcNoteTitle": "La corrección de completitud +0,2 está calibrada para California",
+      "mcNote": "La habitual corrección MAXC de +0,2 <cite> está calibrada para California y se re-valida por región — no se exporta sin cambios a Chile, Japón ni Nueva Zelanda."
+    },
+    "incompleteness": {
+      "title": "Incompletitud de réplicas de corto plazo (requerida)",
+      "body": "La ventana de mayor riesgo — horas a días después de un evento grande — tiene una completitud <mc> que se dispara. El trabajo diario usa una verosimilitud consciente de la incompletitud (<mc> dependiente del tiempo, ETAS detendenciado), <b>no ETAS ingenuo</b>, o subestimaría justo cuando las réplicas grandes son más probables. Esto se trata como un método requerido, no una opción."
+    },
+    "gated": {
+      "title": "Retadores con compuerta",
+      "body": "Los retadores aprendidos por máquina están tras una bandera de característica y se despliegan <b>solo</b> con ganancia de información pseudo-prospectiva positiva y significativa sobre ETAS: un proceso puntual temporal neuronal de clase RECAST <cite>, que mejora al ETAS temporal solo cuando el catálogo de entrenamiento es grande, de lo contrario solo lo iguala <citeNPP>; y covariables de marea / GNSS / hidrológicas, codificadas como un multiplicador regularizado que se encoge a ~0 donde no hay señal.",
+      "detectionNote": "Los modelos de detección y selección de fases aprendidos por máquina (PhaseNet, EQTransformer, SeisBench) se usan solo para construir un catálogo de entrada más completo. La detección no es pronóstico, y esa línea se mantiene explícita."
+    },
+    "pipeline": {
+      "title": "La canalización diaria fuera de línea",
+      "intro": "El cómputo pesado corre una vez al día, fuera de línea, en un único host de CPU; el tiempo de ejecución es sin estado y de solo lectura."
+    },
+    "diagram": {
+      "svgTitle": "Canalización diaria de pronóstico fuera de línea",
+      "svgDesc": "Un flujo de arriba hacia abajo de cinco etapas: alimentaciones de datos externas, el trabajo diario fuera de línea, el artefacto compacto, la API delgada y la SPA estática.",
+      "caption": "El cómputo pesado corre una vez al día, fuera de línea; el tiempo de ejecución es sin estado y de solo lectura.",
+      "feeds": {
+        "title": "Alimentaciones de datos (externas, solo lectura, públicas)",
+        "body": "USGS ComCat / ISC / IRIS-EarthScope FDSN → catálogo reciente (últimos N días)"
+      },
+      "job": {
+        "title": "Trabajo diario fuera de línea (host único, CPU)",
+        "body": "ingesta → QC / dedup → Mc y homogeneización de magnitud → desagrupamiento (catálogo dual) → ajuste / condicionamiento ETAS (+ respaldo R-J) → simular conjunto → campo de tasa por celda → cotas optimista / esperada / pesimista → estadísticas CSEP móviles"
+      },
+      "artifact": {
+        "title": "Artefacto (versionado / servido estático, comprimido)",
+        "body": "forecast_AAAA-MM-DD.json(.gz) + arreglos de tasa H3: λ por celda para {1d, 2d, 7d} × {lo, exp, hi}; λ de línea base; metadatos / marca temporal; resumen N/S/M/L + puntos de fiabilidad; máscara de cobertura"
+      },
+      "api": {
+        "title": "API (delgada, sin estado, solo lectura)",
+        "body": "/forecast/latest, /forecast/{date}, /region/{iso}, /calibration; ORJSON + GZip"
+      },
+      "spa": {
+        "title": "SPA (Vite + React + TS, i18n EN→ES, claro / oscuro)",
+        "body": "Intro · Problema · Metodología · Implementación · Retroanálisis · Monitoreo (campo H3 mundial MapLibre + deck.gl, acercamiento por país, resumen SVG; leyenda · horizonte · línea base · calibración · obsolescencia)"
+      },
+      "arrow": {
+        "pull": "extracción diaria (temporizador programado)",
+        "write": "escribe UN artefacto compacto",
+        "serve": "servido estático / cargado al inicio",
+        "render": "obtiene + renderiza el horizonte × cota elegidos"
+      }
+    }
+  },
+  "ba": {
+    "title": "Retroanálisis",
+    "lede": "Puntajes CSEP retrospectivos y pseudo-prospectivos en regiones tectónicamente diversas — reportados en su totalidad, incluyendo donde el modelo no gana.",
+    "honesty": "La habilidad se establece <b>solo</b> ganando las pruebas de comparación contra líneas base reales. Pasar las pruebas de consistencia (calibración) es necesario pero no suficiente. Cada celda región × horizonte se reporta, incluyendo los fallos — el reporte selectivo es en sí mismo el sesgo que CSEP existe para prevenir.",
+    "ridgecrest": {
+      "title": "Ejemplo trabajado — Ridgecrest 2019",
+      "body": "Un pronóstico de cerca del <b>3%</b> en la primera semana precedió al M7.1 por cerca de 34 horas <cite>. Un pronóstico de ~3% no está equivocado cuando ocurre el resultado del 3%: un resultado individual ni valida ni invalida un pronóstico probabilístico. El diagrama de fiabilidad, acumulado sobre muchos pronósticos, es lo que juzga al modelo."
+    },
+    "sampleBanner": "Resultados de EJEMPLO ilustrativos — no son puntajes CSEP reales. Reemplazados byte a byte por el trabajo de evaluación pyCSEP fuera de línea.",
+    "error": "No se pudo cargar el reporte de retroanálisis: {{message}}",
+    "regionSelector": "Selecciona una región",
+    "meta": {
+      "catalog": "Catálogo autoritativo:",
+      "train": "Periodo de aprendizaje:",
+      "test": "Periodo de prueba (pseudo-prospectivo):",
+      "mmin": "Magnitud objetivo uniforme:"
+    },
+    "cell": {
+      "horizon": "Horizonte de {{days}} día(s)",
+      "overReject": "Grilla Poisson sobre-rechazó",
+      "overRejectTip": "Las pruebas de grilla Poisson sobre-rechazan durante secuencias de réplicas (sobre-dispersión). Este resultado de grilla se reporta junto al resultado basado en catálogo, que relaja el supuesto de Poisson."
+    },
+    "consistency": {
+      "title": "Pruebas de consistencia (calibración de un modelo)",
+      "gridded": "Tasa en grilla (Poisson)",
+      "catalog": "Basado en catálogo (honesto a la sobre-dispersión)"
+    },
+    "comparison": {
+      "title": "Pruebas de comparación (habilidad vs líneas base)",
+      "baseline": "Línea base",
+      "igpe": "IGPE (nats)",
+      "tci": "IC 95% prueba T",
+      "w": "Valor p W",
+      "skill": "Habilidad",
+      "skillYes": "establecida",
+      "skillNo": "no establecida",
+      "note": "La habilidad se reclama solo cuando IGPE es positiva con un intervalo de confianza de la prueba T que excluye cero, corroborada por la prueba de Wilcoxon.",
+      "baselineName": { "etas": "vs ETAS", "smoothed": "vs sismicidad suavizada" }
+    },
+    "reliability": { "title": "Diagrama de fiabilidad" },
+    "evo": { "title": "Conteos esperados vs observados", "expected": "esperado", "observed": "observado" },
+    "scoring": {
+      "title": "Puntaje secundario (comunicación, nunca el titular)",
+      "brier": "Puntaje de Brier",
+      "log": "Puntaje log",
+      "crps": "CRPS",
+      "ass": "Puntaje de habilidad de área"
+    }
+  },
+  "calibration": {
+    "modelQuality": "Calidad del modelo",
+    "tooltip": "La tríada verde / ámbar / rojo describe la CALIDAD DEL MODELO según las pruebas CSEP — nunca el peligro sísmico.",
+    "level": {
+      "green": "dentro de la consistencia CSEP",
+      "amber": "limítrofe",
+      "red": "rechazado / poco probado"
+    }
+  },
+  "csep": {
+    "test": "Prueba",
+    "quantile": "Cuantil",
+    "status": "Estado",
+    "short": { "N": "N", "M": "M", "S": "S", "L": "L", "CL": "CL" },
+    "name": {
+      "N": "Prueba de número",
+      "M": "Prueba de magnitud",
+      "S": "Prueba espacial",
+      "L": "Prueba de verosimilitud",
+      "CL": "Prueba de verosimilitud condicional (preferida sobre L pura)"
+    },
+    "statusLabel": { "pass": "dentro de consistencia", "fail": "rechazada", "untested": "sin probar" },
+    "igPoisson": "Ganancia de información vs Poisson",
+    "igEtas": "Ganancia de información vs ETAS",
+    "necessaryNotSufficient": "Pasar las pruebas de consistencia calibra un modelo; nunca establece habilidad. La habilidad vive en las pruebas de comparación contra ETAS y la sismicidad suavizada. La ganancia de información va en nats, no en bits."
+  },
+  "monitoring": {
+    "title": "Monitoreo",
+    "lede": "El campo de pronóstico diario en vivo: dónde la tasa condicional está elevada respecto de su propia línea base de largo plazo, con un horizonte y un umbral de magnitud explícitos.",
+    "framing": "Esto no es un mapa de alarma. Muestra dónde la tasa condicional está elevada respecto de su propia línea base de largo plazo — un campo continuo de probabilidad con un horizonte y un umbral de magnitud explícitos, siempre mostrado con sus cotas de incertidumbre.",
+    "error": "No se pudo cargar el artefacto de pronóstico: {{message}}",
+    "region": "Región",
+    "regionName": "{{name}}",
+    "sampleBanner": "Pronóstico de EJEMPLO ilustrativo — no es un pronóstico real. Reemplazado byte a byte por el trabajo de publicación diario.",
+    "showCsep": "mostrar detalle CSEP",
+    "hideCsep": "ocultar detalle CSEP",
+    "csepTitle": "Calibración y consistencia CSEP",
+    "reliabilityTitle": "Diagrama de fiabilidad",
+    "ctl": {
+      "horizon": "Horizonte",
+      "threshold": "Umbral de magnitud",
+      "bounds": "Cotas",
+      "view": "Vista",
+      "days_one": "{{count}} día",
+      "days_other": "{{count}} días",
+      "mstar": "M ≥ {{m}}",
+      "viewMap": "Campo de probabilidad",
+      "viewSummary": "Resumen sin mapa"
+    },
+    "bound": {
+      "lo": { "label": "Optimista (P10)", "tip": "La cota optimista del percentil 10." },
+      "expected": { "label": "Esperada (mediana)", "tip": "El pronóstico esperado / mediana." },
+      "hi": {
+        "label": "Pesimista (P90)",
+        "tip": "La cota pesimista del percentil 90 — un mal caso plausible.",
+        "caption": "La vista pesimista muestra un mal caso plausible, no una predicción."
+      }
+    },
+    "legend": {
+      "aria": "Leyenda del campo de pronóstico",
+      "rampAria": "Rampa de color secuencial perceptualmente uniforme (de baja a alta probabilidad)",
+      "title": "{{bound}} · P(≥1 evento ≥ M{{m}}) en {{days}} día(s)",
+      "caption": "Por celda (~{{area}} km²), en {{days}} día(s), para uno o más eventos de M ≥ {{m}}.",
+      "notSafe": "Una celda en blanco significa sin pronóstico o fuera de cobertura — nunca que un área esté segura."
+    },
+    "map": {
+      "aria": "Mapa mundial del campo de probabilidad",
+      "loadingStack": "Cargando el mapa…",
+      "noWebgl": "Este navegador no puede renderizar el campo WebGL. Cambia a la vista de resumen sin mapa para los mismos datos.",
+      "noWebglHint": "Usa la vista 'Resumen sin mapa' de arriba."
+    },
+    "summary": {
+      "head": "{{bound}} · celdas más elevadas · P(≥1 evento ≥ M{{m}}) en {{days}} día(s)",
+      "cell": "Celda",
+      "probability": "Probabilidad",
+      "baseline": "Línea base",
+      "ratio": "Razón",
+      "ratioTip": "Probabilidad del pronóstico dividida por la probabilidad de la línea base de largo plazo.",
+      "rest": "+ {{count}} celdas más cerca de la línea base (no mostradas).",
+      "baselineNote": "Cada celda muestra el pronóstico junto a su línea base de largo plazo, tanto como razón como probabilidad absoluta — una razón grande sobre una línea base casi cero sigue leyéndose 'aún muy improbable'.",
+      "empty": "No hay celdas sobre el piso de tasa para este corte — el campo está en el fondo en todo lo mostrado."
+    },
+    "detail": {
+      "aria": "Detalle de la celda seleccionada",
+      "close": "Cerrar",
+      "context": "P(≥1 evento ≥ M{{m}}) en {{days}} día(s)",
+      "absolute": "Probabilidad absoluta",
+      "baseline": "Línea base de largo plazo",
+      "ratio": "Razón a la línea base",
+      "rate": "Conteo esperado (λ·T)",
+      "honesty": "Las cotas son un rango epistémico + aleatorio real, no un intervalo cosmético. Una razón grande sobre una línea base pequeña sigue siendo pequeña en términos absolutos."
+    },
+    "staleness": {
+      "generated": "Pronóstico generado:",
+      "next": "próxima ejecución:",
+      "failed": "La última ejecución diaria no se completó — el campo está desaturado y puede estar obsoleto."
+    },
+    "coverageNote": "{{count}} celda(s) están explícitamente fuera de la cobertura validada y aparecen achuradas en el mapa — en blanco nunca significa seguro.",
+    "provenanceNote": "Esquema de artefacto {{schema}} · emitido {{issued}}. Servido estático, solo lectura; sin inferencia por solicitud."
+  }
+}

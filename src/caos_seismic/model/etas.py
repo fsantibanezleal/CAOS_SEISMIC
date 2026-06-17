@@ -1,0 +1,734 @@
+"""Space-time ETAS (Ogata 1998) — the primary conditional estimator *and* the reference to beat.
+
+The Epidemic-Type Aftershock Sequence model is the physics-free, self-exciting Hawkes point process
+that is the de-facto operational baseline for short-horizon seismicity forecasting. Any candidate
+forecaster (neural or otherwise) must demonstrate positive, significant information gain over a
+well-fit ETAS in prospective CSEP-style testing, or it adds no forecasting skill (model-design §1.1).
+
+Conditional intensity (model-design §1.2; configs/etas.yaml)::
+
+    lambda(t,x,y | H_t) = mu(x,y) + sum_{i: t_i < t} k(m_i) g(t - t_i) f(r | m_i)
+
+with the canonical Ogata-1998 *separable* kernels:
+
+  * Utsu productivity:        k(m) = K e^{alpha (m - M0)}
+  * Omori-Utsu temporal decay: g(t) = (p - 1) / c * (1 + t/c)^{-p}            [days, integrates to 1]
+  * Inverse-power spatial:     f(r | m) = (q - 1) / (pi zeta^2) (1 + r^2/zeta^2)^{-q},
+                               zeta(m) = D e^{gamma (m - M0)}                  [integrates to 1 over plane]
+
+The background term ``mu(x, y)`` is supplied by the adaptive smoothed-seismicity field
+(:class:`~caos_seismic.model.smoothed.SmoothedSeismicityForecaster`) fit on a *declustered* catalog —
+the dual-catalog rule (model-design §5). The triggering sum uses the *full, un-declustered* catalog,
+because aftershock/foreshock triggering *is* the predictable signal.
+
+The magnitude distribution is independent of history (separability) and follows Gutenberg-Richter,
+so the expected count above a display threshold ``M*`` is the integrated intensity times the GR tail
+fraction, and the public probability is the non-homogeneous Poisson exceedance
+``P(>=1) = 1 - e^{-N}`` (model-design §3.2). This formula never changes; only the quality of the rate
+feeding ``N`` improves.
+
+**Stability — two distinct gates (kept separate, both enforced after the fit):**
+
+1. ``alpha < beta`` with ``beta = b ln 10`` is required for the productivity x magnitude integral to
+   converge (finite branching ratio ``n``).
+2. Given that, ``n < 1`` is the subcritical / stationary condition. A fit with ``n >= 1`` is
+   supercritical (explosive) and is rejected as a mis-fit.
+
+References
+----------
+Ogata, Y. (1988), *JASA* 83(401), 9-27, doi:10.1080/01621459.1988.10478560.
+Ogata, Y. (1998), *Ann. Inst. Statist. Math.* 50(2), 379-402, doi:10.1023/A:1003403601725.
+Zhuang, J., Ogata, Y. & Vere-Jones, D. (2002), *JASA* 97(458), 369-380 (stochastic declustering /
+    branching-ratio formulation), doi:10.1198/016214502760046925.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+import numpy as np
+import pandas as pd
+
+from ..contracts import BaseForecaster, Cell, Region, validate_catalog
+from ._common import (
+    DEG2KM,
+    LN10,
+    bvalue_aki_utsu,
+    gr_exceedance_fraction,
+    haversine_km,
+    poisson_p_at_least_one,
+    sample_truncated_gr,
+)
+from .smoothed import SmoothedSeismicityForecaster
+
+#: Order of the seven fitted parameters in the optimizer vector.
+PARAM_NAMES: tuple[str, ...] = ("K", "alpha", "c", "p", "D", "gamma", "q")
+
+#: Default optimizer bounds (configs/etas.yaml ``fit.bounds``). Distances ``D`` in degrees, times
+#: ``c`` in days. Used when a caller does not override them. ``q > 1`` keeps the spatial integral
+#: finite; ``p > 1`` keeps the temporal kernel normalizable as a proper density.
+DEFAULT_BOUNDS: dict[str, tuple[float, float]] = {
+    "K": (1.0e-6, 10.0),
+    "alpha": (0.1, 2.5),
+    "c": (1.0e-4, 1.0),
+    "p": (0.8, 1.5),
+    "D": (1.0e-4, 1.0),
+    "gamma": (0.1, 2.0),
+    "q": (1.1, 3.0),
+}
+
+
+class ETASStabilityError(ValueError):
+    """Raised when a fitted ETAS violates a stability gate (alpha >= beta, or branching ratio n >= 1).
+
+    Carries the offending quantities so the caller / manifest can record *why* the fit was rejected
+    rather than silently publishing a supercritical (explosive) intensity.
+    """
+
+    def __init__(self, message: str, *, alpha: float, beta: float, branching_ratio: float) -> None:
+        super().__init__(message)
+        self.alpha = alpha
+        self.beta = beta
+        self.branching_ratio = branching_ratio
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Separable Ogata-1998 kernels (each normalized to integrate to 1 over its domain)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def utsu_productivity(m: np.ndarray | float, K: float, alpha: float, m0: float) -> np.ndarray:
+    """Utsu productivity ``k(m) = K e^{alpha (m - M0)}`` — expected direct aftershocks of an event ``m``.
+
+    This is the *number* of first-generation offspring an event of magnitude ``m`` triggers; the
+    temporal and spatial kernels below distribute that number over time and space as densities.
+    """
+    return K * np.exp(alpha * (np.asarray(m, dtype=float) - m0))
+
+
+def omori_utsu_density(t: np.ndarray | float, c: float, p: float) -> np.ndarray:
+    """Omori-Utsu temporal *density* ``g(t) = (p-1)/c (1 + t/c)^{-p}`` (days), integrating to 1 on ``[0, inf)``.
+
+    Normalized form (requires ``p > 1``): :math:`\\int_0^\\infty g(t)\\,dt = 1`, so multiplying by the
+    productivity ``k(m)`` gives a kernel whose time-integral is exactly ``k(m)`` expected offspring.
+    """
+    t = np.asarray(t, dtype=float)
+    return (p - 1.0) / c * np.power(1.0 + t / c, -p)
+
+
+def omori_utsu_cumulative(t: np.ndarray | float, c: float, p: float) -> np.ndarray:
+    """Cumulative Omori-Utsu mass ``G(t) = 1 - (1 + t/c)^{-(p-1)}`` on ``[0, t]`` (fraction of offspring).
+
+    For ``p > 1`` this is the integral of :func:`omori_utsu_density` and lies in ``[0, 1)``; it gives
+    the expected fraction of an event's aftershocks that have occurred within ``t`` days. Used to
+    integrate the triggering contribution over a forecast window in closed form (no quadrature).
+    """
+    t = np.asarray(t, dtype=float)
+    return 1.0 - np.power(1.0 + t / c, -(p - 1.0))
+
+
+def spatial_scale(m: np.ndarray | float, D: float, gamma: float, m0: float) -> np.ndarray:
+    """Magnitude-dependent spatial scale ``zeta(m) = D e^{gamma (m - M0)}`` (degrees).
+
+    Larger events spread their aftershocks over a wider area; ``D`` sets the scale at the reference
+    magnitude ``M0`` and ``gamma`` controls how fast the aftershock zone grows with magnitude.
+    """
+    return D * np.exp(gamma * (np.asarray(m, dtype=float) - m0))
+
+
+def spatial_density(
+    r_deg: np.ndarray | float, m: np.ndarray | float, D: float, gamma: float, q: float, m0: float
+) -> np.ndarray:
+    """Inverse-power spatial *density* ``f(r | m) = (q-1)/(pi zeta^2) (1 + r^2/zeta^2)^{-q}``.
+
+    ``r_deg`` is the epicentral distance in degrees (small-region planar approximation, consistent
+    with the 0.1° fit grid). Normalized so :math:`\\int_0^\\infty 2\\pi r f(r|m)\\,dr = 1` for ``q > 1``,
+    i.e. the kernel distributes exactly one event's worth of probability mass over the plane.
+    """
+    zeta = spatial_scale(m, D, gamma, m0)
+    r2 = np.asarray(r_deg, dtype=float) ** 2
+    return (q - 1.0) / (np.pi * zeta**2) * np.power(1.0 + r2 / zeta**2, -q)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# The forecaster
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+@dataclass
+class ETASForecaster(BaseForecaster):
+    """Space-time ETAS (Ogata 1998) conditional forecaster — the production estimator and reference.
+
+    Fit by maximum likelihood on the **full un-declustered** catalog slice before ``t_issue``; the
+    background ``mu(x, y)`` is delegated to an adaptive smoothed-seismicity field fit on the
+    *declustered* catalog (dual-catalog rule, model-design §5). After every fit, both stability gates
+    are enforced (:class:`ETASStabilityError` on violation). Forecasting uses the simulation-free
+    closed-form expected count by default; :meth:`simulate` provides the seeded synthetic-catalog
+    Monte-Carlo path used for over-dispersion-honest bounds.
+
+    Parameters
+    ----------
+    m0:
+        Reference magnitude ``M0`` for the productivity / spatial-scale exponents (configs/etas.yaml
+        ``m0``); must be at/above the target ``m_min``.
+    mc, b_value:
+        Magnitude of completeness and Gutenberg-Richter ``b``. If ``None`` they are estimated on the
+        fit catalog (``b`` via the binning-corrected Aki-Utsu MLE; ``mc`` defaults to the catalog
+        minimum ``mw`` as a conservative proxy — the real pipeline passes the rolling per-region Mc).
+    bounds:
+        Optimizer box constraints per parameter (defaults to :data:`DEFAULT_BOUNDS`).
+    require_alpha_lt_beta, reject_supercritical:
+        The two independent stability gates (configs/etas.yaml ``stability``). Both default on.
+    background:
+        An already-constructed :class:`SmoothedSeismicityForecaster` for ``mu(x, y)``. If ``None`` one
+        is built with default hyperparameters and fit on the (declustered) catalog passed to
+        :meth:`fit`. Pass an explicitly declustered-catalog-fit instance to honor the dual-catalog
+        rule precisely.
+    integration_steps:
+        Number of sub-steps used for the time integral of the productivity term inside the forecast
+        window (the spatial/magnitude parts are closed-form; only the residual coupling between the
+        window edge and each parent's age needs a light quadrature).
+    """
+
+    name: str = "etas"
+    version: str = "0.1.0"
+
+    m0: float = 3.5
+    mc: float | None = None
+    b_value: float | None = None
+    bounds: dict[str, tuple[float, float]] = field(default_factory=lambda: dict(DEFAULT_BOUNDS))
+    require_alpha_lt_beta: bool = True
+    reject_supercritical: bool = True
+    background: SmoothedSeismicityForecaster | None = None
+    integration_steps: int = 24
+
+    # ── Fitted state ─────────────────────────────────────────────────────────
+    params: dict[str, float] = field(default_factory=dict, repr=False)
+    _b: float = field(default=0.0, repr=False)
+    _mc: float = field(default=0.0, repr=False)
+    _beta: float = field(default=0.0, repr=False)
+    _branching_ratio: float = field(default=0.0, repr=False)
+    _t_issue: pd.Timestamp | None = field(default=None, repr=False)
+    _region: Region | None = field(default=None, repr=False)
+    # Parent catalog (events before t_issue), arrays for fast vectorized intensity.
+    _ev_t: np.ndarray | None = field(default=None, repr=False)  # days before t_issue (>= 0)
+    _ev_lat: np.ndarray | None = field(default=None, repr=False)
+    _ev_lon: np.ndarray | None = field(default=None, repr=False)
+    _ev_m: np.ndarray | None = field(default=None, repr=False)
+    _loglik: float = field(default=float("nan"), repr=False)
+    params_used: dict = field(default_factory=dict, repr=False)
+
+    # ── Forecaster.fit ───────────────────────────────────────────────────────
+    def fit(self, catalog: pd.DataFrame, region: Region, t_issue: pd.Timestamp) -> "ETASForecaster":
+        """MLE-fit the seven ETAS parameters on the full un-declustered catalog before ``t_issue``.
+
+        Steps:
+
+        1. Slice the catalog to ``time < t_issue`` (leakage backstop on top of the forecast clock).
+        2. Estimate ``Mc`` / ``b`` (hence ``beta = b ln 10``) unless fixed by the caller.
+        3. Build the smoothed-seismicity background ``mu(x, y)`` if one was not supplied.
+        4. Maximize the space-time point-process log-likelihood by L-BFGS-B over the bounded box.
+        5. Enforce the two stability gates; raise :class:`ETASStabilityError` if either fails.
+
+        Returns ``self``. Raises ``ValueError`` for an empty/degenerate fit window and
+        :class:`ETASStabilityError` for a supercritical / non-convergent fit.
+        """
+        validate_catalog(catalog)
+        df = catalog.loc[catalog["time"] < t_issue].copy()
+        if df.empty:
+            raise ValueError("no events strictly before t_issue to fit ETAS")
+        df = df.sort_values("time")
+
+        self._t_issue = pd.Timestamp(t_issue)
+        self._region = region
+
+        # Completeness + b-value (estimated, never hard-coded to 1.0).
+        self._mc = float(self.mc) if self.mc is not None else float(df["mw"].min())
+        complete = df.loc[df["mw"] >= self._mc - 1e-9]
+        if len(complete) < 2:
+            raise ValueError(f"need >= 2 events at/above Mc={self._mc} to fit ETAS")
+        if self.b_value is not None:
+            self._b = float(self.b_value)
+        else:
+            self._b, _ = bvalue_aki_utsu(complete["mw"].to_numpy(), self._mc, delta_m=0.1)
+        self._beta = self._b * LN10
+
+        # Parent-event arrays (ages in days before t_issue, >= 0).
+        t_days = (self._t_issue - complete["time"]).dt.total_seconds().to_numpy() / 86400.0
+        self._ev_t = np.clip(t_days, 0.0, None)
+        self._ev_lat = complete["latitude"].to_numpy(dtype=float)
+        self._ev_lon = complete["longitude"].to_numpy(dtype=float)
+        self._ev_m = complete["mw"].to_numpy(dtype=float)
+        train_days = float(max(self._ev_t.max(), 1.0))  # observation window length T
+
+        # Background mu(x, y): use the supplied (ideally declustered-catalog-fit) field, else build one.
+        if self.background is None:
+            self.background = SmoothedSeismicityForecaster(
+                b_value=self._b, mc=self._mc
+            ).fit(catalog, region, t_issue)
+        elif self.background._ev_lat is None:  # not yet fit
+            self.background.fit(catalog, region, t_issue)
+
+        # MLE over the bounded parameter box.
+        best = self._maximize_likelihood(train_days)
+        self.params = best
+        self._loglik = -self._negative_loglik(self._vector(best), train_days)
+
+        # Stability gates (kept separate, both checked).
+        self._branching_ratio = self._compute_branching_ratio(best)
+        self._enforce_stability(best)
+
+        self.params_used = {
+            **best,
+            "m0": self.m0,
+            "mc": self._mc,
+            "b": self._b,
+            "beta": self._beta,
+            "branching_ratio": self._branching_ratio,
+            "loglik": self._loglik,
+            "n_parents": int(self._ev_t.size),
+            "train_days": train_days,
+            "background": self.background.name,
+            "gates": {
+                "require_alpha_lt_beta": self.require_alpha_lt_beta,
+                "reject_supercritical": self.reject_supercritical,
+            },
+        }
+        return self
+
+    # ── Likelihood machinery ──────────────────────────────────────────────────
+    def _vector(self, params: dict[str, float]) -> np.ndarray:
+        return np.array([params[k] for k in PARAM_NAMES], dtype=float)
+
+    def _unpack(self, x: np.ndarray) -> dict[str, float]:
+        return {k: float(v) for k, v in zip(PARAM_NAMES, x)}
+
+    def _background_density_deg2(self, lat: float, lon: float) -> float:
+        """Background rate ``mu(x, y)`` in events / day / **deg^2** at a point.
+
+        The smoothed-seismicity field reports ``mu`` in events / day / km^2, whereas the ETAS spatial
+        kernel :func:`spatial_density` is normalized per **deg^2** (its scale ``zeta`` is in degrees).
+        Adding the two requires a common areal unit, so the per-km^2 background is converted to per-deg^2
+        using the local area element ``km^2 per deg^2 = DEG2KM^2 * cos(lat)``. Doing this keeps the
+        background and triggering terms on the same footing (the bug that otherwise lets the MLE inflate
+        ``K`` because a per-km^2 background is ~10^4x too small next to a per-deg^2 trigger).
+        """
+        km2_per_deg2 = (DEG2KM**2) * np.cos(np.radians(lat))
+        return self.background.background_rate_density(lat, lon) * km2_per_deg2
+
+    def _conditional_intensity_at_events(self, p: dict[str, float]) -> np.ndarray:
+        """Background + triggering intensity evaluated at each observed event time/place (the sum term).
+
+        For event ``j`` only earlier events ``i < j`` (strictly older, larger age) contribute to the
+        triggering sum — the Hawkes causality constraint. ``mu`` is the smoothed background rate at the
+        event location. Returns an array of ``lambda(t_j, x_j, y_j)`` values (events / day / deg^2-ish
+        intensity in the planar approximation), used in the first (log) term of the log-likelihood.
+        """
+        K, alpha, c, pp, D, gamma, q = self._vector(p)
+        n = self._ev_t.size
+        # Ages decrease with index because the catalog is time-sorted ascending; convert to forward
+        # time so that "earlier event" == "larger age". age[k] = days before t_issue.
+        age = self._ev_t
+        lam = np.empty(n, dtype=float)
+        for j in range(n):
+            # parents are events strictly older than j (age_i > age_j).
+            mask = age > age[j] + 1e-12
+            mu = self._background_density_deg2(self._ev_lat[j], self._ev_lon[j])
+            if not np.any(mask):
+                lam[j] = mu
+                continue
+            dt = age[mask] - age[j]  # days since each parent (positive)
+            r_km = haversine_km(self._ev_lat[j], self._ev_lon[j], self._ev_lat[mask], self._ev_lon[mask])
+            r_deg = r_km / DEG2KM
+            k_m = utsu_productivity(self._ev_m[mask], K, alpha, self.m0)
+            g_t = omori_utsu_density(dt, c, pp)
+            f_r = spatial_density(r_deg, self._ev_m[mask], D, gamma, q, self.m0)
+            lam[j] = mu + float(np.sum(k_m * g_t * f_r))
+        return lam
+
+    def _integrated_intensity(self, p: dict[str, float], train_days: float) -> float:
+        """``∫_0^T ∫_A lambda dx dy dt`` — the compensator term of the log-likelihood.
+
+        With separable, individually-normalized kernels the triggering integral collapses in closed
+        form: each parent contributes ``k(m_i) * G(T - t_i)`` expected offspring over the window
+        (its spatial kernel integrates to 1 over the plane, its temporal kernel to ``G`` over the
+        elapsed window). The background contributes ``mu_total * T`` where ``mu_total`` is the
+        region-integrated background rate (events / day), recovered from the smoothed field's own
+        normalization (its spatial integral equals the declustered event rate per day).
+        """
+        K, alpha, c, pp, D, gamma, q = self._vector(p)
+        # Background mass over the window: the smoothed field integrates to its declustered rate/day.
+        bg_total = float(self.background._rate_per_day) * train_days
+        # Triggering mass: each parent's productivity times the temporal CDF over its in-window age.
+        # A parent of age a (days before t_issue) was active for (train_days - a) ... T of the window;
+        # but the compensator integrates the *future* contribution within [0, T]. For an event that
+        # occurred at forward time s_i = train_days - age_i within the window, its offspring mass over
+        # the remaining window is k(m_i) * G(T - s_i) = k(m_i) * G(age_i). So age_i is exactly the
+        # elapsed time available for triggering inside the observation window.
+        k_m = utsu_productivity(self._ev_m, K, alpha, self.m0)
+        g_cdf = omori_utsu_cumulative(self._ev_t, c, pp)
+        trig_total = float(np.sum(k_m * g_cdf))
+        return bg_total + trig_total
+
+    def _negative_loglik(self, x: np.ndarray, train_days: float) -> float:
+        """Negative space-time point-process log-likelihood ``-(sum ln lambda_i - ∫∫∫ lambda)``.
+
+        Minimized by the optimizer. Guards against non-positive intensities (returns a large finite
+        penalty) so L-BFGS-B never sees ``log(<=0)``.
+        """
+        p = self._unpack(x)
+        lam = self._conditional_intensity_at_events(p)
+        if np.any(~np.isfinite(lam)) or np.any(lam <= 0):
+            return 1e12
+        ll = float(np.sum(np.log(lam))) - self._integrated_intensity(p, train_days)
+        if not np.isfinite(ll):
+            return 1e12
+        return -ll
+
+    def _maximize_likelihood(self, train_days: float) -> dict[str, float]:
+        """Bounded L-BFGS-B MLE from a data-informed start, with a coarse multi-start for robustness.
+
+        SciPy is imported lazily so the package stays importable with numpy alone; a clear error is
+        raised if SciPy is unavailable. The starting point puts ``alpha`` safely below ``beta`` to seed
+        a subcritical region, and the optimizer is restarted from a few perturbations to avoid shallow
+        local optima in the (mildly multimodal) ETAS likelihood.
+        """
+        try:
+            from scipy.optimize import minimize
+        except ModuleNotFoundError as exc:  # pragma: no cover - exercised only without scipy
+            raise ModuleNotFoundError(
+                "ETAS MLE requires SciPy (scipy.optimize). Install the 'scipy' dependency."
+            ) from exc
+
+        bnds = [self.bounds[k] for k in PARAM_NAMES]
+
+        def clamp(name: str, value: float) -> float:
+            lo, hi = self.bounds[name]
+            return float(min(max(value, lo), hi))
+
+        # Data-informed start: alpha just under beta (subcritical), Omori p slightly > 1, modest K.
+        alpha0 = clamp("alpha", min(0.8, 0.9 * self._beta))
+        x0 = np.array(
+            [
+                clamp("K", 0.1),
+                alpha0,
+                clamp("c", 0.01),
+                clamp("p", 1.1),
+                clamp("D", 0.05),
+                clamp("gamma", 0.5),
+                clamp("q", 1.5),
+            ],
+            dtype=float,
+        )
+
+        starts = [x0]
+        rng = np.random.default_rng(0)
+        for _ in range(3):
+            perturb = x0 * (1.0 + 0.25 * rng.standard_normal(x0.size))
+            perturb = np.array([clamp(k, v) for k, v in zip(PARAM_NAMES, perturb)])
+            starts.append(perturb)
+
+        best_x, best_f = None, np.inf
+        for s in starts:
+            res = minimize(
+                self._negative_loglik,
+                s,
+                args=(train_days,),
+                method="L-BFGS-B",
+                bounds=bnds,
+                options={"maxiter": 500, "ftol": 1e-9},
+            )
+            if res.fun < best_f:
+                best_f, best_x = float(res.fun), res.x
+        if best_x is None:  # pragma: no cover - minimize always returns something
+            best_x = x0
+        return self._unpack(best_x)
+
+    def _compute_branching_ratio(self, p: dict[str, float]) -> float:
+        """Branching ratio ``n`` = expected direct offspring per event, integrated over the GR law.
+
+        With ``k(m) = K e^{alpha(m - M0)}`` and the bounded GR density ``f(m) = beta e^{-beta(m-Mc)} /
+        (1 - e^{-beta(m_max-Mc)})`` on ``[Mc, m_max]``, and the temporal/spatial kernels each
+        integrating to 1::
+
+            n = K e^{alpha(Mc - M0)} * beta / (beta - alpha)
+                * (1 - e^{-(beta - alpha)(m_max - Mc)}) / (1 - e^{-beta (m_max - Mc)})
+
+        valid for ``alpha < beta`` (finite-branching gate 1). When ``alpha >= beta`` the integral
+        diverges (unbounded ``m_max``) or is dominated by the largest events; we return ``+inf`` to
+        force rejection by gate 1. ``m_max`` comes from the region (bounded GR), which keeps ``n``
+        finite and physical even near ``alpha ~ beta``.
+
+        References: Zhuang et al. (2002); Helmstetter & Sornette (2003), *JGR* 108(B10), 2457.
+        """
+        K, alpha = p["K"], p["alpha"]
+        beta, mc = self._beta, self._mc
+        m_max = float(self._region.m_max) if self._region is not None else mc + 4.0
+        base = K * np.exp(alpha * (mc - self.m0))
+        span = m_max - mc
+        denom_norm = 1.0 - np.exp(-beta * span)  # GR normalization on [Mc, m_max]
+        if denom_norm <= 0:
+            return float("inf")
+        if abs(beta - alpha) < 1e-9:
+            # limit: integral of e^{(alpha-beta)(m-Mc)} over the span -> span itself.
+            integral = beta * span
+        else:
+            integral = beta / (beta - alpha) * (1.0 - np.exp(-(beta - alpha) * span))
+        n = float(base * integral / denom_norm)
+        return n if np.isfinite(n) and n >= 0 else float("inf")
+
+    def _enforce_stability(self, p: dict[str, float]) -> None:
+        """Apply the two independent stability gates; raise :class:`ETASStabilityError` on violation."""
+        alpha = p["alpha"]
+        if self.require_alpha_lt_beta and not (alpha < self._beta):
+            raise ETASStabilityError(
+                f"ETAS finite-branching gate failed: alpha={alpha:.4f} >= beta={self._beta:.4f} "
+                f"(beta = b ln10, b={self._b:.3f}); productivity x magnitude integral diverges.",
+                alpha=alpha,
+                beta=self._beta,
+                branching_ratio=self._branching_ratio,
+            )
+        if self.reject_supercritical and not (self._branching_ratio < 1.0):
+            raise ETASStabilityError(
+                f"ETAS supercritical: branching ratio n={self._branching_ratio:.4f} >= 1 "
+                "(explosive cascade — rejected as a mis-fit).",
+                alpha=alpha,
+                beta=self._beta,
+                branching_ratio=self._branching_ratio,
+            )
+
+    # ── Conditional intensity at an arbitrary forecast point ───────────────────
+    def conditional_intensity(
+        self, t_days_ahead: float, lat: float, lon: float, *, parents_only_before_issue: bool = True
+    ) -> float:
+        """Conditional intensity ``lambda(t, x, y | H_t)`` at ``t_issue + t_days_ahead`` and ``(lat, lon)``.
+
+        Background plus the triggering sum over all parent events (the catalog before ``t_issue``).
+        ``t_days_ahead`` is measured forward from ``t_issue``; each parent's elapsed time is its
+        pre-issue age plus ``t_days_ahead``. Returns the intensity in events / day / deg^2 (planar
+        approximation). This is the quantity integrated by :meth:`expected_counts`.
+        """
+        self._require_fit()
+        K, alpha, c, pp, D, gamma, q = self._vector(self.params)
+        mu = self._background_density_deg2(lat, lon)  # events / day / deg^2 (matches the spatial kernel)
+        dt = self._ev_t + float(t_days_ahead)  # elapsed days since each parent at the forecast time
+        r_km = haversine_km(lat, lon, self._ev_lat, self._ev_lon)
+        r_deg = r_km / DEG2KM
+        k_m = utsu_productivity(self._ev_m, K, alpha, self.m0)
+        g_t = omori_utsu_density(dt, c, pp)
+        f_r = spatial_density(r_deg, self._ev_m, D, gamma, q, self.m0)
+        return float(mu + np.sum(k_m * g_t * f_r))
+
+    # ── Forecaster.expected_counts ─────────────────────────────────────────────
+    def expected_counts(
+        self,
+        region: Region,
+        cells: list[Cell],
+        horizon_days: float,
+        m_threshold: float,
+        t_issue: pd.Timestamp,
+    ) -> list[float]:
+        """Expected count ``N_{>=M*}`` per cell over ``[t_issue, t_issue + horizon_days)``.
+
+        Implements the methodology integral (model-design §3.2)::
+
+            N_{>=M*} = ∫∫ lambda(t,x,y) dx dt * 10^{-b (M* - Mc)}            (bounded GR tail)
+
+        Per cell we integrate the conditional intensity over the horizon (light time quadrature; the
+        background part is time-flat) times the cell area, then multiply by the Gutenberg-Richter
+        exceedance fraction :func:`gr_exceedance_fraction` (bounded by the region ``m_max``). The
+        public probability is then ``1 - e^{-N}`` (see :meth:`forecast_probabilities`).
+        """
+        self._require_fit()
+        cell_area_deg2 = self._cell_area_deg2(cells)
+        mag_frac = gr_exceedance_fraction(m_threshold, self._b, self._mc, region.m_max)
+        if mag_frac <= 0.0:
+            return [0.0] * len(cells)
+
+        # Time quadrature nodes over [0, horizon) (midpoint rule); background is time-constant so the
+        # only time-dependence is the Omori decay of the triggering term.
+        steps = max(int(self.integration_steps), 1)
+        edges = np.linspace(0.0, float(horizon_days), steps + 1)
+        mids = 0.5 * (edges[:-1] + edges[1:])
+        dts = np.diff(edges)
+
+        out: list[float] = []
+        for cell in cells:
+            integral = 0.0
+            for s, w in zip(mids, dts):
+                integral += self.conditional_intensity(float(s), cell.lat, cell.lon) * float(w)
+            n = integral * cell_area_deg2 * mag_frac
+            out.append(max(n, 0.0))
+        return out
+
+    def forecast_probabilities(
+        self,
+        region: Region,
+        cells: list[Cell],
+        horizon_days: float,
+        m_threshold: float,
+        t_issue: pd.Timestamp,
+    ) -> list[float]:
+        """Convenience: per-cell ``P(>=1 event >= M*) = 1 - e^{-N}`` (the public exceedance formula)."""
+        return [
+            poisson_p_at_least_one(n)
+            for n in self.expected_counts(region, cells, horizon_days, m_threshold, t_issue)
+        ]
+
+    # ── Seeded synthetic-catalog simulation (Monte-Carlo path for over-dispersion bounds) ──
+    def simulate(
+        self,
+        region: Region,
+        horizon_days: float,
+        *,
+        seed: int,
+        m_min: float | None = None,
+        max_generations: int = 100,
+    ) -> pd.DataFrame:
+        """Simulate ONE synthetic next-window catalog over ``[t_issue, t_issue + horizon_days)``.
+
+        Branching-process (thinning) simulation seeded by ``seed`` for byte-reproducibility:
+
+        * **Background** events are drawn as a homogeneous Poisson process in time with the
+          region-integrated background rate, placed spatially by sampling the smoothed field's parent
+          events (each background event inherits a fitted-bandwidth Gaussian jitter around a randomly
+          chosen historical epicenter — a fast, normalization-consistent surrogate for the kernel).
+        * **Aftershocks** of every existing parent (historical *and* newly simulated) are generated
+          generation-by-generation: a parent of magnitude ``m`` spawns ``Poisson(k(m) * remaining
+          Omori mass in window)`` offspring, each with an Omori-distributed time, an inverse-power
+          spatial offset (``zeta(m)`` scale), and a bounded-GR magnitude.
+
+        The loop terminates when no generation produces offspring inside the window (guaranteed in
+        finite time because the fit is subcritical, ``n < 1``) or after ``max_generations``.
+
+        Returns a DataFrame with the catalog columns (``time, latitude, longitude, mw, mag, mag_type,
+        source, event_id``) for the synthetic events only. Drawing many of these with different seeds
+        and binning per cell yields the over-dispersion-honest catalog-based forecast and the
+        P10/median/P90 bounds (model-design §7.2, §9 step 4).
+        """
+        self._require_fit()
+        rng = np.random.default_rng(seed)
+        K, alpha, c, pp, D, gamma, q = self._vector(self.params)
+        m_max = float(region.m_max)
+        mc = self._mc
+        m_min = float(m_min) if m_min is not None else mc
+        T = float(horizon_days)
+
+        rows: list[dict] = []
+
+        # 1) Background events: homogeneous Poisson in time at the region-integrated rate.
+        bg_rate_per_day = float(self.background._rate_per_day)
+        n_bg = int(rng.poisson(bg_rate_per_day * T))
+        if n_bg > 0 and self.background._ev_lat is not None and self.background._ev_lat.size > 0:
+            parent_idx = rng.integers(0, self.background._ev_lat.size, size=n_bg)
+            for k in range(n_bg):
+                pi = int(parent_idx[k])
+                d_km = float(self.background._ev_d[pi])  # adaptive bandwidth (km) as jitter scale
+                jitter_deg = (d_km / DEG2KM) * rng.standard_normal(2)
+                lat = float(self.background._ev_lat[pi] + jitter_deg[0])
+                lon = float(self.background._ev_lon[pi] + jitter_deg[1])
+                t = float(rng.random() * T)
+                m = float(sample_truncated_gr(rng, 1, self._b, mc, m_max)[0])
+                rows.append(self._mk_event(t, lat, lon, m, "sim_background"))
+
+        # 2) Branching cascade. Seed the queue with (a) historical parents (their in-window offspring)
+        #    and (b) the freshly simulated background events.
+        # Historical parents trigger offspring over the *remaining* window; their pre-issue age shifts
+        # the Omori clock so a long-decayed mainshock contributes little.
+        Generation = list[tuple[float, float, float, float]]  # (t_in_window, lat, lon, m)
+        queue: Generation = [
+            (-float(age), float(la), float(lo), float(mm))
+            for age, la, lo, mm in zip(self._ev_t, self._ev_lat, self._ev_lon, self._ev_m)
+        ]
+        queue += [(r["_t"], r["latitude"], r["longitude"], r["mw"]) for r in rows]
+
+        for _gen in range(max_generations):
+            next_queue: Generation = []
+            for (t_parent, la, lo, mm) in queue:
+                # Expected offspring inside the window: productivity * Omori mass from max(t_parent, 0)
+                # to T, measured from the parent's own origin (t_parent may be negative = pre-issue).
+                k_m = float(utsu_productivity(mm, K, alpha, self.m0))
+                t0 = max(t_parent, 0.0)
+                # elapsed-time bounds for the parent's Omori clock within the window:
+                a_lo = t0 - t_parent  # age at window start for this parent (>= 0)
+                a_hi = T - t_parent    # age at window end
+                if a_hi <= a_lo:
+                    continue
+                mass = float(
+                    omori_utsu_cumulative(a_hi, c, pp) - omori_utsu_cumulative(a_lo, c, pp)
+                )
+                lam = k_m * max(mass, 0.0)
+                n_off = int(rng.poisson(lam)) if lam > 0 else 0
+                for _ in range(n_off):
+                    # Omori-distributed age within [a_lo, a_hi] via inverse-CDF on the truncated kernel.
+                    u = rng.random()
+                    g_lo = float(omori_utsu_cumulative(a_lo, c, pp))
+                    g_hi = float(omori_utsu_cumulative(a_hi, c, pp))
+                    g = g_lo + u * (g_hi - g_lo)
+                    age = c * ((1.0 - g) ** (-1.0 / (pp - 1.0)) - 1.0)
+                    t_child = t_parent + age
+                    if t_child < 0.0 or t_child >= T:
+                        continue
+                    # Inverse-power spatial offset at scale zeta(mm); isotropic direction.
+                    zeta_deg = float(spatial_scale(mm, D, gamma, self.m0))
+                    uu = rng.random()
+                    r_deg = zeta_deg * np.sqrt((1.0 - uu) ** (-1.0 / (q - 1.0)) - 1.0)
+                    theta = 2.0 * np.pi * rng.random()
+                    lat_c = la + r_deg * np.sin(theta)
+                    lon_c = lo + r_deg * np.cos(theta) / max(np.cos(np.radians(la)), 1e-6)
+                    m_c = float(sample_truncated_gr(rng, 1, self._b, mc, m_max)[0])
+                    rows.append(self._mk_event(float(t_child), float(lat_c), float(lon_c), m_c, "sim_triggered"))
+                    next_queue.append((float(t_child), float(lat_c), float(lon_c), m_c))
+            if not next_queue:
+                break
+            queue = next_queue
+
+        if not rows:
+            return self._empty_catalog()
+        df = pd.DataFrame(rows)
+        df = df.loc[df["mw"] >= m_min - 1e-9].copy()
+        # Convert relative window time to absolute UTC timestamps.
+        df["time"] = self._t_issue + pd.to_timedelta(df["_t"], unit="D")
+        df = df.drop(columns=["_t"]).sort_values("time").reset_index(drop=True)
+        return df
+
+    # ── internals ──────────────────────────────────────────────────────────────
+    def _mk_event(self, t_days: float, lat: float, lon: float, m: float, source: str) -> dict:
+        """Build one synthetic catalog row (relative time kept in ``_t`` until absolute conversion)."""
+        return {
+            "event_id": "",  # filled by caller / dedup if needed
+            "_t": float(t_days),
+            "latitude": float(lat),
+            "longitude": float(lon),
+            "depth_km": np.nan,
+            "mag": float(m),
+            "mag_type": "Mw",
+            "mw": float(m),
+            "source": source,
+        }
+
+    def _empty_catalog(self) -> pd.DataFrame:
+        cols = ["event_id", "time", "latitude", "longitude", "depth_km", "mag", "mag_type", "mw", "source"]
+        return pd.DataFrame({c: pd.Series(dtype="object") for c in cols})
+
+    def _cell_area_deg2(self, cells: list[Cell]) -> float:
+        """Area of one fit cell in deg^2 (matches the planar deg-based spatial kernel normalization).
+
+        The spatial density :func:`spatial_density` is normalized per unit area in *degrees* (its
+        ``zeta`` is in degrees), so the intensity it produces is per deg^2 and the cell area used to
+        turn an intensity into a count must also be in deg^2. We infer the regular pitch from the
+        cell latitudes (the 0.1° fit grid) and correct longitude by ``cos(lat)``.
+        """
+        if len(cells) >= 2:
+            lats = np.array([c.lat for c in cells])
+            pitch = np.median(np.diff(np.unique(np.round(lats, 4))))
+            if not np.isfinite(pitch) or pitch <= 0:
+                pitch = 0.1
+        else:
+            pitch = 0.1
+        mean_lat = float(np.mean([c.lat for c in cells])) if cells else 0.0
+        return float(pitch * pitch * np.cos(np.radians(mean_lat)))
+
+    def _require_fit(self) -> None:
+        if self._ev_t is None or not self.params:
+            raise RuntimeError("ETASForecaster.fit() must be called before use")

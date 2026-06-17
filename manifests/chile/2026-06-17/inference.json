@@ -1,0 +1,48 @@
+{
+  "code_git_sha": "601073531190c1ed1e14849370b392b4cb80016c",
+  "config_hash": "6e9d8c022bb2",
+  "created_at": "2026-06-17T03:53:00Z",
+  "inputs": {
+    "b_value": 0.5109346845920612,
+    "catalog_snapshot_id": "cat-b11ed2c9226ef3aa",
+    "declustering": "none(fallback)",
+    "mc": 3.5,
+    "mc_grid_version": "maxc+0.2/regional_default",
+    "n_background_events": 16,
+    "n_conditioning_events": 16,
+    "t_issue": "2026-06-17T03:52:53Z"
+  },
+  "outputs": {
+    "horizons_days": [
+      1,
+      2,
+      7
+    ],
+    "magnitude_thresholds": [
+      5.0,
+      6.0,
+      7.0
+    ],
+    "model": {
+      "name": "reasenberg_jones",
+      "params": {
+        "a": -1.67,
+        "b": 0.5109346845920612,
+        "c": 0.05,
+        "mainshock": null,
+        "note": "no event >= trigger_min_mag before t_issue; rate = 0 (floors to background)",
+        "p": 1.08,
+        "source": "user"
+      },
+      "version": "0.1.0"
+    },
+    "n_cells": 28000,
+    "n_synthetic_catalogs": 10000,
+    "qa_passed": true
+  },
+  "region_id": "chile",
+  "stage": "inference",
+  "stats": {
+    "qa_reasons": []
+  }
+}

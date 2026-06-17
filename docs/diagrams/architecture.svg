@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" role="img" aria-labelledby="title desc">
+  <title id="title">CAOS_SEISMIC deployment architecture: compute to git to web</title>
+  <desc id="desc">A daily offline compute job on a local GPU workstation fits the model and writes one compact artifact, commits it to a public git repository (git-as-data), and a static web app reads the committed JSON. The runtime is stateless and read-only; heavy compute runs once per day, offline.</desc>
+
+  <!-- palette: bg #0d1117 surface #161b22 border #30363d text #c9d1d9 accent #58a6ff good #3fb950 warn #d29922 bad #f85149 -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58a6ff"/>
+    </marker>
+    <style>
+      .lane   { fill:#0d1117; stroke:#30363d; stroke-width:1.5; rx:14; }
+      .lane-t { fill:#58a6ff; font-size:15px; font-weight:700; letter-spacing:.04em; }
+      .node   { fill:#161b22; stroke:#30363d; stroke-width:1.5; rx:12; }
+      .h      { fill:#c9d1d9; font-size:18px; font-weight:700; }
+      .t      { fill:#c9d1d9; font-size:14px; }
+      .m      { fill:#8b949e; font-size:13px; }
+      .edge   { stroke:#58a6ff; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+      .elbl   { fill:#58a6ff; font-size:13px; font-weight:600; }
+      .accent { fill:#58a6ff; }
+      .good   { fill:#3fb950; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="800" fill="#0d1117"/>
+  <text x="40" y="52" class="accent" font-size="26" font-weight="700">CAOS_SEISMIC — deployment: compute &#8594; git &#8594; web</text>
+  <text x="40" y="80" class="m" font-size="14">Heavy compute runs once per day, offline; the runtime is stateless and read-only.</text>
+
+  <!-- three swim lanes -->
+  <rect class="lane" x="40"  y="110" width="350" height="640"/>
+  <rect class="lane" x="425" y="110" width="350" height="640"/>
+  <rect class="lane" x="810" y="110" width="350" height="640"/>
+  <text class="lane-t" x="60"  y="138">1 · LOCAL GPU WORKSTATION</text>
+  <text class="m"      x="60"  y="158" font-size="13">scheduled daily ~03:00 local</text>
+  <text class="lane-t" x="445" y="138">2 · PUBLIC REPO (git-as-data)</text>
+  <text class="m"      x="445" y="158" font-size="13">one small commit per day</text>
+  <text class="lane-t" x="830" y="138">3 · STATIC WEB</text>
+  <text class="m"      x="830" y="158" font-size="13">no processing backend</text>
+
+  <!-- node 1: daily job -->
+  <rect class="node" x="70" y="190" width="290" height="250"/>
+  <text class="h" x="90" y="222">Daily job  (caos-seismic daily)</text>
+  <text class="t" x="90" y="252">fetch: ComCat + CSN delta (FDSN)</text>
+  <text class="t" x="90" y="278">hygiene: Mc &#183; Mw &#183; decluster</text>
+  <text class="t" x="90" y="304">condition / fit ETAS (+ R-J)</text>
+  <text class="t" x="90" y="330">+ gated GPU challenger</text>
+  <text class="t" x="90" y="356">simulate &#8805;10k catalogs</text>
+  <text class="t" x="90" y="382">calibrate (isotonic) &#183; bounds</text>
+  <text class="m" x="90" y="412">CPU seconds&#8211;minutes; GPU only for</text>
+  <text class="m" x="90" y="430">the challenger + large ensembles</text>
+
+  <!-- node 2: QA gate -->
+  <rect class="node" x="70" y="470" width="290" height="120"/>
+  <text class="h" x="90" y="502">QA gate</text>
+  <text class="t" x="90" y="530">count z-score &#183; no dup/retract</text>
+  <text class="t" x="90" y="556">near M* &#183; rolling N-test drift</text>
+  <text class="m" x="90" y="580" fill="#d29922">fail &#8594; serve &#8220;unavailable&#8221;, never stale</text>
+
+  <!-- node 3: scoped publish -->
+  <rect class="node" x="70" y="620" width="290" height="110"/>
+  <text class="h" x="90" y="652">Scoped publish</text>
+  <text class="t" x="90" y="680">git add results/ manifests/ only</text>
+  <text class="t" x="90" y="704">(never -A) &#8594; commit &#8594; push main</text>
+  <text class="m" x="90" y="724" fill="#3fb950">least-privilege deploy key, never committed</text>
+
+  <!-- node 4: committed artifact -->
+  <rect class="node" x="455" y="250" width="290" height="200"/>
+  <text class="h" x="475" y="282">Committed artifact  [VERSIONED]</text>
+  <text class="t" x="475" y="312">results/forecast-&lt;region&gt;-</text>
+  <text class="t" x="475" y="334">YYYY-MM-DD.json.gz</text>
+  <text class="m" x="475" y="362">per-cell rate + baseline + P10/P90</text>
+  <text class="m" x="475" y="382">+ CSEP summary + coverage mask</text>
+  <text class="t" x="475" y="412">results/index.json (latest +</text>
+  <text class="t" x="475" y="434">rolling calibration)</text>
+
+  <!-- node 5: provenance -->
+  <rect class="node" x="455" y="480" width="290" height="150"/>
+  <text class="h" x="475" y="512">Provenance  [VERSIONED]</text>
+  <text class="t" x="475" y="542">manifests/: config hash, code SHA,</text>
+  <text class="t" x="475" y="568">input snapshot id, Mc grid version</text>
+  <text class="m" x="475" y="596">a few hundred KB&#8211;few MB / day &#8594;</text>
+  <text class="m" x="475" y="614">any past forecast is byte-reproducible</text>
+
+  <!-- node 6: static SPA -->
+  <rect class="node" x="840" y="250" width="290" height="200"/>
+  <text class="h" x="860" y="282">Static SPA</text>
+  <text class="t" x="860" y="312">Vite + React + TS, i18n EN&#8594;ES</text>
+  <text class="t" x="860" y="338">reads index.json &#8594; the JSON</text>
+  <text class="t" x="860" y="364">horizon &#183; bound &#183; region &#183; baseline</text>
+  <text class="t" x="860" y="390">calibration badge &#183; staleness banner</text>
+  <text class="m" x="860" y="420">GitHub Pages / Netlify + CDN cache</text>
+  <text class="m" x="860" y="438" fill="#3fb950">no server computes anything</text>
+
+  <!-- node 7: viewer -->
+  <rect class="node" x="840" y="480" width="290" height="150"/>
+  <text class="h" x="860" y="512">Reader (browser)</text>
+  <text class="t" x="860" y="542">conditional probability in (0,1)</text>
+  <text class="t" x="860" y="568">always shown vs long-term baseline</text>
+  <text class="m" x="860" y="596" fill="#d29922">never an alarm &#183; never a &#8220;safe&#8221; state</text>
+  <text class="m" x="860" y="614">cost scales with bytes served, not compute</text>
+
+  <!-- intra-lane flow arrows -->
+  <path class="edge" d="M215 440 L215 468"/>
+  <path class="edge" d="M215 590 L215 618"/>
+
+  <!-- cross-lane: publish -> committed artifact -->
+  <path class="edge" d="M362 660 C 410 660, 410 380, 453 360"/>
+  <text class="elbl" x="372" y="500">commit + push</text>
+
+  <!-- committed artifact -> SPA -->
+  <path class="edge" d="M747 350 L838 350"/>
+  <text class="elbl" x="752" y="338">served static</text>
+
+  <!-- index/provenance -> reader -->
+  <path class="edge" d="M747 555 L838 555"/>
+  <text class="elbl" x="752" y="543">loaded on boot</text>
+</svg>

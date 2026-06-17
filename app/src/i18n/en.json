@@ -1,0 +1,421 @@
+{
+  "product": {
+    "name": "CAOS_SEISMIC",
+    "tagline": "Conditional probabilistic seismic forecasting",
+    "longTagline": "Bounded, calibrated conditional probabilities over short horizons — forecasts, never predictions, evaluated CSEP-style."
+  },
+  "nav": {
+    "introduction": "Introduction",
+    "problem": "The problem",
+    "methodology": "Methodology",
+    "implementation": "Implementation",
+    "backAnalysis": "Back-analysis",
+    "monitoring": "Monitoring"
+  },
+  "header": {
+    "github": "Source on GitHub",
+    "projects": "More projects",
+    "toggleTheme": "Toggle light / dark theme",
+    "toggleLanguage": "Switch language",
+    "lightThemeShort": "Light",
+    "darkThemeShort": "Dark"
+  },
+  "footer": {
+    "attribution": "Independent research / education tool by Felipe Santibáñez-Leal.",
+    "complement": "Complements official Operational Earthquake Forecasting (USGS, INGV, CSN, GeoNet, JMA); it is not an authoritative civil-protection alarm.",
+    "license": "Open source — public repository.",
+    "version": "Version",
+    "build": "Build",
+    "commit": "Commit"
+  },
+  "disclaimer": {
+    "short": "This product does not predict earthquakes. It emits bounded, calibrated conditional probabilities, always shown next to the long-term baseline, evaluated against what actually happens. It is never an alarm and never a promise of safety.",
+    "creed": "Earthquakes cannot be predicted, but their probability can be forecast — reported honestly, with uncertainty, evaluated against reality, never as an alarm and never as a promise of safety."
+  },
+  "common": {
+    "comingSoon": "Full content for this page is added in the next build phase.",
+    "placeholder": "Scaffold page — wiring only. The real content (copy, equations, diagrams, and the live forecast field) lands in the next phase.",
+    "loading": "Loading…",
+    "notFoundTitle": "Page not found",
+    "notFoundBody": "That route does not exist. Use the navigation above to return to the product.",
+    "references": "References"
+  },
+  "pages": {
+    "introduction": { "title": "Introduction", "intro": "What this product is — and what it is not." },
+    "problem": { "title": "The problem", "intro": "The honest epistemics of earthquake forecasting: prediction is not forecasting." },
+    "methodology": { "title": "Methodology", "intro": "The classical theories and analytical models, with the real governing equations." },
+    "implementation": { "title": "Implementation", "intro": "The model and the daily offline pipeline that produces one compact artifact." },
+    "backAnalysis": { "title": "Back-analysis", "intro": "Retrospective, pseudo-prospective CSEP results across tectonically diverse regions and periods." },
+    "monitoring": { "title": "Monitoring", "intro": "The live daily forecast field: conditional rate elevated relative to its own long-term baseline, with an explicit horizon and magnitude threshold." }
+  },
+  "intro": {
+    "title": "Introduction",
+    "lede": "An independent, honest, calibrated research and education tool for conditional probabilistic seismic forecasting — and a careful statement of what it deliberately is not.",
+    "creedTitle": "The creed",
+    "is": {
+      "title": "What this is",
+      "items": [
+        "An independent, open-source research and education tool that complements official Operational Earthquake Forecasting from agencies (USGS, INGV, CSN, GeoNet, JMA).",
+        "A producer of conditional probabilities: for a region, magnitude band, and horizon (1, 2, or 7 days), the chance of one or more qualifying events — always shown next to the long-term baseline so 'elevated' and 'still small' are visible at once.",
+        "A forecast log: every daily forecast is sealed at issue time and scored prospectively against what actually happens, so the live reliability diagram can be read by anyone.",
+        "Transparent about method: every published number is bounded (P10 / median / P90), evaluated CSEP-style, and reproducible from a versioned daily artifact."
+      ]
+    },
+    "isNot": {
+      "title": "What this is not",
+      "items": [
+        "Not an authoritative civil-protection alarm — it does not replace or compete with official agencies.",
+        "Not a predictor: it never names a time, place, and magnitude, and never renders a binary 'will / will not happen' call.",
+        "Not a 'safe' signal: a blank cell means no forecast or out of coverage, never that an area is safe.",
+        "Not a countdown, a warning siren, or a single-event call — the object is a continuous probability field, not a dot on a map."
+      ]
+    },
+    "conditional": {
+      "title": "Conditional probabilities, not predictions",
+      "body": "The product reports the probability of at least one qualifying earthquake within a chosen region, above a chosen magnitude threshold, over a chosen short horizon. The probability is conditional on the recent seismicity — it rises during an active sequence and relaxes as the sequence decays — and it is always reported next to its long-term baseline.",
+      "example": "For example: the field might read an <b>expected</b> probability of <code>2%</code> for one or more <code>M≥5</code> events in a given cell over the next <code>24 h</code>, against a long-term baseline of <code>0.5%</code> — about <b>4× the usual rate</b>, yet still small in absolute terms. Both numbers are shown together, by design."
+    },
+    "complement": {
+      "title": "It complements official agencies",
+      "body": "Operational Earthquake Forecasting is a real, deployed service — the USGS aftershock forecasts and INGV's OEF-Italy ensemble are probabilistic systems, not predictions. This product sits beside them as an independent, transparent, openly-evaluated reference. It is positioned to inform and to teach, never to issue civil-protection guidance."
+    },
+    "credibility": {
+      "title": "The reliability record is the credibility",
+      "body": "A probabilistic forecast cannot be validated or invalidated by any single outcome. It is judged only over many forecasts, by whether the things it called '10% likely' happened about 10% of the time. That live reliability record — refreshed as the forecast log grows — is the product's central credibility artifact.",
+      "cta": "Read the honest epistemics on <problem>The problem</problem>, the retrospective scores on <backAnalysis>Back-analysis</backAnalysis>, and the live field on <monitoring>Monitoring</monitoring>."
+    }
+  },
+  "problem": {
+    "title": "The problem",
+    "lede": "Why earthquakes cannot be predicted, why their probability can nonetheless be forecast, and how honest communication is the part that actually fails people.",
+    "creedTitle": "The product creed",
+    "determinism": {
+      "title": "Deterministic prediction is effectively impossible",
+      "body": "Naming the time, place, and magnitude of an earthquake with alarm-grade reliability has never been achieved. Faulting is strongly nonlinear, and whether a small rupture cascades into a great one depends on unmeasurably fine detail of the crust <cite>.",
+      "soc": "The leading explanatory framework is self-organized criticality — earthquakes as a critical phenomenon in which any small event has a long, fat-tailed chance of growing large <cite>. This is the leading explanation, not settled physics: characteristic-earthquake and partial-predictability views coexist."
+    },
+    "predVsForecast": {
+      "title": "Prediction versus forecast",
+      "body": "This is the field's organizing distinction <cite>. A <b>prediction</b> is a deterministic yes/no statement that an event will or will not occur in a region, window, and magnitude range. A <b>forecast</b> gives a probability strictly between 0 and 1. This product is strictly a forecaster.",
+      "uiNote": "The interface therefore never renders a binary call, an alarm, a warning siren, or a countdown — only a continuous probability with its uncertainty and its baseline."
+    },
+    "scale": {
+      "title": "The honest absolute scale",
+      "body": "Short-term earthquake probabilities may vary over orders of magnitude but typically remain low in an absolute sense — usually <b>below about 1% per day</b> <cite>. The relative gain during an active sequence can be large (one to a few orders of magnitude over background), yet the absolute probability of a large event in the next day is still usually well under a few percent. The product shows both at once so neither is mistaken for the other."
+    },
+    "cases": {
+      "title": "Three teaching cases",
+      "intro": "Each case teaches a specific lesson about the limits of prediction and the discipline of probabilistic forecasting.",
+      "parkfield": {
+        "title": "Parkfield",
+        "body": "A recurrence model gave a roughly 95%-by-1993 forecast for a characteristic M6 at Parkfield <cite1>. The M6.0 arrived in 2004 — about eleven years after the window closed — with no diagnostic short-term precursors on the most instrumented fault on Earth <cite2>. Timing is not predictable even with a recurrence model and dense instrumentation."
+      },
+      "ridgecrest": {
+        "title": "Ridgecrest 2019",
+        "body": "UCERF3-ETAS gave about a <b>2.8% (~3%)</b> first-week chance of a larger event; the M7.1 then struck about 34 hours later <cite>. A ~3% forecast is not wrong when the 3% outcome occurs. A single outcome neither validates nor invalidates a probabilistic forecast."
+      },
+      "laquila": {
+        "title": "L'Aquila",
+        "body": "The harm at L'Aquila was a <b>communication failure</b> — false reassurance — not a failure to predict. (The mainshock magnitude is reported variously as Mw 6.1–6.3 in primary sources.) This is exactly why this product always shows the number next to its baseline, with explicit uncertainty, and never offers a 'safe' state."
+      }
+    },
+    "achievable": {
+      "title": "What is achievable: Operational Earthquake Forecasting",
+      "body": "Real deployed systems are probabilistic services, not supercomputers. The USGS operational aftershock forecasts grew from Reasenberg & Jones <citeRJ> to the global tectonic-regime extension of Page et al. <citePage>. <b>OEF-Italy / INGV</b> is an ensemble of three distinct models — ETAS, ETES, and STEP <citeINGV>.",
+      "honestNote": "Report OEF-Italy honestly: broadly reliable over about ten years of true prospective operation, but with a documented underestimation of the 2016–2017 Central Italy (Amatrice–Norcia) sequence caused by post-mainshock catalog incompleteness. Calibration is earned and qualified, never assumed."
+    }
+  },
+  "method": {
+    "title": "Methodology",
+    "lede": "The real, citable equations behind the field, and an honest verdict on whether machine-learned models beat them.",
+    "tabs": { "classical": "Classical theories", "analytical": "Analytical & ML" },
+    "classical": {
+      "intro": "Each block below renders the governing equation and its canonical reference. None of these constants are hard-coded in the product: b-value, completeness, and ETAS parameters are re-estimated on rolling windows."
+    },
+    "gr": {
+      "title": "Gutenberg–Richter law",
+      "body": "The magnitude–frequency relation: the number of events at or above magnitude M falls off log-linearly, with slope b near 1. It fixes the per-bin magnitude distribution used throughout.",
+      "caption": "a sets the productivity; b ≈ 1 is the magnitude-distribution slope, re-estimated on a rolling window"
+    },
+    "bvalue": {
+      "title": "Aki–Utsu b-value (MLE)",
+      "body": "The maximum-likelihood b-value from the mean magnitude above completeness <mc>. It is strongly biased if <mc> is mis-estimated, so <mc> is found with MAXC plus goodness-of-fit and its uncertainty is propagated <cite1>; the estimator carries a binning correction <cite2>.",
+      "caption": "binning-corrected; re-estimated on a rolling window, never hard-coded"
+    },
+    "omori": {
+      "title": "Modified Omori–Utsu law",
+      "body": "Temporal aftershock decay — the heart of operational aftershock forecasting. The rate of aftershocks falls off as a power law in time since the mainshock, with exponent p near 1.",
+      "caption": "K is the productivity, c the time offset, p ≈ 1 the decay exponent"
+    },
+    "rj": {
+      "title": "Reasenberg–Jones (1989), extended by Page et al. (2016)",
+      "body": "The transparent operational baseline: the aftershock rate combines the Gutenberg–Richter magnitude term with the Omori–Utsu temporal decay; integrating the rate over the horizon gives the expected count N, and the exceedance probability follows by the Poisson map <cite1> <cite2>.",
+      "caption": "the Bayesian fallback / sanity check beside the ETAS core estimator"
+    },
+    "etas": {
+      "title": "Space–time ETAS conditional intensity",
+      "body": "The recommended core estimator and the mandatory reference model <cite>. The conditional intensity is a stationary background μ(x, y) plus a sum of contributions from all prior events, each with Utsu productivity, Omori temporal decay, and an inverse-power spatial kernel. The product fits this on the <b>full, un-declustered</b> catalog because triggering is the predictable signal.",
+      "caption": "μ is the smoothed-seismicity background; the sum is the self-exciting triggering term",
+      "gatesTitle": "Two stationarity gates (kept separate)",
+      "gate1": "Convergence of the productivity × magnitude integral requires <m> with <beta>, so the branching ratio <n> is finite.",
+      "gate2": "Given that, <n> is the subcritical / stationary condition; any fit with <nreject> is rejected."
+    },
+    "smoothed": {
+      "title": "Smoothed seismicity (background μ)",
+      "body": "The spatial background μ(x, y) is an adaptive smoothed-seismicity field on the declustered catalog (Helmstetter-class) <cite>. The exact kernel form, exponent, and normalization are pinned to a reference implementation before coding — the literature carries both −1 and −3/2 power-law kernels, and the nearest-neighbour bandwidth is an optimized hyperparameter, not a fixed constant."
+    },
+    "exceedance": {
+      "title": "Exceedance probability (what the legend encodes)",
+      "body": "The public scalar is the probability of at least one event at or above M* over the horizon, by the Poisson exceedance map. The expected count integrates the conditional intensity against the Gutenberg–Richter magnitude term up to the bounding Mmax.",
+      "caption": "Φ(M*) folds the magnitude distribution into the rate; this is the number the field colours"
+    },
+    "ml": {
+      "intro": "Machine-learned point processes are admitted only if they earn their place by beating ETAS in CSEP tests — not because they are newer.",
+      "verdictTitle": "Honest model-class verdict",
+      "verdict": "Under prospective, CSEP-style testing, <b>no neural point process has been shown to reliably beat a well-fit ETAS</b>. The EarthquakeNPP benchmark found that none of five neural point processes outperformed ETAS on a California 1971–2021 benchmark with chronological splits and CSEP tests <cite>.",
+      "spatial": {
+        "title": "The gap is largest where it matters: space",
+        "body": "On that benchmark the gap is largest on the <b>spatial</b> test — the dimension that matters most for a map (best NPP ≈ 68.6% vs ETAS ≈ 92.0% pass rate). This is stated as 'on the benchmark to date' (the datasets are California-only), not as a universal law."
+      },
+      "infogain": {
+        "title": "Information gain is state-dependent, and in nats",
+        "body": "The ETAS-over-Poisson information gain is <b>not a fixed constant</b>: it is large and positive during active sequences (probability gains of orders of magnitude on peak days) and near zero in quiet periods. It is measured in <b>nats</b> (natural-log units), never bits, and there is no stable steady-state value to quote."
+      },
+      "requirement": {
+        "title": "A requirement, not a verdict against ML",
+        "body": "Some hybrid and neural models do match or beat ETAS on information gain in specific settings <cite>. The rule here is a gate, not a ban: <b>any ML model must beat ETAS in CSEP tests before it reaches the public map</b>. Detection and phase-picking models build a better input catalog — detection is not forecasting."
+      }
+    }
+  },
+  "impl": {
+    "title": "Implementation",
+    "lede": "The v0 model and the once-a-day offline pipeline that turns public catalogs into one small, reproducible artifact.",
+    "model": {
+      "title": "The model (v0)",
+      "null": {
+        "title": "Mandatory null",
+        "body": "A stationary smoothed-seismicity Poisson reference on the declustered catalog. Every forecast is measured against this baseline; 'elevated' only ever means 'elevated relative to this'."
+      },
+      "primary": {
+        "title": "Primary estimator + reference",
+        "body": "Maximum-likelihood space–time ETAS <cite> is both the core estimator and the mandatory reference. The Bayesian Reasenberg–Jones model <citeRJ> is a transparent fallback and sanity check."
+      },
+      "background": {
+        "title": "Spatial background μ(x, y)",
+        "body": "Adaptive smoothed seismicity on the declustered catalog <cite>, with the kernel pinned to a reference implementation before coding."
+      },
+      "magnitude": {
+        "title": "Magnitude term",
+        "body": "Gutenberg–Richter with a rolling completeness <mc> and a rolling <b>, never hard-coded."
+      }
+    },
+    "dualCatalog": {
+      "title": "The dual-catalog rule",
+      "body": "Two catalogs feed two roles. The <b>declustered</b> catalog feeds the Poisson background; the <b>full, un-declustered</b> catalog feeds the conditional / ETAS model — because triggering is the predictable signal, declustering it away would discard exactly what the forecast is for."
+    },
+    "hygiene": {
+      "title": "Data hygiene (mandatory, ordered)",
+      "intro": "Hygiene runs in a fixed order before any fitting:",
+      "steps": [
+        "Estimate a time-varying completeness Mc(x, y, t) with MAXC + goodness-of-fit (EMR for uncertainty).",
+        "Homogenize magnitudes to Mw via a total-least-squares regression anchored on ISC-GEM / GCMT.",
+        "Decluster (dual-catalog): the declustered catalog feeds the background, the full catalog feeds ETAS."
+      ],
+      "mcNoteTitle": "The +0.2 completeness correction is California-tuned",
+      "mcNote": "The common +0.2 MAXC correction <cite> is California-tuned and is re-validated per region — it is not exported unchanged to Chile, Japan, or New Zealand."
+    },
+    "incompleteness": {
+      "title": "Short-term aftershock incompleteness (required)",
+      "body": "The highest-stakes window — hours to days after a large event — has a spiking completeness <mc>. The daily job uses an incompleteness-aware likelihood (time-dependent <mc>, detrended ETAS), <b>not naive ETAS</b>, or it would under-forecast exactly when large aftershocks are most likely. This is treated as a required method, not an option."
+    },
+    "gated": {
+      "title": "Gated challengers",
+      "body": "Machine-learned challengers are feature-flagged and ship <b>only</b> on positive, significant pseudo-prospective information gain over ETAS: a RECAST-class neural temporal point process <cite>, which improves on temporal ETAS only when the training catalog is large, otherwise it merely matches <citeNPP>; and tidal / GNSS / hydrological covariates, encoded as a regularized multiplier that shrinks to ~0 where there is no signal.",
+      "detectionNote": "Machine-learned detection and phase-picking models (PhaseNet, EQTransformer, SeisBench) are used only to build a more complete input catalog. Detection is not forecasting, and that line stays explicit."
+    },
+    "pipeline": {
+      "title": "The daily offline pipeline",
+      "intro": "Heavy compute runs once per day, offline, on a single CPU host; the runtime is stateless and read-only."
+    },
+    "diagram": {
+      "svgTitle": "Daily offline forecasting pipeline",
+      "svgDesc": "A top-to-bottom flow of five stages: external data feeds, the offline daily job, the compact artifact, the thin API, and the static SPA.",
+      "caption": "Heavy compute runs once per day, offline; the runtime is stateless and read-only.",
+      "feeds": {
+        "title": "Data feeds (external, read-only, public)",
+        "body": "USGS ComCat / ISC / IRIS-EarthScope FDSN → recent catalog (last N days)"
+      },
+      "job": {
+        "title": "Offline daily job (single host, CPU)",
+        "body": "ingest → QC / dedup → Mc & magnitude homogenization → declustering (dual-catalog) → fit / condition ETAS (+ R-J fallback) → simulate ensemble → per-cell rate field → optimistic / expected / pessimistic bounds → rolling CSEP stats"
+      },
+      "artifact": {
+        "title": "Artifact (committed / served static, gzipped)",
+        "body": "forecast_YYYY-MM-DD.json(.gz) + H3 rate arrays: per-cell λ for {1d, 2d, 7d} × {lo, exp, hi}; baseline λ; metadata / timestamp; N/S/M/L summary + reliability points; coverage mask"
+      },
+      "api": {
+        "title": "API (thin, stateless, read-only)",
+        "body": "/forecast/latest, /forecast/{date}, /region/{iso}, /calibration; ORJSON + GZip"
+      },
+      "spa": {
+        "title": "SPA (Vite + React + TS, i18n EN→ES, light / dark)",
+        "body": "Intro · Problem · Methodology · Implementation · Back-analysis · Monitoring (world MapLibre + deck.gl H3 field, country zoom, SVG summary; legend · horizon · baseline · calibration · staleness)"
+      },
+      "arrow": {
+        "pull": "daily pull (scheduled timer)",
+        "write": "write ONE compact artifact",
+        "serve": "served static / loaded on boot",
+        "render": "fetch + render the chosen horizon × bound"
+      }
+    }
+  },
+  "ba": {
+    "title": "Back-analysis",
+    "lede": "Retrospective, pseudo-prospective CSEP scores across tectonically diverse regions — reported in full, including where the model does not win.",
+    "honesty": "Skill is established <b>only</b> by winning comparison tests against real baselines. Passing consistency (calibration) tests is necessary but not sufficient. Every region × horizon cell is reported, including failures — selective reporting is itself the bias CSEP exists to prevent.",
+    "ridgecrest": {
+      "title": "Worked example — Ridgecrest 2019",
+      "body": "A roughly <b>3%</b> first-week forecast preceded the M7.1 by about 34 hours <cite>. A ~3% forecast is not wrong when the 3% outcome occurs: a single outcome neither validates nor invalidates a probabilistic forecast. The reliability diagram, accumulated over many forecasts, is what judges the model."
+    },
+    "sampleBanner": "Illustrative SAMPLE results — not real CSEP scores. Replaced byte-for-byte by the offline pyCSEP evaluation job.",
+    "error": "Could not load the back-analysis report: {{message}}",
+    "regionSelector": "Select a region",
+    "meta": {
+      "catalog": "Authoritative catalog:",
+      "train": "Learning period:",
+      "test": "Testing period (pseudo-prospective):",
+      "mmin": "Uniform target magnitude:"
+    },
+    "cell": {
+      "horizon": "{{days}}-day horizon",
+      "overReject": "Poisson grid over-rejected",
+      "overRejectTip": "Poisson grid tests over-reject during aftershock sequences (over-dispersion). This grid-test result is paired with the catalog-based result, which relaxes the Poisson assumption."
+    },
+    "consistency": {
+      "title": "Consistency tests (calibration of one model)",
+      "gridded": "Gridded-rate (Poisson)",
+      "catalog": "Catalog-based (over-dispersion honest)"
+    },
+    "comparison": {
+      "title": "Comparison tests (skill vs baselines)",
+      "baseline": "Baseline",
+      "igpe": "IGPE (nats)",
+      "tci": "T-test 95% CI",
+      "w": "W p-value",
+      "skill": "Skill",
+      "skillYes": "established",
+      "skillNo": "not established",
+      "note": "Skill is claimed only when IGPE is positive with a T-test confidence interval excluding zero, corroborated by the Wilcoxon test.",
+      "baselineName": { "etas": "vs ETAS", "smoothed": "vs smoothed seismicity" }
+    },
+    "reliability": { "title": "Reliability diagram" },
+    "evo": { "title": "Expected vs observed counts", "expected": "expected", "observed": "observed" },
+    "scoring": {
+      "title": "Secondary scoring (communication, never the headline)",
+      "brier": "Brier score",
+      "log": "Log score",
+      "crps": "CRPS",
+      "ass": "Area skill score"
+    }
+  },
+  "calibration": {
+    "modelQuality": "Model quality",
+    "tooltip": "The green / amber / red triad describes MODEL QUALITY from CSEP tests — never earthquake danger.",
+    "level": {
+      "green": "within CSEP consistency",
+      "amber": "borderline",
+      "red": "rejected / under-tested"
+    }
+  },
+  "csep": {
+    "test": "Test",
+    "quantile": "Quantile",
+    "status": "Status",
+    "short": { "N": "N", "M": "M", "S": "S", "L": "L", "CL": "CL" },
+    "name": {
+      "N": "Number test",
+      "M": "Magnitude test",
+      "S": "Spatial test",
+      "L": "Likelihood test",
+      "CL": "Conditional likelihood test (preferred over raw L)"
+    },
+    "statusLabel": { "pass": "within consistency", "fail": "rejected", "untested": "untested" },
+    "igPoisson": "Information gain vs Poisson",
+    "igEtas": "Information gain vs ETAS",
+    "necessaryNotSufficient": "Passing consistency tests calibrates one model; it never establishes skill. Skill lives in the comparison tests against ETAS and smoothed seismicity. Information gain is in nats, not bits."
+  },
+  "monitoring": {
+    "title": "Monitoring",
+    "lede": "The live daily forecast field: where the conditional rate is elevated relative to its own long-term baseline, with an explicit horizon and magnitude threshold.",
+    "framing": "This is not an alarm map. It shows where the conditional rate is elevated relative to its own long-term baseline — a continuous probability field with an explicit horizon and magnitude threshold, always shown with its uncertainty bounds.",
+    "error": "Could not load the forecast artifact: {{message}}",
+    "region": "Region",
+    "regionName": "{{name}}",
+    "sampleBanner": "Illustrative SAMPLE forecast — not a real forecast. Replaced byte-for-byte by the daily publish job.",
+    "showCsep": "show CSEP detail",
+    "hideCsep": "hide CSEP detail",
+    "csepTitle": "Calibration & CSEP consistency",
+    "reliabilityTitle": "Reliability diagram",
+    "ctl": {
+      "horizon": "Horizon",
+      "threshold": "Magnitude threshold",
+      "bounds": "Bounds",
+      "view": "View",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "mstar": "M ≥ {{m}}",
+      "viewMap": "Probability field",
+      "viewSummary": "No-map summary"
+    },
+    "bound": {
+      "lo": { "label": "Optimistic (P10)", "tip": "The optimistic 10th-percentile bound." },
+      "expected": { "label": "Expected (median)", "tip": "The expected / median forecast." },
+      "hi": {
+        "label": "Pessimistic (P90)",
+        "tip": "The pessimistic 90th-percentile bound — a plausible bad case.",
+        "caption": "The pessimistic view shows a plausible bad case, not a prediction."
+      }
+    },
+    "legend": {
+      "aria": "Forecast field legend",
+      "rampAria": "Perceptually-uniform sequential colour ramp (low to high probability)",
+      "title": "{{bound}} · P(≥1 event ≥ M{{m}}) over {{days}} day(s)",
+      "caption": "Per cell (~{{area}} km²), over {{days}} day(s), for one or more events of M ≥ {{m}}.",
+      "notSafe": "A blank cell means no forecast or out of coverage — never that an area is safe."
+    },
+    "map": {
+      "aria": "World probability field map",
+      "loadingStack": "Loading the map…",
+      "noWebgl": "This browser cannot render the WebGL field. Switch to the no-map summary view for the same data.",
+      "noWebglHint": "Use the 'No-map summary' view above."
+    },
+    "summary": {
+      "head": "{{bound}} · most-elevated cells · P(≥1 event ≥ M{{m}}) over {{days}} day(s)",
+      "cell": "Cell",
+      "probability": "Probability",
+      "baseline": "Baseline",
+      "ratio": "Ratio",
+      "ratioTip": "Forecast probability divided by the long-term baseline probability.",
+      "rest": "+ {{count}} more cells near baseline (not shown).",
+      "baselineNote": "Each cell shows the forecast next to its long-term baseline, both as a ratio and an absolute probability — a large ratio on a near-zero baseline still reads 'still very unlikely'.",
+      "empty": "No cells above the rate floor for this slice — the field is at background everywhere shown."
+    },
+    "detail": {
+      "aria": "Selected cell detail",
+      "close": "Close",
+      "context": "P(≥1 event ≥ M{{m}}) over {{days}} day(s)",
+      "absolute": "Absolute probability",
+      "baseline": "Long-term baseline",
+      "ratio": "Ratio to baseline",
+      "rate": "Expected count (λ·T)",
+      "honesty": "The bounds are a real epistemic + aleatory range, not a cosmetic interval. A large ratio on a small baseline is still small in absolute terms."
+    },
+    "staleness": {
+      "generated": "Forecast generated:",
+      "next": "next run:",
+      "failed": "The latest daily run did not complete — the field is desaturated and may be stale."
+    },
+    "coverageNote": "{{count}} cell(s) are explicitly out of validated coverage and are hatched on the map — blank never means safe.",
+    "provenanceNote": "Artifact schema {{schema}} · issued {{issued}}. Served static, read-only; no inference per request."
+  }
+}

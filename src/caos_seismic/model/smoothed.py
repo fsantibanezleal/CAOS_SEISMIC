@@ -192,10 +192,17 @@ class SmoothedSeismicityForecaster(BaseForecaster):
     d_min_km: float = 2.0
     b_value: float | None = None
     mc: float | None = None
+    #: Number of nearest events summed per query point at INFERENCE. The adaptive kernel decays as
+    #: ``r^{-2s}``, so the few-dozen nearest events carry essentially all of a point's density; querying
+    #: them with a KD-tree makes the field O(cells · k log N) instead of O(cells · N) — the difference
+    #: between an instant and a 10^5-events × 10^6-cells global evaluation. ``None`` sums all events.
+    inference_k: int = 96
 
     # Fitted state (populated by `fit`).
     _ev_lat: np.ndarray | None = field(default=None, repr=False)
     _ev_lon: np.ndarray | None = field(default=None, repr=False)
+    _ev_xyz: np.ndarray | None = field(default=None, repr=False)  # 3-D unit-sphere coords for the KD-tree
+    _tree: object | None = field(default=None, repr=False)        # scipy.spatial.cKDTree over _ev_xyz
     _ev_d: np.ndarray | None = field(default=None, repr=False)  # adaptive bandwidths (km)
     _ev_norm: np.ndarray | None = field(default=None, repr=False)  # per-event C(d_i)
     _exponent_s: float = field(default=0.0, repr=False)
@@ -239,6 +246,17 @@ class SmoothedSeismicityForecaster(BaseForecaster):
         lat = complete["latitude"].to_numpy(dtype=float)
         lon = complete["longitude"].to_numpy(dtype=float)
         self._ev_lat, self._ev_lon = lat, lon
+        # 3-D unit-sphere index, reused for the O(k) k-nearest queries at inference.
+        latr = np.radians(lat)
+        lonr = np.radians(lon)
+        coslat = np.cos(latr)
+        self._ev_xyz = np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
+        try:
+            from scipy.spatial import cKDTree
+
+            self._tree = cKDTree(self._ev_xyz)
+        except ModuleNotFoundError:  # pragma: no cover - SciPy is a core dependency
+            self._tree = None
         self._ev_d = _nth_nearest_bandwidth(lat, lon, self.n_neighbors, self.d_min_km)
         self._ev_norm = np.array(
             [_kernel_normalization(d, self._exponent_s) for d in self._ev_d], dtype=float
@@ -260,6 +278,20 @@ class SmoothedSeismicityForecaster(BaseForecaster):
         area to get an expected count.
         """
         self._require_fit()
+        n = self._ev_lat.size
+        if self._tree is not None and self.inference_k is not None and n > int(self.inference_k):
+            # Sum the kernel over the k nearest events only — the decaying ``r^{-2s}`` kernel makes the
+            # far events' contribution negligible, so this is O(k log N) instead of O(N) per query.
+            latr = np.radians(lat)
+            lonr = np.radians(lon)
+            cl = np.cos(latr)
+            q = np.array([cl * np.cos(lonr), cl * np.sin(lonr), np.sin(latr)])
+            kk = min(int(self.inference_k), n)
+            _, idx = self._tree.query(q, k=kk)
+            idx = np.atleast_1d(np.asarray(idx, dtype=int))
+            r = haversine_km(lat, lon, self._ev_lat[idx], self._ev_lon[idx])
+            ker = self._ev_norm[idx] * np.power(r * r + self._ev_d[idx] ** 2, -self._exponent_s)
+            return float(np.sum(ker))
         r = haversine_km(lat, lon, self._ev_lat, self._ev_lon)
         k = self._ev_norm * np.power(r * r + self._ev_d * self._ev_d, -self._exponent_s)
         return float(np.sum(k))

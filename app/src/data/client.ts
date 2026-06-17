@@ -175,23 +175,25 @@ export class ForecastClient {
    */
   async loadLatest(): Promise<ForecastArtifact> {
     const index = await this.loadIndex();
-    if (!index.latest) {
+    const file = index.latest?.file;
+    if (!file) {
       throw new Error('index.json has no `latest` artifact pointer.');
     }
-    return this.loadArtifactFile(index.latest);
+    return this.loadArtifactFile(file);
   }
 
   /**
-   * Load the artifact for a specific date ("YYYY-MM-DD") from the rolling history —
-   * the "forecast from {past date}" selector. Falls back to the conventional filename
-   * `forecast-<date>.json` if the date is not present in the index history.
+   * Load the artifact for a specific issue date ("YYYY-MM-DD") from the rolling `forecasts`
+   * history — the "forecast from {past date}" selector. Matches on the entry's `issued_at` UTC
+   * day; falls back to the conventional global filename `forecast-global-<date>.json.gz` if the
+   * date is not present in the index.
    */
   async loadByDate(date: string): Promise<ForecastArtifact> {
     const index = await this.loadIndex();
+    const onDay = (e: { issued_at?: string }) => (e.issued_at ?? '').slice(0, 10) === date;
     const entry =
-      index.history.find((e) => e.date === date) ??
-      (index.latest && index.latest.includes(date) ? { date, file: index.latest } : undefined);
-    const file = entry?.file ?? `forecast-${date}.json`;
+      (index.forecasts ?? []).find(onDay) ?? (index.latest && onDay(index.latest) ? index.latest : undefined);
+    const file = entry?.file ?? `forecast-global-${date}.json.gz`;
     return this.loadArtifactFile(file);
   }
 
@@ -200,6 +202,7 @@ export class ForecastClient {
     const cached = this.artifactCache.get(file);
     if (cached) return cached;
     const artifact = await fetchJson<ForecastArtifact>(this.artifactUrl(file), this.fetchImpl);
+    decodeRates(artifact);
     this.artifactCache.set(file, artifact);
     return artifact;
   }
@@ -214,6 +217,30 @@ export class ForecastClient {
 // ─────────────────────────────────────────────────────────────────────────────
 // Pure typed selectors over a loaded artifact (no I/O)
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Expand the compacted log-uint16 `q` rate code on every forecast leaf into a real `rate`
+ * (expected event count N_{>=M*} = λ·T), in place, using the artifact's `rate_legend`. The publish
+ * stage quantizes the rate to a 16-bit code to keep the world payload small (configs/grid.yaml
+ * sparsity); the cell readout needs the decoded value. Leaves that already carry a numeric `rate`
+ * (uncompacted sample artifacts) and artifacts without a `log_uint16` legend are left untouched, so
+ * this is safe and idempotent on both formats.
+ */
+export function decodeRates(artifact: ForecastArtifact): void {
+  const legend = artifact.rate_legend;
+  if (!legend || legend.kind !== 'log_uint16') return;
+  const logSpan = Math.log(legend.rate_max / legend.rate_min);
+  const denom = Math.max(legend.levels - 1, 1);
+  for (const byHorizon of Object.values(artifact.forecast)) {
+    for (const byThreshold of Object.values(byHorizon)) {
+      for (const leaf of Object.values(byThreshold)) {
+        if (typeof leaf.rate === 'number') continue; // already decoded / uncompacted
+        const q = leaf.q ?? 0;
+        leaf.rate = q <= 0 ? 0 : legend.rate_min * Math.exp((logSpan * (q - 1)) / denom);
+      }
+    }
+  }
+}
 
 /** String key for a numeric horizon as Python's `str(int)` emits it ("1", "2", "7"). */
 export function horizonKey(horizonDays: number): string {

@@ -47,6 +47,16 @@ from .config import (
     load_views,
 )
 
+# Windows consoles default to a legacy code page (cp1252) that cannot encode the Unicode used in our
+# status lines and result `__str__` (e.g. the "→" date-range arrow). Reconfigure the standard streams
+# to UTF-8 (replacing anything truly unmappable) so the CLI — and the unattended daily job on this
+# Windows box — never dies on an echo. No-op where the stream lacks `reconfigure` (already-wrapped).
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
+    except (AttributeError, ValueError):  # pragma: no cover - stream not reconfigurable
+        pass
+
 app = typer.Typer(
     name="caos-seismic",
     help="Conditional probabilistic seismic forecasting (forecasts, never predictions; CSEP-scored).",
@@ -275,9 +285,14 @@ def backanalysis_global(
     if end_dt < start_dt:
         raise _fail("--end is before --start.")
     mod = _require_stage("eval.global_backanalysis", extra="science")
+    # Pass the ONE worldwide cleaned catalog: every country view is sliced from it inside the driver
+    # (a true window into the same global field), so we never need per-region `data/clean/<id>.parquet`
+    # stores. Without this each view tries to load its own store and fails (FileNotFoundError).
+    clean = importlib.import_module("caos_seismic.data.clean")
+    catalog = clean.load_clean_catalog("global")
     _echo(f"backanalysis-global · {start_dt.isoformat()} -> {end_dt.isoformat()} · global={not no_global}")
     result = mod.run_global_backanalysis(
-        start=start_dt, end=end_dt, include_global=not no_global
+        start=start_dt, end=end_dt, include_global=not no_global, catalog=catalog
     )
     _echo(f"backanalysis-global · done: {result}")
 

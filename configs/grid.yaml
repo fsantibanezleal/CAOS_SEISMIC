@@ -11,10 +11,11 @@ fit:
   # materialized in full at once: the global fit grid is built coarsely worldwide and refined only
   # inside coverage tiles (active provinces) — see global_fit below.
   global_fit:
-    world_cell_deg: 1.0    # coarse worldwide fit cells (the quiet-everywhere baseline)
-    tile_cell_deg: 0.25    # finer cells inside active coverage tiles (recent seismicity provinces)
-    tile_pad_deg: 2.0      # pad (deg) around recent events when carving coverage tiles
-    tile_min_mag: 4.5      # an event must reach this Mw to seed/keep a fine coverage tile
+    world_cell_deg: 1.0    # coarse worldwide fit cells (the quiet-everywhere baseline ~61k cells)
+    tile_cell_deg: 0.5     # finer cells inside active coverage tiles (recent seismicity provinces)
+    tile_pad_deg: 1.0      # pad (deg) around recent events when carving coverage tiles
+    tile_min_mag: 6.0      # only sizeable events seed a fine tile — keeps the global fit grid to ~10^5
+                           # cells (M>=4.5 with a 2° pad explodes it to ~10^6, untenable to score)
 display:
   # The UI aggregates the fine grid into H3 hexbins (multi-resolution LOD via deck.gl).
   h3_resolution_world: 3   # coarse world overview (every surfaced cell at least this coarse)

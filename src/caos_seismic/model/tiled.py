@@ -311,16 +311,11 @@ class TiledForecaster(BaseForecaster):
         if not self._tiles:
             return [0.0] * len(cells)
 
-        # Group cell indices by the owning tile.
-        owner: dict[int, list[int]] = {}
-        unowned: list[int] = []
-        tile_lookup = self._tile_centres()
-        for idx, cell in enumerate(cells):
-            t_i = self._owning_tile_index(cell, tile_lookup)
-            if t_i is None:
-                unowned.append(idx)
-            else:
-                owner.setdefault(t_i, []).append(idx)
+        # Group cell indices by the owning tile. The daily driver calls this with the SAME ``cells``
+        # list for every (horizon, threshold) pair (9 calls), and the back-analysis sweeps it across
+        # many issue dates; the routing (O(cells × tiles)) is identical each time, so memoize it keyed
+        # on the cell-list identity. Horizon/threshold never change which tile owns a cell.
+        owner, _unowned = self._route_cells(cells)
 
         out = [0.0] * len(cells)
         for t_i, cell_indices in owner.items():
@@ -349,6 +344,30 @@ class TiledForecaster(BaseForecaster):
         ]
 
     # ── tile routing ────────────────────────────────────────────────────────
+    def _route_cells(self, cells: list[Cell]) -> tuple[dict[int, list[int]], list[int]]:
+        """Map each cell index to its owning fit-tile index, memoized on the cell-list identity.
+
+        Returns ``(owner, unowned)`` where ``owner[t_i]`` is the list of indices into ``cells`` owned
+        by fit tile ``t_i`` and ``unowned`` is the list of indices that fall in no fit tile. The result
+        is cached against ``(id(cells), len(cells))`` so the repeated per-(horizon, threshold) and
+        per-issue-date calls reuse the one O(cells × tiles) pass instead of recomputing it.
+        """
+        key = (id(cells), len(cells))
+        cached = getattr(self, "_route_cache", None)
+        if cached is not None and cached[0] == key:
+            return cached[1], cached[2]
+        owner: dict[int, list[int]] = {}
+        unowned: list[int] = []
+        tile_lookup = self._tile_centres()
+        for idx, cell in enumerate(cells):
+            t_i = self._owning_tile_index(cell, tile_lookup)
+            if t_i is None:
+                unowned.append(idx)
+            else:
+                owner.setdefault(t_i, []).append(idx)
+        self._route_cache = (key, owner, unowned)
+        return owner, unowned
+
     def _tile_centres(self) -> np.ndarray:
         """``(n_tiles, 2)`` array of interior-bbox centres, for the nearest-tile boundary tiebreak."""
         centres = []

@@ -25,6 +25,8 @@
 
 import {
   BOUND_FIELD,
+  WORLD_VIEW_ID,
+  type BBox,
   type Bound,
   type CalibrationSummary,
   type CellSelection,
@@ -32,6 +34,7 @@ import {
   type ForecastArtifact,
   type ForecastIndex,
   type Staleness,
+  type ViewIndexEntry,
 } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -245,21 +248,30 @@ export function getCellValue(
  * (horizon, threshold, bound) slice — the array the deck.gl H3 layer / no-map summary
  * consumes. Cells in `coverage_mask` are excluded (they render as an explicit hatch,
  * handled separately by `getCoverageMask`).
+ *
+ * Global re-scope (web-app-spec.md §7.1): pass `restrictToCells` to surface only one country VIEW's
+ * slice of the single global field (the cell-key index from `ViewIndexEntry.cells`). Omit it (or pass
+ * `null`/the WORLD view) to surface the whole global field — the default world probability field.
+ * The forecast dict is the same one global field in both cases; the view only narrows which cells are
+ * returned, never re-computes anything.
  */
 export function selectField(
   artifact: ForecastArtifact,
   horizonDays: number,
   mThreshold: number,
   bound: Bound = 'expected',
+  restrictToCells?: Iterable<string> | null,
 ): CellSelection[] {
   const hKey = horizonKey(horizonDays);
   const tKey = thresholdKey(mThreshold);
   const field = BOUND_FIELD[bound];
   const masked = new Set(artifact.coverage_mask);
+  const restrict = restrictToCells ? new Set(restrictToCells) : null;
   const out: CellSelection[] = [];
 
   for (const [cell, byHorizon] of Object.entries(artifact.forecast)) {
     if (masked.has(cell)) continue;
+    if (restrict && !restrict.has(cell)) continue;
     const v = byHorizon[hKey]?.[tKey];
     if (!v) continue;
     const value = v[field] as number;
@@ -279,6 +291,60 @@ export function selectField(
     });
   }
   return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Country VIEW helpers (slices of the single global field) — web-app-spec.md §7.1
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The configured country views (slices of the global field). Empty for a single-region artifact. */
+export function getViews(artifact: ForecastArtifact): ViewIndexEntry[] {
+  return artifact.views ?? [];
+}
+
+/** Whether this artifact carries country views (i.e. it is the global, multi-country field). */
+export function isGlobalArtifact(artifact: ForecastArtifact): boolean {
+  return getViews(artifact).length > 0 || artifact.region.id === 'global';
+}
+
+/** Find a country view by id, or `undefined` (e.g. when the WORLD view is selected). */
+export function findView(artifact: ForecastArtifact, viewId: string): ViewIndexEntry | undefined {
+  if (viewId === WORLD_VIEW_ID) return undefined;
+  return getViews(artifact).find((v) => v.id === viewId);
+}
+
+/**
+ * The flat per-cell field for the currently-selected country view (or the whole world when `viewId`
+ * is the WORLD view / unknown). Restricts to the view's cell-key index — the cheap slice of the one
+ * global field, never a re-fit.
+ */
+export function selectViewField(
+  artifact: ForecastArtifact,
+  viewId: string,
+  horizonDays: number,
+  mThreshold: number,
+  bound: Bound = 'expected',
+): CellSelection[] {
+  const view = findView(artifact, viewId);
+  return selectField(artifact, horizonDays, mThreshold, bound, view ? view.cells : null);
+}
+
+/** Centre `[lon, lat]` of a bbox — the map's initial centre for a view (or the world). */
+export function bboxCenter(bbox: BBox): [number, number] {
+  return [(bbox.lon_min + bbox.lon_max) / 2, (bbox.lat_min + bbox.lat_max) / 2];
+}
+
+/**
+ * A rough MapLibre zoom level that frames a bbox (degrees of span → zoom). The world view sits near
+ * zoom 1; a country view zooms in. Heuristic only — the map is interactive after the initial frame.
+ */
+export function bboxZoom(bbox: BBox): number {
+  const spanLat = Math.abs(bbox.lat_max - bbox.lat_min);
+  const spanLon = Math.abs(bbox.lon_max - bbox.lon_min);
+  const span = Math.max(spanLat, spanLon, 1e-3);
+  // ~360° span → zoom 0; halving the span adds ~1 zoom level. Clamp to a sane window.
+  const zoom = Math.log2(360 / span);
+  return Math.min(7, Math.max(1, Math.round(zoom * 10) / 10));
 }
 
 /** All distinct horizons present in the artifact metadata (sorted ascending). */

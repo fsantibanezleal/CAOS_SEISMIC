@@ -204,6 +204,8 @@ kbd {
 }
 .brand .brand-mark {
   color: var(--color-accent);
+  display: inline-flex;
+  flex: none;
 }
 
 .main-nav {
@@ -253,6 +255,16 @@ kbd {
   opacity: 1;
   color: var(--color-fg);
   text-decoration: none;
+}
+.icon-btn svg {
+  display: block;
+  flex: none;
+}
+.lang-code {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
 }
 
 .header-sep {
@@ -478,32 +490,120 @@ kbd {
   margin-block: 0.5rem;
 }
 
-/* ── Tabs ── */
+/* ── Top-level tabs (accent-soft pills, LDA-HSI pattern) ── */
 .tablist {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.35rem;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1.5rem;
   border-bottom: 1px solid var(--color-border);
-  margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 .tab {
-  padding: 0.55rem 1rem;
-  border: none;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
   background: transparent;
   color: var(--color-fg-subtle);
-  border-bottom: 2px solid transparent;
-  margin-bottom: -1px;
+  font-size: 0.92rem;
   font-weight: 550;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
 }
 .tab:hover {
   color: var(--color-fg);
+  background-color: var(--color-surface-2);
 }
 .tab.active {
   color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  border-color: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  font-weight: 650;
 }
 .tabpanel:focus {
   outline: none;
+}
+
+/* ── Sub-tabs (lighter chips nested inside a top-level tab panel) ── */
+.subtabs {
+  margin-block: 1rem;
+}
+.subtablist {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.1rem;
+}
+.subtab {
+  padding: 0.32rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  color: var(--color-fg-subtle);
+  font-size: 0.84rem;
+  font-weight: 500;
+  transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+.subtab:hover {
+  color: var(--color-fg);
+  border-color: var(--color-fg-faint);
+}
+.subtab.active {
+  color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  border-color: color-mix(in oklab, var(--color-accent) 40%, transparent);
+  font-weight: 600;
+}
+.subtabpanel:focus {
+  outline: none;
+}
+/* Vertical variant: a left rail of chips beside the panel on wide viewports. */
+.subtabs-vertical {
+  display: grid;
+  grid-template-columns: minmax(160px, 220px) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+.subtabs-vertical .subtablist {
+  flex-direction: column;
+  margin-bottom: 0;
+}
+.subtabs-vertical .subtab {
+  text-align: left;
+  border-radius: 8px;
+}
+@media (max-width: 720px) {
+  .subtabs-vertical {
+    grid-template-columns: 1fr;
+  }
+  .subtabs-vertical .subtablist {
+    flex-direction: row;
+  }
+}
+
+/* ── Figure (inline SVG diagram + caption) ── */
+.figure {
+  margin: 1.5rem 0;
+}
+.figure-canvas {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+.figure-canvas svg {
+  max-width: 100%;
+  height: auto;
+}
+.figure-caption {
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--color-fg-faint);
+  margin-top: 0.6rem;
+  font-style: italic;
+}
+.figure-caption-title {
+  font-style: normal;
+  font-weight: 650;
+  color: var(--color-fg-subtle);
 }
 
 /* ── Equations (KaTeX) ── */
@@ -523,6 +623,194 @@ kbd {
 }
 .katex {
   color: var(--color-fg);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Methodology — Tab 1 "Theoretical approaches": per-model sub-tab bodies,
+   assumptions blocks, inline reference rows, and the theme-aware analysis SVGs.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.th-model {
+  max-width: 72ch;
+}
+.th-model > p {
+  margin-block: 0.6rem;
+}
+
+/* Assumptions / failure-modes block */
+.th-assume {
+  margin-block: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-surface);
+}
+.th-assume-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-faint);
+}
+.th-assume-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--color-fg-subtle);
+}
+.th-assume-list li {
+  margin-block: 0.35rem;
+}
+
+/* Inline reference row under each model */
+.th-refs {
+  margin-top: 1.25rem;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--color-border);
+  font-size: 0.85rem;
+  color: var(--color-fg-subtle);
+}
+.th-refs-label {
+  font-weight: 650;
+  color: var(--color-fg-faint);
+}
+
+/* ── Analysis SVGs (one per model) — read the palette, follow light/dark ── */
+.th-svg {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  display: block;
+}
+.th-axis {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.2;
+}
+.th-axis-label {
+  fill: var(--color-fg-subtle);
+  font: 11px var(--font-sans);
+}
+.th-curve {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.th-curve-faint {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.5;
+}
+.th-marker {
+  stroke: var(--color-warn);
+  stroke-width: 1.2;
+}
+.th-marker-label {
+  fill: var(--color-warn);
+  font: 600 11px var(--font-mono);
+}
+.th-note {
+  fill: var(--color-fg-faint);
+  font: italic 11px var(--font-sans);
+}
+/* ETAS branching nodes + edges */
+.th-edges line {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.2;
+  opacity: 0.7;
+}
+.th-node-main {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+  stroke-width: 1;
+}
+.th-node-2 {
+  fill: color-mix(in oklab, var(--color-accent) 60%, transparent);
+  stroke: var(--color-accent);
+  stroke-width: 1;
+}
+.th-node-3 {
+  fill: color-mix(in oklab, var(--color-accent) 35%, transparent);
+  stroke: var(--color-accent);
+  stroke-width: 0.8;
+}
+.th-node-label {
+  fill: var(--color-fg-subtle);
+  font: 10.5px var(--font-sans);
+}
+.th-field {
+  fill: var(--color-surface-2);
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.th-field-stroke {
+  stroke: var(--color-accent);
+  stroke-width: 1.5;
+  opacity: 0.7;
+}
+/* R–J / STEP flow boxes */
+.th-box {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.2;
+}
+.th-box-accent {
+  stroke: var(--color-accent);
+}
+.th-box-title {
+  fill: var(--color-fg);
+  font: 600 12px var(--font-sans);
+}
+.th-box-sub {
+  fill: var(--color-fg-subtle);
+  font: 10px var(--font-mono);
+}
+.th-op {
+  fill: var(--color-fg-subtle);
+  font: 700 16px var(--font-sans);
+}
+.th-flow {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.4;
+}
+.th-arrowhead {
+  fill: var(--color-fg-faint);
+}
+/* STEP gridded map cells */
+.th-grid-cell {
+  fill: var(--color-accent);
+  stroke: var(--color-border);
+  stroke-width: 0.5;
+}
+/* Smoothed-seismicity kernel gradient stops */
+.th-kernel-core {
+  stop-color: var(--color-accent);
+  stop-opacity: 0.4;
+}
+.th-kernel-edge {
+  stop-color: var(--color-accent);
+  stop-opacity: 0;
+}
+/* Rate-and-state Coulomb lobes + fault */
+.th-fault {
+  stroke: var(--color-fg);
+  stroke-width: 2.5;
+}
+.th-lobe-pos {
+  fill: color-mix(in oklab, var(--color-bad) 18%, transparent);
+  stroke: var(--color-bad);
+  stroke-width: 1;
+}
+.th-lobe-neg {
+  fill: color-mix(in oklab, var(--color-accent) 16%, transparent);
+  stroke: var(--color-accent);
+  stroke-width: 1;
+}
+.th-lobe-label {
+  font: 600 10px var(--font-mono);
+}
+.th-lobe-label.pos {
+  fill: var(--color-bad);
+}
+.th-lobe-label.neg {
+  fill: var(--color-accent);
 }
 
 /* ── Definition / case grids ── */
@@ -552,9 +840,211 @@ kbd {
 .case h3 {
   margin-top: 0;
 }
+.case-lesson {
+  margin: 0.6rem 0 0;
+  font-size: 0.86rem;
+  color: var(--color-fg-faint);
+  border-top: 1px dashed var(--color-border);
+  padding-top: 0.55rem;
+  font-style: italic;
+}
 .ordered-steps,
 .detail-list {
   padding-left: 1.2rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Problem-page figures (theme-aware inline SVG: prediction-vs-forecast,
+   magnitude–frequency, single-outcome). All read the palette via CSS variables
+   so they follow light/dark; labels are kept >= 13px for legibility.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Shared sizing */
+.pvf-svg,
+.mfd-svg,
+.soc-svg {
+  width: 100%;
+  margin-inline: auto;
+  display: block;
+  height: auto;
+}
+
+/* (a) Prediction (deterministic, rejected) vs forecast (probability in (0,1)). */
+.pvf-svg {
+  max-width: 660px;
+}
+.pvf-frame {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.2;
+}
+.pvf-frame-on {
+  stroke: color-mix(in oklab, var(--color-accent) 55%, var(--color-border));
+}
+.pvf-panel-title {
+  fill: var(--color-fg-faint);
+  font: 700 15px var(--font-sans);
+}
+.pvf-panel-title.on {
+  fill: var(--color-accent);
+}
+.pvf-panel-sub {
+  fill: var(--color-fg-faint);
+  font: 13px var(--font-sans);
+}
+.pvf-binary {
+  stroke-width: 1.4;
+}
+.pvf-binary-on {
+  fill: color-mix(in oklab, var(--color-bad) 16%, var(--color-surface-2));
+  stroke: var(--color-bad);
+}
+.pvf-binary-off {
+  fill: var(--color-surface-2);
+  stroke: var(--color-fg-faint);
+}
+.pvf-binary-label {
+  fill: var(--color-bad);
+  font: 700 16px var(--font-mono);
+}
+.pvf-binary-label.off {
+  fill: var(--color-fg-faint);
+}
+.pvf-note {
+  fill: var(--color-fg-faint);
+  font: 13px var(--font-sans);
+}
+.pvf-note.on {
+  fill: var(--color-fg-subtle);
+}
+.pvf-cross {
+  stroke: var(--color-bad);
+  stroke-width: 2.5;
+  opacity: 0.55;
+}
+.pvf-axis {
+  stroke: var(--color-fg-subtle);
+  stroke-width: 1.6;
+}
+.pvf-arrowhead {
+  fill: var(--color-fg-subtle);
+}
+.pvf-open {
+  fill: var(--color-bg);
+  stroke: var(--color-fg-subtle);
+  stroke-width: 1.6;
+}
+.pvf-axis-tick {
+  fill: var(--color-fg-faint);
+  font: 13px var(--font-mono);
+}
+.pvf-band {
+  fill: color-mix(in oklab, var(--color-accent) 28%, transparent);
+  stroke: color-mix(in oklab, var(--color-accent) 55%, transparent);
+  stroke-width: 1;
+}
+.pvf-marker {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.pvf-marker-label {
+  fill: var(--color-accent);
+  font: 600 13px var(--font-sans);
+}
+.pvf-baseline {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.6;
+  stroke-dasharray: 3 3;
+}
+.pvf-baseline-label {
+  fill: var(--color-fg-faint);
+  font: 13px var(--font-sans);
+}
+
+/* (b) Gutenberg–Richter magnitude–frequency log-linear plot. */
+.mfd-svg {
+  max-width: 480px;
+}
+.mfd-frame {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+.mfd-grid line {
+  stroke: var(--color-border);
+  stroke-width: 0.5;
+  opacity: 0.5;
+}
+.mfd-tick {
+  fill: var(--color-fg-faint);
+  font: 13px var(--font-mono);
+}
+.mfd-point {
+  fill: var(--color-fg-subtle);
+  fill-opacity: 0.55;
+}
+.mfd-line {
+  stroke: var(--color-accent);
+  stroke-width: 2.2;
+}
+.mfd-slope line {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.2;
+}
+.mfd-slope-label {
+  fill: var(--color-fg-subtle);
+  font: 600 13px var(--font-sans);
+}
+.mfd-axis {
+  fill: var(--color-fg-subtle);
+  font: 13px var(--font-sans);
+}
+
+/* (c) Single outcome neither validates nor invalidates a forecast (Ridgecrest ~3%). */
+.soc-svg {
+  max-width: 580px;
+}
+.soc-head {
+  fill: var(--color-fg-subtle);
+  font: 600 14px var(--font-sans);
+}
+.soc-bar-large {
+  fill: var(--color-surface-2);
+}
+.soc-bar-small {
+  fill: color-mix(in oklab, var(--color-accent) 60%, var(--color-surface-2));
+}
+.soc-bar-frame {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 1.2;
+}
+.soc-bar-label {
+  fill: var(--color-fg-subtle);
+  font: 13px var(--font-sans);
+}
+.soc-leader {
+  stroke: var(--color-accent);
+  stroke-width: 1.2;
+}
+.soc-small-label {
+  fill: var(--color-accent);
+  font: 600 13px var(--font-sans);
+}
+.soc-outcome-line {
+  stroke: var(--color-warn);
+  stroke-width: 1.8;
+}
+.soc-arrowhead {
+  fill: var(--color-warn);
+}
+.soc-outcome-label {
+  fill: var(--color-warn);
+  font: 600 13px var(--font-sans);
+}
+.soc-takeaway {
+  fill: var(--color-fg-faint);
+  font: italic 13px var(--font-sans);
 }
 .ordered-steps li {
   margin-block: 0.5rem;
@@ -598,6 +1088,86 @@ kbd {
   font: italic 10.5px var(--font-mono);
 }
 .pipeline-caption {
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--color-fg-faint);
+  font-style: italic;
+  margin-top: 0.6rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Architecture SVG (Methodology Tab 3 — "The version employed").
+   The two-layer estimator stack: inputs + CNN context encoder → ETAS-class core
+   (ships v0, solid) + gated neural challenger (flagged, dashed) → exceedance.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.arch-figure {
+  margin: 1.5rem 0;
+}
+.arch-svg {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+  display: block;
+  height: auto;
+}
+.arch-box {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.4;
+}
+/* The core path ships in v0 → accent border + faint accent wash. */
+.arch-core .arch-box {
+  stroke: var(--color-accent);
+  stroke-width: 1.6;
+  fill: var(--color-accent-soft);
+}
+/* The gated challenger is feature-flagged → dashed border, neutral fill. */
+.arch-gated .arch-box {
+  stroke: var(--color-fg-faint);
+  stroke-dasharray: 5 4;
+}
+.arch-output .arch-box {
+  stroke: var(--color-good);
+  stroke-width: 1.5;
+}
+.arch-box-title {
+  fill: var(--color-fg);
+  font: 650 13px var(--font-sans);
+}
+.arch-core .arch-box-title {
+  fill: var(--color-accent);
+}
+.arch-output .arch-box-title {
+  fill: var(--color-good);
+}
+.arch-box-body {
+  fill: var(--color-fg-subtle);
+  font: 11.5px var(--font-sans);
+}
+.arch-line {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.5;
+  fill: none;
+}
+.arch-line.gated {
+  stroke-dasharray: 5 4;
+  stroke: var(--color-fg-faint);
+  opacity: 0.85;
+}
+.arch-arrowhead {
+  fill: var(--color-fg-faint);
+}
+.arch-arrowhead.gated {
+  fill: var(--color-fg-faint);
+}
+.arch-edge-label {
+  fill: var(--color-fg-faint);
+  font: italic 10.5px var(--font-mono);
+}
+.arch-edge-label.gated {
+  fill: var(--color-warn);
+}
+.arch-caption {
   text-align: center;
   font-size: 0.84rem;
   color: var(--color-fg-faint);
@@ -1190,4 +1760,192 @@ kbd {
 .coverage-note,
 .provenance-note {
   margin-top: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Methodology Tab 2 (Analytical / ML) — sub-tab headers, assumption lists,
+   tool table, and the theme-aware inline SVG method diagrams.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Section header: a lucide glyph in the accent colour + the method title. */
+.method-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-block: 0.25rem 0.4rem;
+}
+.method-head-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--color-accent);
+  background-color: var(--color-accent-soft);
+  border: 1px solid color-mix(in oklab, var(--color-accent) 30%, transparent);
+  flex: none;
+}
+.method-head h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+.method-subhead {
+  margin-block: 1.25rem 0.4rem;
+  font-size: 0.98rem;
+  color: var(--color-accent);
+}
+
+/* Assumptions / limitations block. */
+.assumptions {
+  margin-block: 1rem;
+  padding: 0.85rem 1rem;
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+.assumptions-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-fg-faint);
+}
+.method-assumption-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+.method-assumption-list li {
+  margin-block: 0.35rem;
+  font-size: 0.92rem;
+  color: var(--color-fg-subtle);
+}
+.method-refs {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--color-fg-faint);
+}
+
+/* Detection-vs-forecasting tool table. */
+.method-tools {
+  margin-block: 1rem;
+  font-size: 0.88rem;
+}
+.method-tools-no {
+  color: var(--color-bad);
+  white-space: nowrap;
+}
+.method-tools-no svg {
+  vertical-align: -2px;
+  margin-right: 0.15rem;
+}
+
+/* The methodology sub-tabs read better as a left rail with breathing room. */
+.subtabs-vertical .subtabpanels {
+  padding-left: 0.25rem;
+}
+
+/* ── Inline SVG method diagrams (theme-aware via the CSS palette) ── */
+.diagram-svg {
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  display: block;
+  margin-inline: auto;
+}
+.diagram-axis {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.3;
+}
+.diagram-axis-label {
+  fill: var(--color-fg-subtle);
+  font: italic 12px var(--font-mono);
+}
+.diagram-guide {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+.diagram-curve {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.diagram-event {
+  stroke: var(--color-fg-subtle);
+  stroke-width: 1.6;
+}
+.diagram-event.inhibit {
+  stroke: var(--color-warn);
+}
+.diagram-event-dot {
+  fill: var(--color-fg-subtle);
+}
+.diagram-box {
+  fill: var(--color-surface);
+  stroke: var(--color-border);
+  stroke-width: 1.3;
+}
+.diagram-box.accent {
+  stroke: var(--color-accent);
+}
+.diagram-box.good {
+  stroke: var(--color-good);
+}
+.diagram-box-text {
+  fill: var(--color-fg-subtle);
+  font: 12px var(--font-mono);
+}
+.diagram-box-text.accent {
+  fill: var(--color-accent);
+}
+.diagram-sum {
+  fill: var(--color-accent);
+  font: 600 16px var(--font-sans);
+}
+.diagram-arrow {
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.4;
+  fill: none;
+}
+.diagram-arrowhead {
+  fill: var(--color-fg-faint);
+}
+.diagram-attn {
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0.5;
+  fill: none;
+}
+.diagram-node {
+  fill: var(--color-surface);
+  stroke: var(--color-fg-faint);
+  stroke-width: 1.2;
+}
+.diagram-node.accent {
+  stroke: var(--color-accent);
+  fill: var(--color-accent-soft);
+}
+.diagram-edge-faint {
+  stroke: var(--color-border);
+  stroke-width: 0.6;
+  opacity: 0.7;
+}
+.diagram-tick {
+  fill: var(--color-fg-faint);
+  font: 11px var(--font-sans);
+}
+.diagram-tick.good {
+  fill: var(--color-good);
+  font-weight: 600;
+}
+.diagram-tick.bad {
+  fill: var(--color-bad);
+  font-weight: 600;
+}
+.diagram-tick.inhibit {
+  fill: var(--color-warn);
 }

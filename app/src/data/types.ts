@@ -157,11 +157,53 @@ export interface Staleness {
  * Spatial-discretization descriptor. Mirrors `ForecastArtifact.grid`
  * ("{type:'h3', resolution:int}"). `type` is open-ended (`'h3'` today; `'latlon'`
  * possible for a fine fit grid), `resolution` is the H3 resolution for display cells.
+ *
+ * Global field (multi-resolution H3): the writer (`inference/artifact.serialize_artifact`) also
+ * emits `resolution_world` (the coarse world overview every surfaced cell is at least as coarse as)
+ * and `resolution_region` (the per-country drill-down resolution; views may override it). `resolution`
+ * is the base display resolution (== `resolution_world` for the global field). All optional so a
+ * single-region artifact (one resolution) still validates.
  */
 export interface GridDescriptor {
   type: 'h3' | 'latlon' | string;
   resolution: number;
+  /** Coarse world-overview H3 resolution (global field). */
+  resolution_world?: number;
+  /** Per-country / per-region drill-down H3 resolution (global field). */
+  resolution_region?: number;
   [key: string]: unknown;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// View index (mirror ViewIndexEntry) — a country slice of the single global field
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * One entry in the artifact's `views` index. Mirrors `contracts.ViewIndexEntry`.
+ *
+ * Core thesis of the global re-scope (web-app-spec.md §7.1, contracts.View): the model conditions
+ * ONE global field; any country is a VIEW into that field, never a separately-trained model. The
+ * global artifact ships one `forecast` dict; the SPA's country selector resolves a view to its
+ * `cells` (H3 cell keys of the shared field falling in this view's bbox) and reads only those keys.
+ * Storing the cell keys (a few hundred per country) is far cheaper than duplicating the per-cell
+ * forecast payload per country.
+ */
+export interface ViewIndexEntry {
+  /** Stable view id — ISO-3166 alpha-2/-3 for countries (e.g. "CL", "JP", "US-CA"). */
+  id: string;
+  name_en: string;
+  name_es: string;
+  bbox: BBox;
+  /** View-local maximum magnitude bounding the exceedance integral (e.g. Chile 9.5, UK 7.0). */
+  m_max: number;
+  /** Attribution required on any public surface that surfaces this view. */
+  attribution: string[];
+  /** Optional finer display H3 resolution for this view (overrides the world resolution). */
+  h3_resolution?: number | null;
+  /** H3 cell keys of the global field falling in this view's bbox (the slice index). */
+  cells: string[];
+  /** Convenience count (== `cells.length`). */
+  n_cells: number;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,6 +214,13 @@ export interface GridDescriptor {
  * The single compact JSON the SPA renders. Mirrors `contracts.ForecastArtifact`
  * after `model_dump_compact()` (the writer further H3-bins, quantizes, and gzips).
  *
+ * Global re-scope (contracts.ForecastArtifact, web-app-spec.md §7.1): `region` is the GLOBAL
+ * field's bounding region (the whole Earth); the per-country drill-downs are carried as `views`
+ * (each a lightweight cell-key index into the shared `forecast` dict, NOT a duplicated payload).
+ * `grid` may declare a base world resolution plus per-view finer resolutions (multi-resolution H3).
+ * Backward compatible: a single-region artifact ships an empty `views` list and a single-resolution
+ * `grid`.
+ *
  * Field order and names match the Python model. Keep it small: sparse cells, H3 keys.
  */
 export interface ForecastArtifact {
@@ -181,7 +230,7 @@ export interface ForecastArtifact {
   product: string;
   /** ISO-8601 UTC issue time (the sealed forecast-clock instant). */
   issued_at: string;
-  /** The region this artifact covers. */
+  /** The GLOBAL field's bounding region (whole Earth for the global artifact). */
   region: Region;
   /** Horizons in days, e.g. [1, 2, 7]. Numeric here; STRING keys inside `forecast`. */
   horizons_days: number[];
@@ -189,7 +238,7 @@ export interface ForecastArtifact {
   magnitude_thresholds: number[];
   /** Maximum magnitude bounding the exceedance integral (== region.m_max). */
   m_max: number;
-  /** Grid descriptor, e.g. { type: 'h3', resolution: 3 }. */
+  /** Grid descriptor, e.g. { type: 'h3', resolution: 3, resolution_world: 3, resolution_region: 5 }. */
   grid: GridDescriptor;
   /** Sparse forecast[cell][horizon][threshold] -> {p, lo, hi, rate, baseline}. */
   forecast: ForecastTree;
@@ -197,6 +246,11 @@ export interface ForecastArtifact {
   calibration: CalibrationSummary;
   /** Cell keys explicitly OUT of validated coverage (hatch in the UI; blank != safe). */
   coverage_mask: string[];
+  /**
+   * Per-country slices of the global field for the web's country selector (cell-key indices into
+   * the shared `forecast` dict). Empty for a single-region artifact.
+   */
+  views?: ViewIndexEntry[];
   /** Free-form provenance (catalog versions, Mc version, model version, config hash, ...). */
   provenance: Record<string, unknown>;
   /** Generated / next-run / ok staleness indicator. */
@@ -256,6 +310,13 @@ export const BOUND_FIELD: Record<Bound, keyof CellValue> = {
   expected: 'p',
   hi: 'hi',
 };
+
+/**
+ * The id the country selector uses for the default WORLD view — the whole global field, NOT a slice.
+ * It is not present in `artifact.views`; selecting it surfaces every cell. Any other value is a
+ * `ViewIndexEntry.id` (a country slice).
+ */
+export const WORLD_VIEW_ID = 'world' as const;
 
 /** A flattened per-cell selection for one (horizon, threshold, bound) slice. */
 export interface CellSelection {

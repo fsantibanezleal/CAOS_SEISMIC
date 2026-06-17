@@ -7,8 +7,12 @@ import { PipelineDiagram } from "@/components/content/PipelineDiagram";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Route 4 — Implementation (web-app-spec.md §5). The v0 model description + the inline SVG
- * flow diagram of the daily offline pipeline.
+ * Route 4 — Implementation (web-app-spec.md §5 + model-design.md §9).
+ *
+ * The v0 model description, the global / regime-tiled + context-encoder structure, and the
+ * inline SVG flow diagram of the daily offline pipeline (web-app-spec.md §5.2):
+ *
+ *   data feeds → offline daily job → compact artifact → static read (thin API) → SPA
  *
  * Model (v0):
  *  - mandatory null: stationary smoothed-seismicity Poisson reference on a declustered catalog;
@@ -16,10 +20,10 @@ import type { CitationId } from "@/lib/citations";
  *    fallback / sanity check;
  *  - dual-catalog rule (declustered → background; full → conditional/ETAS);
  *  - data hygiene (ordered): time-varying Mc → magnitude homogenization to Mw → declustering;
- *  - incompleteness-aware likelihood for the hours–days-after-a-large-event window (required,
- *    not optional);
- *  - gated ML challengers ship ONLY on positive, significant pseudo-prospective information
- *    gain over ETAS in CSEP tests; detection ≠ forecasting.
+ *  - incompleteness-aware likelihood for the hours–days-after-a-large-event window (required);
+ *  - global field tiled by tectonic regime, each tile region-refit (never California generics);
+ *  - a CNN spatial-context encoder feeding the gated neural challenger (which ships ONLY on a
+ *    positive, significant pseudo-prospective information gain over ETAS in CSEP tests).
  *
  * Copy lives in i18n under `impl.*`; the diagram component carries its own translated labels.
  */
@@ -30,6 +34,7 @@ const IMPL_REFS: CitationId[] = [
   "page2016",
   "helmstetter2007",
   "wiemerWyss2000",
+  "savran2020",
   "stockman2026",
   "dascher2023",
   "savran2022",
@@ -39,6 +44,7 @@ export default function Implementation() {
   const { t } = useTranslation();
 
   const hygieneSteps = t("impl.hygiene.steps", { returnObjects: true }) as string[];
+  const jobSteps = t("impl.flow.steps", { returnObjects: true }) as string[];
 
   return (
     <article className="page-body prose">
@@ -47,6 +53,7 @@ export default function Implementation() {
         <p className="lede">{t("impl.lede")}</p>
       </header>
 
+      {/* ── The model (v0) ─────────────────────────────────────────────────── */}
       <section>
         <h2>{t("impl.model.title")}</h2>
 
@@ -82,6 +89,7 @@ export default function Implementation() {
         </div>
       </section>
 
+      {/* ── Dual-catalog rule ──────────────────────────────────────────────── */}
       <section>
         <h2>{t("impl.dualCatalog.title")}</h2>
         <p>
@@ -89,6 +97,7 @@ export default function Implementation() {
         </p>
       </section>
 
+      {/* ── Data hygiene ───────────────────────────────────────────────────── */}
       <section>
         <h2>{t("impl.hygiene.title")}</h2>
         <p className="muted">{t("impl.hygiene.intro")}</p>
@@ -102,6 +111,7 @@ export default function Implementation() {
         </Callout>
       </section>
 
+      {/* ── Short-term aftershock incompleteness ───────────────────────────── */}
       <section>
         <h2>{t("impl.incompleteness.title")}</h2>
         <Callout tone="honest">
@@ -109,6 +119,30 @@ export default function Implementation() {
         </Callout>
       </section>
 
+      {/* ── Global / regime-tiled + context-encoder structure ──────────────── */}
+      <section>
+        <h2>{t("impl.structure.title")}</h2>
+        <p className="muted">{t("impl.structure.intro")}</p>
+        <div className="def-grid">
+          <div className="def">
+            <h3>{t("impl.structure.tiled.title")}</h3>
+            <p>
+              <Trans i18nKey="impl.structure.tiled.body" components={{ b: <strong /> }} />
+            </p>
+          </div>
+          <div className="def">
+            <h3>{t("impl.structure.encoder.title")}</h3>
+            <p>
+              <Trans i18nKey="impl.structure.encoder.body" components={{ b: <strong /> }} />
+            </p>
+          </div>
+        </div>
+        <Callout tone="note" title={t("impl.structure.note.title")}>
+          {t("impl.structure.note.body")}
+        </Callout>
+      </section>
+
+      {/* ── Gated challengers ──────────────────────────────────────────────── */}
       <section>
         <h2>{t("impl.gated.title")}</h2>
         <p>
@@ -120,10 +154,19 @@ export default function Implementation() {
         <Callout tone="note">{t("impl.gated.detectionNote")}</Callout>
       </section>
 
+      {/* ── The daily offline pipeline (SVG flow diagram) ──────────────────── */}
       <section>
         <h2>{t("impl.pipeline.title")}</h2>
         <p className="muted">{t("impl.pipeline.intro")}</p>
+        <ol className="ordered-steps">
+          {jobSteps.map((step, i) => (
+            <li key={i}>{step}</li>
+          ))}
+        </ol>
         <PipelineDiagram />
+        <Callout tone="honest" title={t("impl.flow.qaTitle")}>
+          <Trans i18nKey="impl.flow.qaBody" components={{ b: <strong /> }} />
+        </Callout>
       </section>
 
       <ReferenceList ids={IMPL_REFS} heading={t("common.references")} />

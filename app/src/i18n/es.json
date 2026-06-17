@@ -42,12 +42,30 @@
     "references": "Referencias"
   },
   "pages": {
-    "introduction": { "title": "Introducción", "intro": "Qué es este producto — y qué no es." },
-    "problem": { "title": "El problema", "intro": "La epistemología honesta del pronóstico sísmico: predecir no es pronosticar." },
-    "methodology": { "title": "Metodología", "intro": "Las teorías clásicas y los modelos analíticos, con las ecuaciones reales que los gobiernan." },
-    "implementation": { "title": "Implementación", "intro": "El modelo y la canalización diaria fuera de línea que produce un único artefacto compacto." },
-    "backAnalysis": { "title": "Retroanálisis", "intro": "Resultados CSEP retrospectivos y pseudo-prospectivos en regiones y periodos tectónicamente diversos." },
-    "monitoring": { "title": "Monitoreo", "intro": "El campo de pronóstico diario en vivo: tasa condicional elevada respecto de su propia línea base de largo plazo, con un horizonte y un umbral de magnitud explícitos." }
+    "introduction": {
+      "title": "Introducción",
+      "intro": "Qué es este producto — y qué no es."
+    },
+    "problem": {
+      "title": "El problema",
+      "intro": "La epistemología honesta del pronóstico sísmico: predecir no es pronosticar."
+    },
+    "methodology": {
+      "title": "Metodología",
+      "intro": "Las teorías clásicas y los modelos analíticos, con las ecuaciones reales que los gobiernan."
+    },
+    "implementation": {
+      "title": "Implementación",
+      "intro": "El modelo y la canalización diaria fuera de línea que produce un único artefacto compacto."
+    },
+    "backAnalysis": {
+      "title": "Retroanálisis",
+      "intro": "Resultados CSEP retrospectivos y pseudo-prospectivos en regiones y periodos tectónicamente diversos."
+    },
+    "monitoring": {
+      "title": "Monitoreo",
+      "intro": "El campo de pronóstico diario en vivo: tasa condicional elevada respecto de su propia línea base de largo plazo, con un horizonte y un umbral de magnitud explícitos."
+    }
   },
   "intro": {
     "title": "Introducción",
@@ -92,44 +110,375 @@
     "creedTitle": "El credo del producto",
     "determinism": {
       "title": "La predicción determinista es efectivamente imposible",
-      "body": "Nombrar el tiempo, lugar y magnitud de un terremoto con fiabilidad de nivel de alarma nunca se ha logrado. La falla es fuertemente no lineal, y si una pequeña ruptura cascada hacia una grande depende de un detalle inmensurablemente fino de la corteza <cite>.",
-      "soc": "El marco explicativo principal es la criticalidad auto-organizada — los terremotos como un fenómeno crítico en el que cualquier evento pequeño tiene una probabilidad larga y de cola pesada de crecer <cite>. Esta es la explicación principal, no física resuelta: las visiones de terremoto característico y de predictibilidad parcial coexisten."
+      "body": "Nombrar el tiempo, lugar y magnitud de un terremoto específico con fiabilidad de nivel de alarma se ha perseguido por más de un siglo sin éxito reproducible. La falla es fuertemente no lineal, y si una pequeña ruptura cascada hacia una grande depende de un detalle inmensurablemente fino de las condiciones del interior de la Tierra — así, cualquier terremoto pequeño tiene alguna probabilidad de crecer, fijada por detalles sub-observacionales <cite>.",
+      "soc": "El cuadro mecanístico es la <b>criticalidad auto-organizada</b>: una corteza extendida y lentamente forzada evoluciona espontáneamente hacia un estado crítico sin tamaño de evento característico, donde las fluctuaciones son invariantes de escala (ley de potencias) y un pequeño deslizamiento y un gran terremoto comienzan de forma indistinguible <cite>. Es el marco explicativo principal, no física resuelta — las visiones de terremoto característico y de predictibilidad parcial coexisten en la literatura.",
+      "laws": "Lo robusto son las <b>estadísticas de poblaciones de terremotos</b>, no el tiempo de ningún evento individual. La ley de Gutenberg–Richter lo concreta: la distribución frecuencia–magnitud es, a primer orden, una ley de potencias de pendiente b ≈ 1, la huella empírica de ese estado crítico e invariante de escala.",
+      "lawsBuy": "Lo que esto nos da: dada la tasa de eventos pequeños, la tasa esperada de los grandes — no hay escala característica, por tanto no hay \"brecha\" que señale que un evento grande específico está pendiente en el corto plazo. Lo que <b>no</b> nos da: el tiempo del próximo grande. El producto vive enteramente dentro del primer tipo de afirmación."
+    },
+    "eq": {
+      "gr": {
+        "caption": "Gutenberg–Richter: N(≥M) decae como 10^(−bM); a fija la productividad, b ≈ 1 la pendiente. Un estadístico de la población, no un reloj para el próximo evento."
+      },
+      "exceedance": {
+        "caption": "El número público: una excedencia de Poisson no homogénea sobre el horizonte. Solo la calidad del conteo esperado N mejora al mejorar el modelo — el mapa P = 1 − e^(−N) nunca cambia."
+      }
     },
     "predVsForecast": {
       "title": "Predicción versus pronóstico",
-      "body": "Esta es la distinción organizadora del campo <cite>. Una <b>predicción</b> es una afirmación determinista de sí/no de que un evento ocurrirá o no en una región, ventana y rango de magnitud. Un <b>pronóstico</b> da una probabilidad estrictamente entre 0 y 1. Este producto es estrictamente un pronosticador.",
-      "uiNote": "Por ello la interfaz nunca emite una decisión binaria, una alarma, una sirena de alerta ni una cuenta regresiva — solo una probabilidad continua con su incertidumbre y su línea base."
+      "body": "Esta es la distinción organizadora del campo, tomada en espíritu del informe ICEF <cite>. Una <b>predicción</b> es determinista; un <b>pronóstico</b> es una probabilidad estrictamente entre 0 y 1. Este producto es estrictamente un pronosticador — y solo eso.",
+      "predDefTitle": "Predicción (nunca hacemos esto)",
+      "predDef": "Una afirmación determinista de que un terremoto futuro ocurrirá o no en una región geográfica, ventana temporal y rango de magnitud particulares — un sí/no binario, falsable en una sola decisión, la postura de una alarma.",
+      "foreDefTitle": "Pronóstico (lo único que emitimos)",
+      "foreDef": "Una probabilidad mayor que cero pero menor que uno de que tal evento ocurra en esa región, ventana y rango de magnitud — ponderada por riesgo, graduada, falsable solo como un conjunto sobre muchos ensayos (calibración).",
+      "uiNote": "Por ello la interfaz nunca emite una decisión binaria, una alarma, una sirena de alerta, una luz roja ni una cuenta regresiva — solo una probabilidad continua con su banda de incertidumbre y su línea base."
     },
     "scale": {
       "title": "La escala absoluta honesta",
-      "body": "Las probabilidades sísmicas de corto plazo pueden variar en órdenes de magnitud, pero típicamente permanecen bajas en sentido absoluto — usualmente <b>por debajo de cerca del 1% por día</b> <cite>. La ganancia relativa durante una secuencia activa puede ser grande (uno a unos pocos órdenes de magnitud sobre el fondo), y sin embargo la probabilidad absoluta de un evento grande en el día siguiente sigue estando usualmente bien por debajo de unos pocos por ciento. El producto muestra ambas a la vez para que ninguna se confunda con la otra."
+      "body": "Las probabilidades sísmicas de corto plazo pueden variar en órdenes de magnitud, pero típicamente permanecen bajas en sentido absoluto — usualmente <b>por debajo de cerca del 1% por día</b>, incluso cuando están elevadas <cite>. La ganancia relativa durante una secuencia activa puede ser grande (uno a tres órdenes de magnitud sobre el fondo), y sin embargo la probabilidad absoluta de un evento grande en el día siguiente sigue estando usualmente bien por debajo de unos pocos por ciento.",
+      "exceedance": "El único número que ve un usuario es una probabilidad de excedencia: la posibilidad de <b>al menos un</b> evento por encima de una magnitud objetivo en una región sobre el horizonte, por el mapa de Poisson no homogéneo.",
+      "baselineRule": "Como <n> ya lleva la intensidad condicional completa y la cola de magnitud de Gutenberg–Richter, el modelo puede mejorarse sin cambiar nunca la fórmula. Los días tranquilos se leen correctamente cerca de la climatología, y el número se <b>muestra siempre junto a su línea base de largo plazo</b> — \"X% vs Y% línea base\" — para que \"más alto que lo usual\" y \"aún pequeño\" sean visibles a la vez, nunca una cifra sin anclar."
     },
     "cases": {
       "title": "Tres casos de enseñanza",
       "intro": "Cada caso enseña una lección específica sobre los límites de la predicción y la disciplina del pronóstico probabilístico.",
       "parkfield": {
         "title": "Parkfield",
-        "body": "Un modelo de recurrencia dio un pronóstico de cerca del 95%-para-1993 para un M6 característico en Parkfield <cite1>. El M6.0 llegó en 2004 — cerca de once años después de cerrarse la ventana — sin precursores de corto plazo diagnósticos en la falla más instrumentada de la Tierra <cite2>. El tiempo no es predecible ni siquiera con un modelo de recurrencia e instrumentación densa."
+        "body": "Un modelo de recurrencia físicamente motivado dio un pronóstico de cerca del <b>95%-para-1993</b> para un M6 característico en Parkfield <cite1>. El M6.0 finalmente llegó en 2004 — cerca de once años después de cerrarse la ventana — sin precursores de corto plazo diagnósticos en la falla más instrumentada de la Tierra <cite2>.",
+        "lesson": "Lección: aun con un modelo de recurrencia e instrumentación densa, el tiempo no es predecible y ningún precursor anunció el evento de forma fiable."
       },
       "ridgecrest": {
         "title": "Ridgecrest 2019",
-        "body": "UCERF3-ETAS dio cerca de un <b>2,8% (~3%)</b> de probabilidad en la primera semana de un evento mayor; el M7.1 ocurrió luego cerca de 34 horas después <cite>. Un pronóstico de ~3% no está equivocado cuando ocurre el resultado del 3%. Un resultado individual ni valida ni invalida un pronóstico probabilístico."
+        "body": "Tras el M6.4 del 4 de julio de 2019, UCERF3-ETAS corrió en ~33 minutos y dio cerca de un <b>2,8% (~3%)</b> de probabilidad en la primera semana de un evento mayor; el M7.1 ocurrió luego cerca de 34 horas después <cite>.",
+        "lesson": "Lección: un pronóstico de ~3% no está equivocado cuando ocurre el resultado del 3% — 3% ≠ 0%. Un resultado individual ni valida ni invalida un pronóstico probabilístico."
       },
       "laquila": {
         "title": "L'Aquila",
-        "body": "El daño en L'Aquila fue un <b>fallo de comunicación</b> — falsa tranquilidad — no un fallo de predicción. (La magnitud del evento principal se reporta de manera variable como Mw 6,1–6,3 en fuentes primarias.) Por esto exactamente este producto siempre muestra el número junto a su línea base, con incertidumbre explícita, y nunca ofrece un estado 'seguro'."
+        "body": "Antes del evento principal de L'Aquila 2009, una probabilidad baja verdadera-pero-mal-comunicada se convirtió en tranquilidad pública — insinuando que un enjambre \"descargaba\" energía y reducía el riesgo, lo cual no es como funciona la sismología. El daño fue un <b>fallo de comunicación</b> (falsa tranquilidad), no un fallo de predicción. (La magnitud se reporta de manera variable como Mw 6,1–6,3 en fuentes primarias.)",
+        "lesson": "Lección: nunca dar falsa tranquilidad ni sobre-alarmar. Mostrar siempre el número con su línea base y su incertidumbre — por lo cual este producto nunca ofrece un estado \"seguro\"."
       }
     },
     "achievable": {
       "title": "Lo que sí es alcanzable: el Pronóstico Operacional de Terremotos",
-      "body": "Los sistemas reales desplegados son servicios probabilísticos, no supercomputadoras. Los pronósticos operacionales de réplicas del USGS crecieron desde Reasenberg & Jones <citeRJ> hasta la extensión global por régimen tectónico de Page et al. <citePage>. <b>OEF-Italy / INGV</b> es un conjunto de tres modelos distintos — ETAS, ETES y STEP <citeINGV>.",
+      "body": "Los sistemas reales desplegados son servicios probabilísticos, no bolas de cristal. Los pronósticos operacionales de réplicas del USGS crecieron desde Reasenberg & Jones <citeRJ> hasta la extensión global por régimen tectónico de Page et al., que reporta pronósticos con <b>cotas de incertidumbre</b>, no estimaciones puntuales <citePage>. <b>OEF-Italy / INGV</b> corre 24/7 como un conjunto de tres modelos de clustering distintos — ETAS, ETES y STEP — actualizado cada noche y tras cada M ≥ 3,5 <citeINGV>.",
       "honestNote": "Reporta OEF-Italy con honestidad: ampliamente fiable a lo largo de cerca de diez años de operación verdaderamente prospectiva, pero con una subestimación documentada de la secuencia de Italia Central 2016–2017 (Amatrice–Norcia) causada por incompletitud del catálogo tras el evento principal. La calibración se gana y se matiza, nunca se asume."
+    },
+    "communication": {
+      "title": "La regla de comunicación que el producto codifica",
+      "intro": "Destilada de la doctrina ICEF, la lección de L'Aquila y la práctica de CSEP. Tanto la falsa tranquilidad como la sobre-alarma son deshonestas; el antídoto es siempre el número, su línea base y su incertidumbre.",
+      "doTitle": "Lo que el producto sí dice",
+      "do": [
+        "Reporta probabilidades condicionales, no predicciones — para una banda de magnitud, región y horizonte de 1 / 2 / 7 días.",
+        "Muestra el número junto a su línea base de largo plazo, para que \"más alto que lo usual\" y \"aún pequeño\" sean ambos visibles.",
+        "Se actualiza a diario al llegar nuevos datos, y muestra la trayectoria — la dependencia temporal es una característica.",
+        "Declara su incertidumbre: cada número lleva una cota (estimación + variabilidad entre secuencias).",
+        "Se evalúa de forma prospectiva — un diagrama de fiabilidad público, y \"un pronóstico de 3% es correcto aunque ocurra el 3%\".",
+        "Complementa, nunca reemplaza, la preparación de largo plazo, la ingeniería y las agencias oficiales."
+      ],
+      "neverTitle": "Lo que el producto nunca dice",
+      "never": [
+        "Una decisión determinista: \"un terremoto golpeará en X el día Y\".",
+        "Una alarma, una luz roja, una sirena de alerta o una cuenta regresiva que implique certeza inminente.",
+        "Un sí/no de evento único — los pronósticos son probabilidades en (0,1), evaluados como conjuntos.",
+        "Falsa tranquilidad: \"sin riesgo\", \"seguro\", o \"el enjambre liberó la energía\".",
+        "Un solo acierto o fallo como prueba de habilidad o de fracaso — la habilidad es calibración sobre muchos ensayos.",
+        "Que la probabilidad diaria es alta; la honestidad exige mostrar que casi siempre es pequeña."
+      ]
+    },
+    "fig": {
+      "pvf": {
+        "figTitle": "Figura 1.",
+        "caption": "Predicción (determinista, binaria, de nivel de alarma) versus pronóstico (una probabilidad estrictamente en el intervalo abierto (0, 1), mostrada con su banda de incertidumbre y su línea base). El producto representa solo el objeto de la derecha <cite>.",
+        "svgTitle": "Contraste predicción versus pronóstico",
+        "svgDesc": "Izquierda: un dial de alarma binario sí/no, tachado — la predicción determinista que este producto nunca representa. Derecha: un eje de probabilidad continuo en el intervalo abierto de 0 a 1, con una banda de incertidumbre, un marcador esperado y una marca de línea base.",
+        "predTitle": "Predicción",
+        "predSub": "determinista · binaria · alarma",
+        "yes": "OCURRIRÁ",
+        "no": "NO OCURRIRÁ",
+        "predNote": "una sola decisión sí/no — nunca se representa aquí",
+        "foreTitle": "Pronóstico",
+        "foreSub": "probabilidad en (0, 1) · con incertidumbre",
+        "expected": "esperada",
+        "baseline": "línea base",
+        "foreNote": "baja pero elevada sobre la línea base — la única salida"
+      },
+      "mfd": {
+        "figTitle": "Figura 2.",
+        "caption": "La ley frecuencia–magnitud de Gutenberg–Richter como gráfico log-lineal: una recta descendente de pendiente −b (b ≈ 1) sobre un catálogo ruidoso. Sin tamaño de evento característico — la firma de invariancia de escala del estado crítico, y un estadístico de población, no un reloj <cite>.",
+        "svgTitle": "Gráfico frecuencia–magnitud de Gutenberg–Richter",
+        "svgDesc": "Log10 del conteo acumulado de eventos contra la magnitud. Los puntos empíricos se dispersan alrededor de una recta descendente de pendiente menos b, cercana a 1: cada paso de una magnitud divide el conteo por unos diez.",
+        "xAxis": "magnitud M",
+        "yAxis": "N (≥ M)",
+        "slope": "+1 M → ÷10"
+      },
+      "soc": {
+        "figTitle": "Figura 3.",
+        "caption": "Un resultado individual ni valida ni invalida un pronóstico probabilístico — el ejemplo trabajado de Ridgecrest 2019. Un pronóstico de ~3% en la primera semana de un evento mayor precedió al M7.1 por ~34 h; que el resultado caiga en la franja del 3% es exactamente lo que un 3% bien calibrado permite <cite>.",
+        "svgTitle": "Un resultado individual no valida un pronóstico probabilístico",
+        "svgDesc": "Una barra de probabilidad unitaria dividida en una franja del 97% sin evento mayor y una franja del 3% con evento mayor. Una flecha marca que el M7.1 de Ridgecrest cayó en la franja del 3%, lo que un pronóstico de 3% bien calibrado permite. La conclusión es que la habilidad se juzga sobre muchos pronósticos por calibración, nunca por un resultado.",
+        "head": "UCERF3-ETAS, primera semana tras el M6.4",
+        "noLarger": "≈ 97% — sin evento mayor",
+        "larger": "≈ 3% evento mayor",
+        "outcome": "M7.1 ocurrió (~34 h después)",
+        "takeaway": "3% ≠ 0% — la habilidad es calibración sobre muchos pronósticos, no un resultado"
+      }
     }
   },
   "method": {
     "title": "Metodología",
     "lede": "Las ecuaciones reales y citables detrás del campo, y un veredicto honesto sobre si los modelos aprendidos por máquina las superan.",
-    "tabs": { "classical": "Teorías clásicas", "analytical": "Analítico y ML" },
+    "tabs": {
+      "classical": "Teorías clásicas",
+      "analytical": "Analítico y ML"
+    },
+    "tabs3": {
+      "theory": "Enfoques teóricos",
+      "analytical": "Métodos analíticos / ML",
+      "employed": "La versión empleada"
+    },
+    "theory": {
+      "lede": "Los modelos analíticos, físicamente informados y estadísticos que definen la línea base estándar del campo — cada uno con su ecuación que lo gobierna, sus parámetros y una referencia real revisada por pares."
+    },
+    "th": {
+      "intro": "Este es el estado del arte — los modelos analíticos, estadísticos y físicos que definen cómo luce un pronóstico sísmico de corto plazo creíble. Ninguno predice un terremoto; cada uno produce, a lo sumo, una tasa o probabilidad condicional. Son las líneas base que un modelo candidato debe superar (o con las que debe combinarse) antes de poder reclamar habilidad. La pestaña de Implementación establece cuáles de estos entrega realmente el producto.",
+      "baselineTitle": "Lo que el campo realmente ejecuta",
+      "baseline": "Una línea base de producción defendible es <b>ETAS (o Reasenberg–Jones) para el término dependiente del tiempo × sismicidad suavizada para el fondo espacial × Gutenberg–Richter para el término de magnitud</b>, todo evaluado contra pruebas de consistencia CSEP. Todo lo demás a continuación es una mejora, un condicionante de largo plazo, o una fuente de características.",
+      "subtabsAria": "Modelos clásicos de pronóstico sísmico",
+      "assumptions": "Supuestos y modos de falla",
+      "roleWord": "Rol en el pronóstico",
+      "figureWord": "Figura",
+      "refsLabel": "Referencias:",
+      "gr": {
+        "tab": "Gutenberg–Richter",
+        "body": "La distribución frecuencia–magnitud de los terremotos es, en primer orden, una ley de potencia: el número de eventos a o sobre la magnitud M decae log-linealmente. Sobre la magnitud de completitud Mc las magnitudes siguen una densidad exponencial desplazada. Gutenberg–Richter aporta el término de magnitud de todo pronóstico — convierte una tasa de eventos sobre una magnitud de referencia en una tasa sobre cualquier magnitud.",
+        "eqCap": "La ley acumulada (pendiente −b) y su densidad de magnitud exponencial equivalente sobre Mc.",
+        "estim": "La pendiente b suele estar cerca de 1 pero no debe fijarse. Se estima por el estimador de máxima verosimilitud de Aki–Utsu con la corrección por agrupamiento de Utsu / Tinti–Mulargia, donde <mc> es la magnitud media de los eventos sobre la completitud y ΔM el ancho del bin. El estimador está <b>fuertemente sesgado si Mc se estima mal</b> — la debilidad más citada — por lo que Mc y b se re-estiman en una ventana espacio-temporal móvil y su incertidumbre se propaga.",
+        "eqCap2": "Valor b de máxima verosimilitud de Aki–Utsu con la corrección por bin finito (ΔM).",
+        "a1": "Magnitudes auto-similares (exponenciales) sobre Mc; esto falla cerca de la magnitud máxima, donde se requiere un atenuante / magnitud de esquina (GR atenuado / Kagan).",
+        "a2": "Un catálogo estacionario y completo sobre Mc. La variación real del valor b (con esfuerzo, profundidad, madurez de falla) debe distinguirse de los artefactos de mala estimación de Mc.",
+        "a3": "Un proceso de Poisson homogéneo con magnitudes continuas subyace al MLE; una regla común necesita ≈ 50–100 eventos sobre Mc para una estimación estable.",
+        "a4": "Mc se estima por separado (MAXC, bondad de ajuste, estabilidad del valor b, EMR); el valor b hereda directamente cualquier error de Mc.",
+        "figCap": "Log-frecuencia vs magnitud: una recta de pendiente −b sobre Mc; bajo Mc el catálogo cae al fallar la detección (línea discontinua).",
+        "role": "Indispensable — el término de magnitud de todo pronóstico. Una canalización diaria re-estima Mc y b en ventana móvil y propaga su incertidumbre a la probabilidad publicada."
+      },
+      "omori": {
+        "tab": "Omori–Utsu",
+        "body": "Tras un evento principal la tasa de réplicas decae como una ley de potencia en el tiempo. La ley modificada de Omori (Omori–Utsu) añade un desplazamiento temporal c y un exponente de decaimiento libre p (Utsu generalizó el p = 1 original de Omori). Es la señal de corto horizonte (horas–semanas) más fiable y el núcleo temporal que tanto ETAS como Reasenberg–Jones incorporan.",
+        "eqCap": "Tasa modificada de Omori–Utsu: K es la productividad, c el desplazamiento temporal, p ≈ 1 el exponente de decaimiento.",
+        "cumIntro": "Integrar la tasa da el número acumulado esperado de réplicas en una ventana — la cantidad que un pronóstico realmente necesita:",
+        "eqCap2": "Conteo acumulado esperado entre t₁ y t₂ (para p = 1 la integral es K[ln(t₂+c) − ln(t₁+c)]).",
+        "a1": "Una sola secuencia aislada evento principal–réplicas; el disparo secundario (réplicas de réplicas) no se representa — eso es lo que añade ETAS.",
+        "a2": "c es controvertido y muy afectado por la incompletitud del catálogo en tiempos tempranos; p suele caer en [0,9, 1,5] y varía de secuencia a secuencia.",
+        "a3": "Los parámetros (K, c, p) se ajustan conjuntamente por MLE sobre el proceso puntual; la incompletitud temprana sesga c hacia arriba y p hacia abajo salvo que el tiempo de inicio se retrase más allá del tiempo de completitud.",
+        "incompleteTitle": "Incompletitud de réplicas de corto plazo",
+        "incomplete": "Inmediatamente después de un gran evento principal — exactamente el momento de mayor riesgo y tráfico — el catálogo es groseramente incompleto: Mc se dispara por horas a días mientras los eventos pequeños quedan sepultados en la coda. Un ajuste ingenuo subestima entonces la productividad justo cuando una gran réplica es más probable. Los ajustes operacionales usan una completitud dependiente del tiempo Mc(t) / verosimilitud consciente de la incompletitud, no un umbral plano.",
+        "figCap": "La tasa de réplicas decae como (t + c)⁻ᵖ desde un valor inicial alto, relajándose hacia la tasa de fondo de largo plazo.",
+        "role": "La señal dominante de corto horizonte (1–7 días) — la línea base para los terremotos de mañana, y el núcleo temporal reutilizado dentro de ETAS y Reasenberg–Jones."
+      },
+      "etas": {
+        "tab": "ETAS",
+        "body": "El modelo de secuencia de réplicas de tipo epidémico es un proceso puntual de Hawkes auto-excitante: cada terremoto puede disparar su propia descendencia. La intensidad condicional, dada la historia, es un fondo estacionario μ(x, y) más las contribuciones sumadas de todos los eventos previos, cada uno con productividad de Utsu, un núcleo temporal de Omori–Utsu, y un núcleo espacial. ETAS es la <b>línea base de corto plazo sin física</b> del estado del arte — el modelo que todo pronosticador debe superar en pruebas CSEP prospectivas.",
+        "eqCap": "Intensidad condicional ETAS espacio-temporal (Ogata 1998): fondo más disparo auto-excitante.",
+        "kernelIntro": "El núcleo espacial de potencia inversa de Ogata (1998) reparte el disparo alrededor de cada evento, con un tamaño de zona de réplicas ζ escalado por magnitud:",
+        "eqCap2": "Núcleo espacial de potencia inversa; D es la longitud de disparo en M₀, γ el escalado por magnitud, q la cola espacial.",
+        "branchIntro": "La razón de ramificación n — el número promedio de descendientes disparados directamente por evento, integrado sobre tiempo y magnitud — gobierna la estacionariedad:",
+        "eqCap3": "Razón de ramificación: n < 1 subcrítica (estacionaria), n = 1 crítica, n > 1 supercrítica (no física).",
+        "gatesTitle": "Dos compuertas de estacionariedad distintas (mantenidas separadas)",
+        "gate1": "Ramificación finita: la integral productividad × magnitud converge solo si <m> (con <beta>). Si α ≥ β los eventos mayores dominan y el modelo es impropio.",
+        "gate2": "Subcriticidad: dado α < β, la razón de ramificación debe cumplir <n>. Un ajuste con <nreject> es supercrítico (explosivo) y se rechaza como mal ajuste.",
+        "a1": "El disparo es isotrópico e independiente de la magnitud en forma; las zonas reales de réplicas se elongan a lo largo de la ruptura (una simplificación conocida — existen variantes anisotrópicas / de falla finita).",
+        "a2": "El fondo μ es estacionario en el tiempo; esto se viola cerca de enjambres, deslizamiento lento y sismicidad inducida.",
+        "a3": "El catálogo es completo sobre la magnitud umbral M₀; la incompletitud de corto plazo debe manejarse explícitamente o se subestima la productividad.",
+        "figCap": "Cascada de ramificación: un evento principal siembra descendientes de primera generación, que siembran los suyos, todo sobre el fondo estacionario μ(x, y).",
+        "fit": "ETAS se ajusta maximizando la log-verosimilitud del proceso puntual ℓ = Σ log λ(tᵢ) − ∫ λ dt dx dy sobre el catálogo completo sin desagrupar; el fondo μ(x, y) se recupera por desagrupamiento estocástico (Zhuang, Ogata & Vere-Jones 2002), que asigna a cada evento una probabilidad de ser fondo vs disparado.",
+        "role": "La línea base de corto plazo sin física de referencia. Todo pronosticador de ML debe demostrar ganancia de información sobre un ETAS bien ajustado en pruebas estilo CSEP, o no aporta nada."
+      },
+      "rj": {
+        "tab": "Reasenberg–Jones",
+        "body": "El ancestro operacional del pronóstico de réplicas del USGS (ahora OAF) y el modelo de terremotos-de-mañana más transparente. La tasa de réplicas a o sobre la magnitud M tras un evento principal Mm es el término de magnitud de Gutenberg–Richter multiplicado por el decaimiento temporal de Omori modificado.",
+        "eqCap": "Tasa de Reasenberg–Jones: término de magnitud GR 10^(b(Mm−M)) por el decaimiento de Omori (t+c)⁻ᵖ.",
+        "probIntro": "Integrar la tasa sobre una ventana de pronóstico da el conteo esperado; asumiendo un proceso de Poisson no homogéneo, la probabilidad de una o más réplicas de ese tipo se sigue:",
+        "eqCap2": "Conteo esperado N y la probabilidad de excedencia de Poisson de al menos una réplica ≥ M.",
+        "a1": "Sin término espacial — da cuántas, no dónde; STEP y ETAS añaden la dimensión espacial.",
+        "a2": "Un proceso de Poisson no homogéneo en el tiempo; el disparo secundario se absorbe en los parámetros ajustados, no se modela explícitamente.",
+        "a3": "Los parámetros genéricos son específicos del entorno tectónico (la subducción chilena difiere fuertemente de California) y deben re-derivarse por región.",
+        "figCap": "Reasenberg–Jones como producto: la cola de magnitud GR por el decaimiento temporal de Omori da una tasa que integra a N y mapea a P(≥1) = 1 − e⁻ᴺ.",
+        "regimes": "En la práctica se usan tres regímenes de parámetros: un conjunto genérico fijado de secuencias pasadas en un entorno tectónico similar; un conjunto específico de secuencia re-ajustado a la secuencia en curso; y un conjunto bayesiano — un prior genérico actualizado por la secuencia (el predeterminado moderno de OAF, extendido a un esquema completo específico de secuencia / ETAS por Page et al. 2016).",
+        "role": "Una excelente línea base transparente para la probabilidad de un evento mayor en los próximos N días tras un sismo sentido — el respaldo bayesiano y chequeo de cordura junto al núcleo ETAS."
+      },
+      "step": {
+        "tab": "STEP",
+        "body": "La probabilidad sísmica de corto plazo es un sistema de California en casi tiempo real (USGS + SCEC + ETH) que produce mapas horarios de la probabilidad de fuerte sacudida (Mercalli Modificada ≥ VI) en una grilla de 10 km. Es la referencia de producción canónica para la forma de salida del producto: un mapa regional probabilístico de una-inferencia-por-intervalo-corto.",
+        "a1": "Construido sobre el modelo de tasa de Reasenberg–Jones — hereda el carácter dominado por réplicas de R–J y es, por diseño, débil para anticipar eventos principales / premonitorios.",
+        "a2": "Parámetros genéricos ajustados a California; trasplantarlos a otro régimen tectónico requiere re-derivación.",
+        "a3": "Mapea la tasa de corto plazo a probabilidad de movimiento del suelo vía una GMPE, añadiendo los supuestos propios del modelo de movimiento del suelo.",
+        "figCap": "STEP combina un fondo independiente del tiempo con un componente de agrupamiento de Reasenberg–Jones en un mapa grillado de probabilidad de sacudida de corto plazo.",
+        "structure": "STEP combina una tasa de fondo independiente del tiempo con un componente de agrupamiento (réplicas) construido sobre Reasenberg–Jones, mezclando conjuntos de parámetros genéricos, específicos de secuencia y espacialmente variables — eligiendo el más informativo disponible para cada celda de la grilla — y luego mapea la tasa resultante a probabilidad de movimiento del suelo.",
+        "role": "La plantilla de producción canónica para mapas probabilísticos de terremotos-de-mañana — exactamente la forma de salida de una-inferencia-por-día de este producto (a cadencia diaria)."
+      },
+      "eepas": {
+        "tab": "EEPAS",
+        "body": "Todo terremoto un precursor según la escala es un proceso puntual espacio-tiempo-magnitud en el que cada terremoto se trata como un precursor de largo plazo, según la escala, de eventos mayores por venir. Se construye sobre el fenómeno empírico de aumento precursor de escala y opera a mediano plazo (meses–años).",
+        "eqCap": "Escalado predictivo de EEPAS: la magnitud esperada del evento principal, el tiempo precursor y el área precursora escalan con la magnitud del precursor Mp.",
+        "densityIntro": "La densidad de tasa de pronóstico es un término de fondo más una suma ponderada de contribuciones de terremotos previos, cada una un producto de tres densidades — normal en magnitud, lognormal en tiempo transcurrido, normal bivariada en ubicación:",
+        "eqCap2": "Densidad de tasa de EEPAS: fondo más contribuciones ponderadas de tres factores de cada evento previo.",
+        "a1": "Cada terremoto contribuye como precursor; el peso wᵢ reduce el peso de los eventos que probablemente son réplicas, y μ se mezcla con un modelo base PPE.",
+        "a2": "Horizonte de mediano plazo (meses–años) — queda fuera de la ventana primaria de 1 semana como pronosticador; sus características de escala precursora son insumos usables.",
+        "a3": "Las constantes de escalado están calibradas por región y probadas con CSEP (NZ, Japón, California, Italia), pero son específicas de la implementación.",
+        "typosTitle": "Las constantes son específicas de la implementación",
+        "typos": "La propia literatura señala que la formulación de EEPAS tiene erratas conocidas entre artículos, y el Fortran de referencia difiere ligeramente (reconocido por Rhoades y por el trabajo de revisión de EEPAS de 2025). Si se usa, fije las constantes a una implementación de referencia (pyCSEP / floatCSEP) en lugar de transcribirlas; la estructura anterior es lo que sostiene el peso.",
+        "figCap": "Un precursor de magnitud Mp proyecta una envolvente lognormal en el tiempo y de área escalada para un evento principal mayor esperado Mm = a_M + b_M·Mp.",
+        "role": "Mediano plazo — fuera de la ventana de 1 semana como pronosticador primario, pero una fuente de habilidad genuina y probada con CSEP cuyas características de escala precursora (y línea base PPE) son insumos de contexto usables."
+      },
+      "smoothed": {
+        "tab": "Sismicidad suavizada",
+        "body": "Los grandes terremotos nuclean donde los pequeños se agrupan. Suavizar las ubicaciones de eventos pequeños pasados (M ≥ 2) con un núcleo adaptativo estima una densidad espacial independiente del tiempo μ(x, y), que multiplicada por una distribución de magnitud de Gutenberg–Richter pronostica la tasa de eventos mayores (M ≥ 5). El catálogo se desagrupa primero para que el mapa refleje el promedio de largo plazo, no ráfagas transitorias.",
+        "eqCap": "Núcleo adaptativo de potencia: contribuciones por evento con ancho de banda dᵢ fijado por la distancia al n-ésimo vecino más cercano.",
+        "a1": "Las ubicaciones de sismicidad futura ≈ ubicaciones pasadas suavizadas — omite fallas no rompidas sin microsismicidad reciente.",
+        "a2": "El catálogo se desagrupa antes de suavizar, así que el campo es un fondo estacionario e independiente del tiempo, no un pronóstico de agrupamiento.",
+        "a3": "El exponente del núcleo s, la normalización C(d) y el conteo de vecinos n (≈ 6) son hiperparámetros optimizados y específicos de región fijados a una implementación de referencia — no constantes universales.",
+        "kernelNoteTitle": "No fijar el exponente del núcleo",
+        "kernelNote": "El exponente del núcleo <s> y la normalización C(d) varían entre la familia de artículos de Helmstetter–Kagan–Jackson (aparecen formas con s = 1 y s = 3/2). Fije s, C(d) y el conteo de vecinos a la implementación de referencia específica antes de construir; no trate s = 3/2 como una constante universal verificada.",
+        "figCap": "Epicentros desagrupados suavizados por un núcleo de ancho de banda adaptativo en una densidad continua independiente del tiempo μ(x, y).",
+        "role": "Dos roles: el campo de fondo espacial μ(x, y) que alimenta a ETAS, y el nulo de Poisson estacionario obligatorio que todo modelo dependiente del tiempo debe superar."
+      },
+      "bpt": {
+        "tab": "BPT / renovación",
+        "body": "Donde los datos paleosísmicos restringen genuinamente el intervalo de recurrencia medio de una falla, un modelo de renovación de tiempo de paso browniano condiciona el fondo de largo plazo. La carga tectónica más ruido browniano lleva una variable de estado a un umbral de falla, así que los tiempos entre eventos siguen la distribución BPT (gaussiana inversa / Wald).",
+        "eqCap": "Densidad de tiempo de recurrencia BPT: μ es el intervalo de recurrencia medio, α la aperiodicidad (coeficiente de variación).",
+        "condIntro": "El peligro sube desde ~0 justo después de un evento, alcanza un pico, luego se estabiliza — a diferencia del peligro constante de Poisson. La probabilidad condicional de un evento en el próximo intervalo, dado el tiempo transcurrido Te desde el último, es:",
+        "eqCap2": "Probabilidad condicional de ruptura en [Te, Te+ΔT] dado Te transcurrido desde el último evento.",
+        "a1": "Los tiempos entre eventos son independientes e idénticamente distribuidos (un proceso de renovación); esto requiere un evento característico bien definido en una sola falla.",
+        "a2": "α → 0 da recurrencia cuasi-periódica; α ≈ 1 se acerca a un proceso de Poisson sin memoria. La hipótesis del terremoto característico (Schwartz & Coppersmith 1984) subyace al supuesto de magnitud única y es disputada frente al GR puro.",
+        "a3": "La recurrencia media μ y la aperiodicidad α deben estimarse de datos de recurrencia paleosísmicos / históricos, que suelen abarcar solo unos pocos ciclos.",
+        "caveatTitle": "Pocos ciclos, ganancia marginal",
+        "caveat": "Con solo unos pocos ciclos observados, α está mal restringida y la ganancia sobre un fondo de Poisson simple suele ser marginal — un punto real de honestidad. BPT se usa en UCERF y en los modelos nacionales de peligro WGCEP / italiano / japonés, pero no debe reclamarse habilidad de renovación donde los datos no la respaldan.",
+        "figCap": "El peligro BPT sube desde casi cero tras un evento, alcanza un pico, luego se estabiliza — contrastado con el peligro plano de Poisson (sin memoria).",
+        "role": "Recurrencia de largo plazo dependiente del tiempo y específica de falla que condiciona el fondo a lo largo de años donde los datos paleosísmicos lo justifican — un condicionante regional opcional."
+      },
+      "rs": {
+        "tab": "Tasa-estado + Coulomb",
+        "body": "La transferencia de esfuerzo estático del deslizamiento de una falla cambia el esfuerzo de falla de Coulomb en fallas vecinas. Un ΔCFS positivo promueve la falla en una falla objetivo; un ΔCFS negativo la inhibe. El patrón de cambio de esfuerzo se correlaciona con las ubicaciones de réplicas — los lóbulos de Coulomb — y depende solo de la geometría de la fuente, la geometría del objetivo, el sentido del deslizamiento y la fricción efectiva μ′, independiente del esfuerzo regional.",
+        "eqCap": "Cambio de esfuerzo de falla de Coulomb: Δτ es el cambio de esfuerzo de corte, Δσₙ el cambio de esfuerzo normal, μ′ ≈ 0,4 la fricción efectiva.",
+        "rsIntro": "La fricción de tasa-estado de Dieterich (1994) predice luego cómo responde la tasa de sismicidad a tal paso de esfuerzo, con una escala temporal característica de duración de réplicas tₐ:",
+        "eqCap2": "Respuesta de sismicidad de tasa-estado: exponencial en el paso de Coulomb, con evolución de estado y la escala temporal de duración de réplicas tₐ.",
+        "a1": "ΔCFS depende de geometrías de falla fuente y objetivo supuestas y de una única fricción efectiva μ′ que absorbe efectos de presión de poro (Skempton) — típicamente μ′ ≈ 0,4.",
+        "a2": "El parámetro constitutivo de tasa-estado Aσ es regionalmente pequeño (≈ kPa) y derivado en laboratorio; la tasa de carga de fondo τ̇ᵣ debe suponerse.",
+        "a3": "Estos son priores espaciales mecanicistas (los lóbulos de Coulomb promueven / suprimen el disparo), usados como covariables opcionales con bandera de característica — no un pronosticador autónomo.",
+        "figCap": "Lóbulos de Coulomb (+ΔCFS promueven, −ΔCFS suprimen) alrededor de una falla fuente; la respuesta de tasa-estado decae tipo Omori tras el paso de esfuerzo.",
+        "bridge": "La respuesta en forma cerrada de tasa-estado a un paso de esfuerzo produce un <b>decaimiento 1/t tipo Omori de la sismicidad disparada desde primeros principios</b> — el puente mecanicista entre la transferencia de esfuerzo de Coulomb y la ley empírica de Omori.",
+        "role": "Priores espaciales mecanicistas que modulan dónde el disparo se realza o se suprime — covariables opcionales con bandera de característica, nunca un pronosticador autónomo."
+      }
+    },
+    "employed": {
+      "lede": "El modelo v0 que el producto realmente entrega: un ETAS espacio-temporal re-ajustado por región con la canalización de higiene completa, el nulo de sismicidad suavizada que debe superar, y un retador neuronal sujeto a ganar una prueba CSEP prospectiva.",
+      "intro": "Esta pestaña fija lo que realmente construimos y seleccionamos — distinto del repaso del campo y del repaso de ML. Establece la arquitectura elegida, el objetivo que codifica el número público, los datos y el contexto que el modelo ingiere, cómo se calibra y acota el pronóstico, y nuestro veredicto honesto sobre la clase de modelo. La regla del doble catálogo y la canalización diaria se detallan en la página de Implementación.",
+      "arch": {
+        "title": "La arquitectura elegida",
+        "body": "La v0 entrega solo un <b>núcleo de clase ETAS</b>. El núcleo es un ETAS espacio-temporal re-ajustado por región <cite> — a la vez el estimador primario y la referencia obligatoria — sobre un nulo de Poisson de sismicidad suavizada <citeH> que todo modelo dependiente del tiempo debe superar, con un modelo transparente de Reasenberg–Jones <citeRJ> como respaldo bayesiano y chequeo de cordura. Un <b>retador neuronal condicionado por contexto y con compuerta</b> está conectado pero permanece tras una bandera de característica: llega al mapa público solo si supera a ETAS en nuestra propia batería CSEP prospectiva y está calibrado.",
+        "svgTitle": "La arquitectura de pronóstico empleada de dos capas",
+        "svgDesc": "Las entradas y un codificador CNN de contexto espacial alimentan un núcleo de clase ETAS (el estimador y la referencia v0) y un retador neuronal con compuerta; la intensidad condicional del núcleo produce la probabilidad de excedencia y las cotas, y el retador llega a la salida solo si supera a ETAS en CSEP.",
+        "caption": "Camino sólido = lo que se entrega en v0 (el núcleo de clase ETAS). Camino discontinuo = el retador neuronal con compuerta, admitido solo con una victoria CSEP prospectiva.",
+        "inputs": {
+          "title": "Entradas — espina del catálogo + contexto",
+          "body": "Catálogo completo sin desagrupar (disparo) · Catálogo desagrupado (fondo μ) · Mc, b móviles por región · Covariables geofísicas estáticas"
+        },
+        "encoder": {
+          "title": "Codificador CNN de contexto espacial",
+          "body": "Geometría Slab2 · fallas / límites de placa · deformación GNSS → un tensor de contexto aprendido por celda (no un pronosticador autónomo)"
+        },
+        "core": {
+          "title": "Núcleo clase ETAS — se entrega v0",
+          "body": "ETAS espacio-temporal (Ogata 1998), el estimador Y la referencia · nulo de Poisson de sismicidad suavizada · respaldo Reasenberg–Jones"
+        },
+        "challenger": {
+          "title": "Retador neuronal con compuerta",
+          "body": "Proceso puntual temporal condicionado por contexto con sesgo inductivo de Hawkes; término de magnitud explícito; tras una bandera de característica"
+        },
+        "output": {
+          "title": "Excedencia + cotas",
+          "body": "P(≥1 evento ≥ M*) para 1d / 2d / 7d · optimista P10 / esperada / pesimista P90 · siempre mostrada junto a la línea base"
+        },
+        "edge": {
+          "feeds": "alimenta la espina del catálogo",
+          "context": "tensor de contexto",
+          "gates": "hereda el esqueleto de Hawkes",
+          "lambda": "λ(t,x,y | Hₜ)",
+          "ifWins": "solo si supera a ETAS"
+        }
+      },
+      "layer1": {
+        "title": "Capa 1 — el núcleo de clase ETAS (lo que se entrega)",
+        "body": "Un ETAS espacio-temporal re-ajustado por región <cite> es, por construcción, materialmente más fuerte que cualquier Hawkes binneado a mano o enfoque de rectángulos gruesos: se ajusta por verosimilitud en una grilla fina de 0,1°, corre la canalización de higiene completa (Mc por región, homogeneización a Mw, desagrupamiento de doble catálogo), propaga la incertidumbre de parámetros y es totalmente CSEP-testeable. Es a la vez el <b>estimador primario y la referencia obligatoria</b>."
+      },
+      "layer2": {
+        "title": "Capa 2 — el retador neuronal con compuerta",
+        "body": "Un proceso puntual temporal espacio-temporal condicional que <b>conserva el sesgo inductivo de Hawkes</b> — el fondo aditivo más el esqueleto de disparo sumado — y reemplaza los núcleos fijos con pequeños MLP / atención, modelando la magnitud explícitamente (una brecha real en la mayoría de los NPP). Un NTPP recurrente de clase RECAST <cite> es un candidato válido. Está tras una bandera de característica y <b>nunca es el predeterminado</b>; se entrega solo con una ganancia de información prospectiva positiva y significativa sobre ETAS."
+      },
+      "cnnNote": {
+        "title": "Por qué la CNN es un codificador, no un pronosticador autónomo",
+        "body": "La red convolucional no pronostica por sí sola. <b>Codifica el contexto espacial estático</b> — geometría de subducción, distancia a fallas, tasa de deformación — en un tensor por celda que condiciona la intensidad del proceso puntual. La estructura de disparo temporal permanece en el esqueleto Hawkes/ETAS, donde es interpretable y CSEP-testeable; la CNN aporta anisotropía espacial aprendida e ingesta de covariables, las dos brechas de ETAS donde los modelos aprendidos sí agregan valor, sin renunciar al respaldo probabilístico calibrado."
+      },
+      "target": {
+        "title": "Definición del objetivo (la decisión vinculante)",
+        "body": "El modelo produce la <b>distribución de magnitud condicional completa</b> vía el término de Gutenberg–Richter, y el escalar público se deriva como una probabilidad de excedencia en uno o más umbrales apropiados por región <mstar>. Un umbral global fijo es frágil — un M ≥ 6 chileno es rutinario, un M ≥ 6 británico es inaudito — así que para cada región fijamos <mstar> a o sobre el peor Mc regional y en un nivel tectónicamente significativo.",
+        "caption": "Φ(M*) integra la distribución de magnitud en la tasa; este es el número que colorea el campo",
+        "dist": {
+          "title": "Distribución completa, umbral para mostrar",
+          "body": "Pronosticar toda la distribución (no un solo binario) conserva la información de Gutenberg–Richter que el modelo ya calcula, habilita la prueba M y el CRPS, y permite a la UI ofrecer múltiples umbrales."
+        },
+        "horizon": {
+          "title": "Tres horizontes móviles",
+          "body": "1 día, 2 días y 7 días, cada uno en la banda M* de la región, reemitidos a diario. Los horizontes largos tienen ganancia casi nula fuera de secuencias activas — los días tranquilos leen correctamente cerca de la climatología."
+        },
+        "mmax": {
+          "title": "Mmax por región",
+          "body": "<mmax> se especifica <b>por región</b> a partir de modelos regionales de peligro; acota la integral de excedencia y fija la probabilidad de cola de los raros eventos grandes que dominan el impacto. Es una suposición explícita y documentada con sensibilidad reportada."
+        }
+      },
+      "data": {
+        "title": "Datos y covariables de contexto",
+        "body": "La espina del catálogo domina la habilidad. La espina de inferencia diaria es el servicio FDSN de USGS ComCat, con la región objetivo impulsada por su red local de bajo Mc (Chile → CSN; California → SCEDC/NCEDC; NZ → GeoNet; Italia → INGV). Todas las magnitudes se <b>homogeneizan a equivalente Mw</b> vía regresión TLS anclada en ISC-GEM y GCMT. Los enriquecedores geofísicos estáticos son potencial, no fundamento — cada uno se integra solo con una ganancia de información incremental medida sobre el ETAS de solo catálogo:",
+        "covariates": [
+          "Geometría de subducción Slab2 (Hayes et al. 2018) — profundidad, manteo, distancia a la interfaz.",
+          "GEM Active Faults + el modelo de placas Bird 2003 — distancia a falla, tipo de límite.",
+          "Tasa de deformación GNSS (Nevada Geodetic Lab MIDAS) — alimenta el término de fondo independiente del tiempo, donde la deformación geodésica tiene valor establecido.",
+          "Estrés de mecanismo focal (segundo nivel). InSAR y flujo de calor se difieren fuera de la v1."
+        ],
+        "note": "Una covariable de marea, motivada físicamente, se codifica como un multiplicador regularizado que puede encogerse a ~0 — la expectativa honesta es un efecto despreciable a escala diaria para la mayoría de regiones, con elevación medible solo en entornos someros de empuje / dorsal cargados por el océano y en el canal de tremor / deslizamiento lento."
+      },
+      "calibration": {
+        "title": "Calibración y cotas",
+        "blockerTitle": "La calibración es un bloqueante de lanzamiento",
+        "blockerBody": "La probabilidad pública se <b>recalibra</b> (isotónica / Platt) y se valida con un diagrama de fiabilidad por horizonte — una probabilidad no calibrada no se entrega. Siempre se muestra <b>junto a la línea base climatológica</b>, de modo que el usuario lea 'X% vs Y% de línea base', nunca un número sin anclaje. La presentación optimista / esperada / pesimista sigue el diseño que empíricamente mejor comunica las sorpresas <cite>."
+      },
+      "bounds": {
+        "title": "Cotas de incertidumbre reales (no un intervalo de Poisson cosmético)",
+        "body": "El trío P10 / mediana / P90 es una descomposición epistémica + aleatoria genuina — incertidumbre de parámetros de ETAS (covarianza MLE / bootstrap o un posterior bayesiano), incertidumbre propagada de Mc y b, e incertidumbre estructural / de selección de modelo. Como la sismicidad regional está <b>sobre-dispersa</b> respecto de Poisson, la cota pesimista debe ser más ancha que un cuantil de Poisson ingenuo <cite>; una banda solo-Poisson sub-advierte sistemáticamente en la cola."
+      },
+      "coldstart": {
+        "title": "Arranque en frío / regiones tranquilas",
+        "body": "La mayor parte del área y el tiempo de cualquier mapa está tranquila, así que el arranque en frío es el régimen dominante. Donde la sismicidad reciente es escasa, la tasa condicional <b>cae al fondo de sismicidad suavizada de largo plazo</b> — nunca a una constante arbitraria por día — y toma fuerza espacialmente vía agrupamiento jerárquico / empírico-bayesiano. La UI distingue 'baja pero mal restringida', 'genuinamente quiescente' y 'sin datos / fuera de cobertura'; el blanco nunca se lee como seguro."
+      },
+      "verdict": {
+        "title": "Nuestro veredicto honesto sobre la clase de modelo",
+        "leadTitle": "Por qué la v0 entrega solo clase ETAS",
+        "lead": "Bajo pruebas prospectivas al estilo CSEP, <b>no se ha demostrado que ningún proceso puntual neuronal supere de forma fiable a un ETAS bien ajustado</b>. El benchmark EarthquakeNPP encontró que ninguno de cinco procesos puntuales neuronales modernos (NSTPP, DeepSTPP, AutoSTPP, DSTPP, SMASH) superó a ETAS en un benchmark de California 1971–2021 con divisiones cronológicas estrictas y pruebas de consistencia CSEP <cite>. Esa es la evidencia detrás de entregar la clase ETAS como núcleo defendible y poner una compuerta a todo modelo neuronal tras una victoria CSEP.",
+        "spatial": {
+          "title": "La brecha es mayor donde importa: el espacio",
+          "body": "En ese benchmark la brecha es más amplia en la prueba <b>espacial</b> — la dimensión que más importa para un mapa (ETAS ≈ 92,0% de aprobación vs el mejor NPP ≈ 68,6%). La corrección metodológica crucial fue reparar una fuga de datos del trabajo neuronal previo: una vez restauradas las divisiones temporales y las grandes secuencias (incluido Tohoku), la aparente ventaja neuronal se evapora. Lo afirmamos como 'en el benchmark hasta la fecha', siendo los datos solo de California — no como una ley universal."
+        },
+        "infogain": {
+          "title": "La ganancia de información depende del estado, y va en nats",
+          "body": "La ganancia de información de ETAS sobre Poisson <b>no es una constante fija</b>. Es grande y positiva durante secuencias activas de réplicas (ganancias de probabilidad de hasta órdenes de magnitud en días pico) y cercana a cero en periodos tranquilos, con un promedio modesto en todo el periodo. Para escala, las ganancias de modelo-vs-sismicidad-suavizada independientes del tiempo en CSEP prospectivo de California son de apenas unos −0,7 a +0,5 nats. Se mide en <b>nats</b> (unidades de log natural), la convención CSEP — nunca en bits.",
+          "caption": "Ganancia de información por sismo (IGPE): la ventaja de log-verosimilitud por evento, probada con una prueba T (el IC debe excluir cero) y la prueba W de Wilcoxon"
+        },
+        "rule": {
+          "title": "Una compuerta, no una prohibición del ML",
+          "body": "Algunos modelos híbridos y neuronales sí igualan o superan al ETAS simple en ganancia de información en escenarios específicos — RECAST mejora al ETAS temporal una vez que el catálogo de entrenamiento es grande (≳10⁴ eventos) <cite>, y el registro CSEP de California de una década muestra que ningún modelo único domina (STEP destaca durante secuencias, ETAS es el generalista consistente) <citeS>. Así que la regla es una <b>compuerta, no una prohibición</b>: todo modelo neuronal debe ganar una comparación CSEP prospectiva contra ETAS y la sismicidad suavizada, con calibración, antes de llegar al mapa público."
+        },
+        "detectionNote": "Los modelos de detección y selección de fases aprendidos por máquina (PhaseNet, EQTransformer, SeisBench, SeisLM) construyen un mejor catálogo de entrada, más completo — la mayor ganancia realizable a corto plazo — pero no pronostican. La detección no es pronóstico, y esa línea se mantiene explícita en el texto del producto."
+      }
+    },
     "classical": {
       "intro": "Cada bloque a continuación muestra la ecuación que lo gobierna y su referencia canónica. Ninguna de estas constantes está fija en el producto: el valor b, la completitud y los parámetros de ETAS se re-estiman en ventanas móviles."
     },
@@ -171,9 +520,10 @@
       "caption": "Φ(M*) integra la distribución de magnitud en la tasa; este es el número que colorea el campo"
     },
     "ml": {
-      "intro": "Los procesos puntuales aprendidos por máquina se admiten solo si se ganan su lugar superando a ETAS en las pruebas CSEP — no por ser más nuevos.",
-      "verdictTitle": "Veredicto honesto sobre la clase de modelo",
-      "verdict": "Bajo pruebas prospectivas al estilo CSEP, <b>no se ha demostrado que ningún proceso puntual neuronal supere de forma fiable a un ETAS bien ajustado</b>. El benchmark EarthquakeNPP encontró que ninguno de cinco procesos puntuales neuronales superó a ETAS en un benchmark de California 1971–2021 con divisiones cronológicas y pruebas CSEP <cite>.",
+      "intro": "Esta pestaña es teoría y estado del arte — no la versión que este producto entrega. Repasa los enfoques analíticos y aprendidos por máquina del pronóstico sísmico bajo la única lente que los unifica a todos: la intensidad condicional de un proceso puntual temporal. Cada método se presenta con sus supuestos, su ecuación clave y una lectura honesta de la evidencia. El titular contundente primero.",
+      "subtabsAria": "Métodos de pronóstico analíticos y de aprendizaje automático",
+      "verdictTitle": "Veredicto honesto sobre la clase de modelo (2026)",
+      "verdict": "Bajo pruebas prospectivas al estilo CSEP, <b>no se ha demostrado que ningún proceso puntual neuronal supere de forma fiable a un ETAS bien ajustado</b> en el pronóstico de corto plazo. El benchmark EarthquakeNPP encontró que ninguno de cinco procesos puntuales neuronales modernos superó a ETAS en California 1971–2021 con divisiones cronológicas estrictas y pruebas de consistencia CSEP <cite>. ETAS sigue siendo el piso que todo método debe superar, no el techo que puede ignorar.",
       "spatial": {
         "title": "La brecha es mayor donde importa: el espacio",
         "body": "En ese benchmark la brecha es mayor en la prueba <b>espacial</b> — la dimensión que más importa para un mapa (mejor NPP ≈ 68,6% vs ETAS ≈ 92,0% de tasa de aprobación). Esto se afirma como 'en el benchmark hasta la fecha' (los datos son solo de California), no como una ley universal."
@@ -185,6 +535,188 @@
       "requirement": {
         "title": "Un requisito, no un veredicto contra el ML",
         "body": "Algunos modelos híbridos y neuronales sí igualan o superan a ETAS en ganancia de información en escenarios específicos <cite>. La regla aquí es una compuerta, no una prohibición: <b>cualquier modelo de ML debe superar a ETAS en las pruebas CSEP antes de llegar al mapa público</b>. Los modelos de detección y selección de fases construyen un mejor catálogo de entrada — la detección no es pronóstico."
+      },
+      "tpp": {
+        "tab": "Procesos puntuales",
+        "title": "Procesos puntuales temporales — el marco unificador",
+        "body": "Un catálogo de sismicidad es una realización de un <b>proceso puntual marcado espacio-temporal</b>. Cada modelo de esta página — clásico o neuronal — estima en última instancia el mismo objeto: la <b>intensidad condicional</b> λ*(t, x, y, m | ℋₜ), la tasa esperada instantánea de eventos en el tiempo t, la ubicación (x, y) y la magnitud m, dada la historia ℋₜ de todo lo ocurrido antes de t. El asterisco denota el condicionamiento a la historia; es lo que hace que un pronóstico sea <b>condicional</b>.",
+        "likelihood": "Un modelo se ajusta maximizando — y se evalúa con — la log-verosimilitud del proceso puntual sobre [0, T]. Sus dos términos importan: la suma premia colocar intensidad donde ocurrieron eventos, y la integral (el <b>compensador</b> o término de supervivencia) penaliza la intensidad colocada donde no ocurrió nada. Ese segundo término es lo que hace al modelo una probabilidad calibrable en lugar de un regresor — <b>un sistema que no lo evalúa no está haciendo pronóstico de proceso puntual</b>. Los encuadres de clasificación (\"¿M≥5 mañana? sí/no\") lo descartan y se vuelven incalibrables — la raíz estructural de la mayoría de los fracasos del ML de pronóstico en esta página.",
+        "capIntensity": "La intensidad condicional: la tasa esperada en (t, x, y, m) dada toda la historia previa ℋₜ.",
+        "capLikelihood": "La log-verosimilitud del proceso puntual. El término compensador es la penalización de supervivencia — la fuente de la calibración.",
+        "figTitle": "Figura — Intensidad condicional auto-excitante.",
+        "figCaption": "Cada evento pasado (marcas bajo el eje) eleva λ*(t), que luego decae de vuelta hacia el fondo μ — la tasa auto-excitante y condicionada a la historia que estima todo método.",
+        "figAlt": "Un eje temporal con marcas de eventos; la curva de intensidad salta hacia arriba en cada evento y decae entre ellos hacia un nivel de fondo μ.",
+        "figHist": "historia ℋₜ",
+        "assumptionsTitle": "Supuestos",
+        "assumptions": [
+          "Los eventos son condicionalmente Poisson dada ℋₜ: la tasa del próximo evento depende de la historia solo a través de λ*.",
+          "La intensidad condicional está bien definida y es integrable sobre la ventana de pronóstico.",
+          "Las marcas (magnitud) se modelan explícitamente — la mayoría de los TPP neuronales lo omiten, una debilidad real para el pronóstico.",
+          "El ajuste y la evaluación se hacen causalmente en el tiempo; la integral del compensador se evalúa, nunca se descarta."
+        ],
+        "calloutTitle": "Por qué este es el objeto correcto",
+        "callout": "Una formulación de proceso puntual produce una <b>probabilidad propia sobre el conteo de eventos y las ubicaciones de la próxima ventana</b> — exactamente lo que evalúan las pruebas de consistencia CSEP. ETAS <cite> es el miembro paramétrico e informado por la física de esta familia; los procesos puntuales temporales neuronales son los miembros flexibles y aprendidos. El resto de esta pestaña recorre esa familia.",
+        "refs": "Fundamentos: <c1>, <c2>."
+      },
+      "rmtpp": {
+        "tab": "RMTPP",
+        "title": "RMTPP — Proceso Puntual Temporal Marcado Recurrente",
+        "body": "El primer TPP neuronal de uso amplio <b>(Du et al. 2016)</b>. Una red recurrente lee la secuencia de pares (tiempo, marca) y comprime toda la historia tras el j-ésimo evento en un estado oculto hⱼ. La intensidad entre eventos es entonces una función <b>log-lineal</b> simple de ese estado con un término temporal explícito, dando un decaimiento de tipo Omori (log-lineal).",
+        "capIntensity": "Intensidad de RMTPP: exponencial de una lectura lineal del estado oculto más un término de decaimiento temporal; v, w, b entrenables.",
+        "figTitle": "Figura — RMTPP.",
+        "figCaption": "Una RNN pliega cada token (tiempo, magnitud) en un estado oculto hⱼ; la intensidad se lee como una función log-lineal de hⱼ y el tiempo transcurrido.",
+        "figAlt": "Tres tokens de entrada que alimentan una cadena recurrente de izquierda a derecha, cada uno emitiendo un estado hacia abajo a una única caja de lectura de intensidad.",
+        "figRnn": "RNN sobre la historia de eventos",
+        "assumptionsTitle": "Supuestos y limitaciones",
+        "assumptions": [
+          "Un único estado oculto de RNN debe comprimir toda la historia de eventos — las dependencias de largo alcance se pierden con facilidad.",
+          "La forma exponencial / log-lineal es restrictiva: la intensidad es monótona entre eventos (sin inhibición, sin recuperación no-monótona).",
+          "Validado en flujos de redes sociales / retail / sintéticos, no en sismos — sus victorias de verosimilitud no se transfieren a la sismicidad."
+        ],
+        "refs": "Referencia: <c1>."
+      },
+      "nhp": {
+        "tab": "Hawkes neuronal",
+        "title": "Proceso de Hawkes neuronal",
+        "body": "<b>Mei & Eisner (2017)</b> reemplazan la RNN por una <b>LSTM de tiempo continuo</b> cuyo estado de celda decae entre eventos. La intensidad es un softplus del estado oculto (que decae continuamente). La ganancia clave sobre un proceso de Hawkes clásico: como el estado puede decaer <b>hacia abajo</b>, un evento pasado puede <b>bajar</b> la intensidad futura (inhibición) — algo que un proceso de Hawkes clásico, estrictamente auto-excitante, no puede representar.",
+        "capIntensity": "Intensidad del Hawkes neuronal: un softplus del estado oculto h(t) que decae continuamente.",
+        "figTitle": "Figura — Inhibición del Hawkes neuronal.",
+        "figCaption": "El estado de tiempo continuo salta hacia arriba en los eventos y decae entre ellos; a diferencia de un Hawkes clásico, un evento también puede llevar la intensidad por debajo del fondo (inhibición).",
+        "figAlt": "Una curva de intensidad que sube en los dos primeros eventos y es llevada hacia abajo tras el tercero, ilustrando la inhibición.",
+        "figInhibit": "inhibición",
+        "assumptionsTitle": "Supuestos y limitaciones",
+        "assumptions": [
+          "Una LSTM de tiempo continuo gobierna la forma del decaimiento — más flexible que RMTPP pero más lenta y difícil de ajustar.",
+          "La inhibición es expresable, pero el modelo sigue validado en flujos no sísmicos.",
+          "Sin sesgo inductivo sismológico (sin estructura de Omori / Gutenberg–Richter) salvo que se añada a mano."
+        ],
+        "refs": "Referencia: <c1>."
+      },
+      "thp": {
+        "tab": "Hawkes Transformer",
+        "title": "Procesos de Hawkes auto-atentivos y Transformer",
+        "body": "<b>SAHP (Zhang et al. 2020)</b> y <b>THP (Zuo et al. 2020)</b> abandonan la recurrencia por completo: la <b>auto-atención multi-cabeza</b> sobre embeddings de eventos construye la representación de la historia, de modo que cada evento atiende directamente a todos los eventos previos sin el decaimiento de memoria de una RNN. La representación atendida h(tᵢ) parametriza entonces una intensidad continua que interpola entre eventos. THP/SAHP suelen reportar mejor log-verosimilitud que RMTPP/NHP en benchmarks estándar de secuencias de eventos.",
+        "capIntensity": "Intensidad continua del Hawkes Transformer entre eventos, parametrizada desde la representación atendida h(tᵢ).",
+        "caveatTitle": "Salvedad honesta sobre la ecuación",
+        "caveat": "Esta forma de intensidad se reconstruye a partir de revisiones secundarias (el PDF primario de THP no se pudo analizar por máquina) y su normalización exacta debería verificarse contra el artículo publicado antes de citarse como autoritativa. Más importante aún: estos modelos se validaron en flujos de eventos <b>no sísmicos</b> — sus victorias de log-verosimilitud no se transfieren a los sismos (ver la sub-pestaña de sismos).",
+        "figTitle": "Figura — Auto-atención sobre eventos.",
+        "figCaption": "Cada evento atiende a todos los eventos previos (sin decaimiento de memoria de RNN); la representación atendida h(tᵢ) parametriza la intensidad. La atención puede en principio capturar dependencias de largo alcance entre fallas.",
+        "figAlt": "Cuatro tokens de evento abajo, cada uno conectado por aristas de atención a una representación de consulta arriba.",
+        "figTokens": "eventos previos",
+        "figQuery": "consulta (atiende a la historia)",
+        "assumptionsTitle": "Supuestos y limitaciones",
+        "assumptions": [
+          "La auto-atención elimina el decaimiento de memoria de la RNN y puede modelar dependencias de largo alcance — la opción de pronóstico neuronal más principista.",
+          "Costo de atención cuadrático en la longitud de la secuencia; requiere codificaciones posicionales / temporales de tiempos de eventos irregulares.",
+          "Fuerte en log-verosimilitud de benchmark, pero no supera a ETAS en las pruebas CSEP de sismos — una dirección de investigación abierta, no una capacidad lista para entregar."
+        ],
+        "refs": "Referencias: <c1>, <c2>."
+      },
+      "earthquakes": {
+        "tab": "TPP neuronal para sismos",
+        "title": "TPP neuronales aplicados a sismos",
+        "body": "Cuando la maquinaria de TPP neuronal se apunta a catálogos reales, el panorama honesto se afina: el valor genuino viene de dos brechas específicas de ETAS — <b>ingerir covariables</b> que ETAS no absorbe fácilmente (eventos sub-Mc, geodesia, múltiples catálogos) y <b>aprender anisotropía espacial</b> alineada con las trazas de falla — no de la magia de la profundidad de la red. Dos ejemplares honestos, luego el benchmark decisivo.",
+        "fernTitle": "FERN — un codificador neuronal que generaliza ETAS",
+        "fern": "<b>Zlydenko et al. (2023)</b> conservan el esqueleto de ETAS — fondo aditivo más disparo sumado — pero reemplazan los núcleos de respuesta fijos por <b>MLPs sobre las características de cada evento</b> (magnitud, tiempo transcurrido, distancia, profundidad), sumados de forma invariante a permutaciones (estilo Deep-Sets, sin RNN/transformer) <cite>. La variante FERN+ que ingiere eventos sub-Mc reporta una mejora de <b>4–12% en ganancia de información por sismo</b> y aprende anisotropía alineada con fallas <b>~1000× más rápido</b> que la simulación de ETAS. Salvedades cruciales declaradas por los propios autores: <b>no está probado bajo CSEP</b>, <b>no entrega cuantificación de incertidumbre</b>, y su periodo de prueba termina <b>antes del Tohoku M9.0 de 2011</b>. La ganancia vino sobre todo de las dos brechas de ETAS anteriores — más datos y flexibilidad espacial — no de la profundidad de la red.",
+        "capFern": "FERN conserva el esqueleto de fondo aditivo + disparo sumado de ETAS, reemplazando los núcleos fijos T y S por MLPs aprendidos.",
+        "figTitle": "Figura — Codificador neuronal que generaliza ETAS (FERN).",
+        "figCaption": "Las características por evento pasan por un MLP compartido; la suma invariante a permutaciones, añadida a un campo de fondo μ(x, y), produce la intensidad condicional — el esqueleto de ETAS con núcleos aprendidos.",
+        "figAlt": "Tres cajas de características por evento que alimentan un MLP compartido, sumadas en un nodo Σ y añadidas a un término de fondo, produciendo la intensidad.",
+        "figShared": "respuesta por evento compartida",
+        "recastTitle": "RECAST — un TPP neuronal recurrente",
+        "recast": "<b>Dascher-Cousineau et al. (2023)</b> proponen un TPP neuronal codificador–decodificador basado en GRU <cite>. Mejora sobre el ETAS temporal <b>solo cuando el catálogo de entrenamiento es grande</b> (≳10⁴ eventos); en catálogos más pequeños apenas <b>iguala</b> a ETAS. Una ilustración limpia de que la flexibilidad neuronal compra destreza solo donde hay datos suficientes para pagarla.",
+        "benchTitle": "EarthquakeNPP — el benchmark decisivo",
+        "benchCalloutTitle": "Ninguno de cinco procesos puntuales neuronales superó a ETAS",
+        "bench": "<b>Stockman, Lawson & Werner (2026)</b> compararon cinco procesos puntuales neuronales modernos (NSTPP, DeepSTPP, AutoSTPP, DSTPP, SMASH) contra ETAS en California 1971–2021, con <b>divisiones cronológicas estrictas</b> y pruebas de consistencia CSEP, generando cada modelo pronósticos a 24 horas mediante 10.000 catálogos simulados por día <cite>. <b>Ninguno superó a ETAS.</b> ETAS ganó la log-verosimilitud espacial de forma consistente y lideró las tasas de aprobación CSEP (ComCat: ETAS ≈ 95,8–97,6% vs mejor NPP ≈ 86–88%). Su veredicto: las implementaciones actuales de NPP <b>aún no son adecuadas para el pronóstico sísmico práctico</b>.",
+        "leakageTitle": "Por qué este benchmark lo zanjó: fuga de datos",
+        "leakage": "Artículos previos de \"lo neuronal supera a X\" en sismos usaron <b>divisiones no cronológicas / alternadas</b> que inflan artificialmente las métricas — el disparo de sismos hace que un conjunto de prueba barajado filtre la respuesta — y algunos excluyeron la secuencia Tohoku M9.0 de 2011. Una vez que se imponen <b>divisiones temporales</b> y se restauran las grandes secuencias, la aparente ventaja neuronal se evapora. Esta es la lección de evaluación más importante de la página.",
+        "assumptionsTitle": "Dónde el valor neuronal es real (y dónde no)",
+        "assumptions": [
+          "Victoria real: ingestión de covariables multivariadas — eventos sub-Mc, geodesia/InSAR, datos de inyección/presión de poros, múltiples catálogos.",
+          "Victoria real: anisotropía espacial aprendida alineada con las trazas de falla, recuperada sin entradas explícitas de falla.",
+          "Victoria real: inferencia ~1000× más rápida, habilitando una app pública diaria barata.",
+          "Aún no es victoria: ningún NPP puro ha superado robustamente a ETAS en CSEP prospectivo a 2026; la mayoría carece de modelado explícito de magnitud.",
+          "Para sismicidad inducida, un TPP neuronal rinde a la par — no claramente mejor — que los benchmarks estadísticos previos."
+        ],
+        "refs": "Referencias: <c1>, <c2>, <c3>, <c4>."
+      },
+      "cnn": {
+        "tab": "CNN — la fábula admonitoria",
+        "title": "Modelos espaciales CNN — la fábula admonitoria canónica",
+        "body": "<b>DeVries et al. (2018, Nature)</b> entrenaron una red profunda (6 capas ocultas, 50 nodos cada una, ~13.451 parámetros libres, 12 entradas del tensor de esfuerzos) sobre ~131.000 réplicas de ~199 eventos principales para predecir el patrón espacial binario de ocurrencia de réplicas por celda de grilla <cite>. Reportó <b>AUC 0,85</b> frente a 0,58 del criterio clásico de esfuerzo de falla de Coulomb, y sugirió que la red había descubierto nuevas cantidades físicas de disparo.",
+        "rebuttalTitle": "La refutación — una neurona basta",
+        "rebuttal": "<b>Mignan & Broccardo (2019, Nature)</b> igualaron ese AUC de 0,85 con una <b>regresión logística de 2 parámetros</b> — una sola \"neurona\" usando esencialmente una característica físicamente simple (la suma de los valores absolutos de las componentes del cambio de esfuerzo) <cite>. La aparente ventaja de la red profunda fue un artefacto de sobre-parametrización y de la evaluación, no física aprendida: ~13,5k parámetros para un problema tabular con 12 entradas y solo ~199 eventos principales efectivamente independientes.",
+        "capOneNeuron": "La \"una neurona\": una regresión logística de dos parámetros que igualó el AUC de la red profunda.",
+        "figTitle": "Figura — Red profunda vs una neurona.",
+        "figCaption": "Una red profunda sobre-parametrizada (izquierda, ~13,5k parámetros) y una regresión logística de dos parámetros (derecha) alcanzan el mismo AUC — la profundidad no compró nada generalizable.",
+        "figAlt": "Izquierda: una red densa multicapa etiquetada ~13,5k params, AUC 0,85. Derecha: una sola neurona logística etiquetada 2 params, AUC ≈ 0,85.",
+        "figDeep": "red profunda (12 → 6×50 capas)",
+        "figOne": "una neurona (logística)",
+        "assumptionsTitle": "Las lecciones de evaluación (integradas en la disciplina de este producto)",
+        "assumptions": [
+          "Incluir siempre una línea base trivialmente simple (regresión logística / una característica / ETAS): si empata con tu red profunda, la red no aprendió nada.",
+          "Contar el tamaño de muestra efectivo, no el número de filas — celdas espacialmente correlacionadas de unos pocos eventos principales no son muestras independientes.",
+          "Parámetros ≫ muestras efectivas ⇒ asumir sobreajuste hasta probar lo contrario en tiempo reservado.",
+          "Retrospectivo ≠ prospectivo: nada cuenta hasta que corre hacia adelante sobre datos que el modelo nunca tocó."
+        ],
+        "aucTitle": "El AUC es la métrica equivocada para el pronóstico",
+        "auc": "El AUC / la exactitud están <b>prohibidos como métricas primarias de pronóstico</b> aquí. El AUC es invariante al re-escalado monótono, por lo que es ciego a la calibración de las mismas probabilidades que un pronóstico publica; en una tarea rara por-celda-por-día mide en gran parte las diferencias de tasa entre regiones (degenera en un clasificador de regiones). Usar en su lugar reglas de puntaje propias + pruebas de consistencia CSEP sobre el pronóstico generativo.",
+        "refs": "Referencias: <c1>, <c2>, <c3>."
+      },
+      "gnn": {
+        "tab": "GNN / RNN-LSTM",
+        "title": "Modelos de sismicidad GNN y RNN-LSTM",
+        "rnnTitle": "Regresión de tasa con RNN / LSTM",
+        "rnn": "Un patrón común alimenta series temporales de tasa de sismicidad o magnitud agrupadas en bins a una LSTM para \"predecir el próximo bin\". Las trampas son estructurales: predecir una <b>tasa</b> agrupada descarta el término de supervivencia del proceso puntual, así que la salida es <b>incalibrable</b>; el fuerte desbalance de clases (los eventos grandes son raros) hace que los modelos opten por \"ningún evento grande\", puntuando bien en exactitud mientras fallan en los eventos que importan; el barajado aleatorio de entrenamiento/prueba reintroduce el problema de fuga; y el decaimiento de memoria de la LSTM sesga hacia el bin más reciente sin física de Omori / Gutenberg–Richter incorporada.",
+        "gnnTitle": "Redes neuronales de grafos",
+        "gnn": "Las GNN tratan la red de estaciones (o un grafo de eventos) como un grafo. Son <b>genuinamente fuertes para la caracterización de la fuente, la asociación de fases y la localización</b> — donde el grafo es la red física de estaciones — pero para el <b>pronóstico</b> de magnitud / ocurrencia la literatura reporta repetidamente que la predicción de profundidad y magnitud sigue siendo débil para todos los modelos probados. Las GNN ayudan del lado de la detección, no donde se necesita una tasa futura calibrada.",
+        "assumptionsTitle": "Supuestos y limitaciones",
+        "assumptions": [
+          "La regresión de tasa con RNN abandona el término compensador — sin probabilidad honesta, sin calibración.",
+          "El desbalance de clases y las métricas de tipo exactitud premian modelos degenerados de \"nunca uno grande\".",
+          "Las GNN son fuertes donde el grafo es la red de estaciones (detección), débiles para el pronóstico de magnitud/ocurrencia."
+        ],
+        "calloutTitle": "Los modos de fallo recurrentes",
+        "callout": "A lo largo de la literatura de ML-para-sismos se repiten los mismos fallos: <b>fuga de datos</b> por divisiones no temporales, <b>desbalance de clases</b>, <b>métricas impropias</b> (AUC / exactitud en lugar de puntaje propio), <b>sin pruebas prospectivas</b>, y <b>sobreajuste</b> de redes sobre-parametrizadas a un puñado de secuencias efectivas. Ninguno de estos es sobre la arquitectura — son sobre la evaluación."
+      },
+      "detection": {
+        "tab": "Detección ≠ pronóstico",
+        "title": "La detección no es pronóstico",
+        "lineTitle": "Una línea dura",
+        "line": "La <b>detección / selección de fases / asociación</b> aprendida por máquina es madura y excelente. <b>No es pronóstico</b>. Dice lo que ya pasó (mejores catálogos); el pronóstico estima lo que pasará. El producto nunca deja que la marca de un modelo de detección implique predicción.",
+        "body": "Aquí es donde el ML añade el mayor valor realizable a corto plazo — y está aguas arriba del pronosticador, no es el pronosticador. Una mejor detección construye <b>catálogos más completos</b>, lo que mejora tanto a ETAS como a cualquier pronosticador neuronal. La canalización es estrictamente unidireccional: formas de onda → detector ML → catálogo más rico → el pronosticador de proceso puntual separado.",
+        "figTitle": "Figura — La detección alimenta, pero no es, el pronóstico.",
+        "figCaption": "Los detectores ML convierten formas de onda crudas en un catálogo más completo; solo el modelo de proceso puntual aguas abajo (ETAS / TPP neuronal) produce un pronóstico. El detector nunca es el pronosticador.",
+        "figAlt": "Una canalización de izquierda a derecha: formas de onda, detector ML marcado como no-pronóstico, catálogo más rico, y un pronosticador TPP/ETAS separado.",
+        "figWave": "formas de onda",
+        "figDetect": "detector ML",
+        "figNotForecast": "NO es pronóstico",
+        "figCatalog": "catálogo más rico",
+        "colTool": "Herramienta",
+        "colTask": "Tarea",
+        "colForecast": "¿Pronóstico?",
+        "notForecast": "detección",
+        "tools": [
+          {
+            "name": "PhaseNet (Zhu & Beroza 2019)",
+            "task": "Selección de fases P/S — CNN U-Net (~268k params)"
+          },
+          {
+            "name": "EQTransformer (Mousavi et al. 2020)",
+            "task": "Detección conjunta + selección P/S — CNN + BiLSTM + atención"
+          },
+          {
+            "name": "SeisBench (Woollam et al. 2022)",
+            "task": "Benchmark / caja de herramientas + datasets (infraestructura)"
+          },
+          {
+            "name": "SeisLM (Liu et al. 2024)",
+            "task": "Modelo fundacional de formas de onda auto-supervisado — detección, selección, caracterización"
+          }
+        ],
+        "seislmTitle": "Incluso el modelo fundacional no pronostica",
+        "seislm": "<b>SeisLM</b> (un transformer auto-supervisado estilo Wav2Vec2, 11,4M / 90,7M params) está posicionado solo para detección y caracterización <cite>. Su \"clasificación de premonitores–réplicas\" etiqueta formas de onda <b>existentes</b> respecto a un evento principal <b>conocido</b> — caracterización retrospectiva, explícitamente <b>no</b> pronóstico sísmico.",
+        "refs": "Referencias: <c1>, <c2>, <c3>, <c4>."
       }
     }
   },
@@ -229,6 +761,22 @@
       "title": "Incompletitud de réplicas de corto plazo (requerida)",
       "body": "La ventana de mayor riesgo — horas a días después de un evento grande — tiene una completitud <mc> que se dispara. El trabajo diario usa una verosimilitud consciente de la incompletitud (<mc> dependiente del tiempo, ETAS detendenciado), <b>no ETAS ingenuo</b>, o subestimaría justo cuando las réplicas grandes son más probables. Esto se trata como un método requerido, no una opción."
     },
+    "structure": {
+      "title": "Campo global, teselado por régimen tectónico",
+      "intro": "El campo mundial no es un único ajuste global. Se tesela por régimen tectónico, y cada tesela se re-ajusta por región sobre su propia red de bajo Mc — nunca con genéricos de California — con un codificador de contexto espacial aprendido condicionando la tasa.",
+      "tiled": {
+        "title": "Teselado por régimen, re-ajustado por región",
+        "body": "Los empujes de subducción violan los supuestos de núcleo isótropo y fuente puntual que el ETAS genérico hace para grandes terremotos, así que una tesela chilena necesita geometría Slab2, posiblemente disparo anisótropo / de falla finita, y Mc de la red chilena. Cada tesela de régimen se <b>ajusta y CSEP-testea sobre su propio catálogo</b>; el mapa global es el mosaico de estas teselas, ajustado fino y reportado grueso."
+      },
+      "encoder": {
+        "title": "Codificador CNN de contexto espacial",
+        "body": "Un codificador convolucional convierte capas geofísicas estáticas (profundidad/manteo Slab2, distancia a falla, deformación GNSS) en un <b>tensor de contexto por celda</b> que condiciona la intensidad del proceso puntual. Aporta anisotropía espacial aprendida e ingesta de covariables — las dos brechas de ETAS donde el aprendizaje ayuda — mientras el disparo temporal permanece en el esqueleto de Hawkes, así el respaldo sigue siendo interpretable y CSEP-testeable. La CNN es un codificador, no un pronosticador autónomo."
+      },
+      "note": {
+        "title": "Ajustar fino, reportar grueso",
+        "body": "ETAS se ajusta y CSEP-testea en una grilla fina de 0,1° × 0,1° con bins de magnitud de 0,1, la resolución a la que la prueba S y la prueba M pueden resolver dónde y de qué tamaño. La UI luego agrega esa grilla fina en hexbins H3 / polígonos tectónicos para mostrar."
+      }
+    },
     "gated": {
       "title": "Retadores con compuerta",
       "body": "Los retadores aprendidos por máquina están tras una bandera de característica y se despliegan <b>solo</b> con ganancia de información pseudo-prospectiva positiva y significativa sobre ETAS: un proceso puntual temporal neuronal de clase RECAST <cite>, que mejora al ETAS temporal solo cuando el catálogo de entrenamiento es grande, de lo contrario solo lo iguala <citeNPP>; y covariables de marea / GNSS / hidrológicas, codificadas como un multiplicador regularizado que se encoge a ~0 donde no hay señal.",
@@ -236,7 +784,18 @@
     },
     "pipeline": {
       "title": "La canalización diaria fuera de línea",
-      "intro": "El cómputo pesado corre una vez al día, fuera de línea, en un único host de CPU; el tiempo de ejecución es sin estado y de solo lectura."
+      "intro": "El cómputo pesado corre una vez al día, fuera de línea, en un único host de CPU; el tiempo de ejecución es sin estado y de solo lectura. Un reloj de pronóstico estricto impulsa cada emisión diaria, de modo que la fuga temporal es estructuralmente imposible."
+    },
+    "flow": {
+      "steps": [
+        "Capturar las entradas en el tiempo de emisión: extraer ComCat y la red regional solo para el segmento hasta t, y persistir el estado exacto del catálogo como un artefacto inmutable y versionado, de modo que el pronóstico sea reproducible bit a bit meses después.",
+        "Correr la higiene — Mc variable en el tiempo → homogeneización a Mw → desagrupamiento de doble catálogo — con corrección de incompletitud post-evento principal si hay un evento grande reciente.",
+        "Ajustar / actualizar el ETAS re-ajustado por región en la grilla fina (segundos a minutos de CPU, sin GPU); imponer α < β y rechazar todo ajuste supercrítico n ≥ 1.",
+        "Generar: simular al menos 10.000 catálogos sintéticos del día siguiente en probabilidades acotadas para 1d / 2d / 7d en M*, con cotas P10 / mediana / P90; emitir tanto un pronóstico de tasa en grilla como uno basado en catálogo.",
+        "Calibrar (isotónica / Platt), pasar la compuerta de QA, escribir un artefacto compacto (de unos cientos de KB a unos MB, comprimido), registrarlo inmutablemente, y servirlo sin estado y de solo lectura."
+      ],
+      "qaTitle": "Compuerta de QA operacional — degradar visiblemente, nunca en silencio",
+      "qaBody": "Un solo evento malo, duplicado o retractado cerca de M* puede mover una probabilidad pública. La publicación se condiciona a la cordura del catálogo de entrada, la integridad del artefacto y un monitor de deriva de la prueba N en ventana móvil sobre el propio pronosticador. Ante una caída de FDSN o una corrida fallida, el producto sirve <b>'no disponible' con un aviso de obsolescencia</b> — nunca sirve en silencio un artefacto obsoleto o corrupto."
     },
     "diagram": {
       "svgTitle": "Canalización diaria de pronóstico fuera de línea",
@@ -307,10 +866,19 @@
       "skillYes": "establecida",
       "skillNo": "no establecida",
       "note": "La habilidad se reclama solo cuando IGPE es positiva con un intervalo de confianza de la prueba T que excluye cero, corroborada por la prueba de Wilcoxon.",
-      "baselineName": { "etas": "vs ETAS", "smoothed": "vs sismicidad suavizada" }
+      "baselineName": {
+        "etas": "vs ETAS",
+        "smoothed": "vs sismicidad suavizada"
+      }
     },
-    "reliability": { "title": "Diagrama de fiabilidad" },
-    "evo": { "title": "Conteos esperados vs observados", "expected": "esperado", "observed": "observado" },
+    "reliability": {
+      "title": "Diagrama de fiabilidad"
+    },
+    "evo": {
+      "title": "Conteos esperados vs observados",
+      "expected": "esperado",
+      "observed": "observado"
+    },
     "scoring": {
       "title": "Puntaje secundario (comunicación, nunca el titular)",
       "brier": "Puntaje de Brier",
@@ -332,7 +900,13 @@
     "test": "Prueba",
     "quantile": "Cuantil",
     "status": "Estado",
-    "short": { "N": "N", "M": "M", "S": "S", "L": "L", "CL": "CL" },
+    "short": {
+      "N": "N",
+      "M": "M",
+      "S": "S",
+      "L": "L",
+      "CL": "CL"
+    },
     "name": {
       "N": "Prueba de número",
       "M": "Prueba de magnitud",
@@ -340,7 +914,11 @@
       "L": "Prueba de verosimilitud",
       "CL": "Prueba de verosimilitud condicional (preferida sobre L pura)"
     },
-    "statusLabel": { "pass": "dentro de consistencia", "fail": "rechazada", "untested": "sin probar" },
+    "statusLabel": {
+      "pass": "dentro de consistencia",
+      "fail": "rechazada",
+      "untested": "sin probar"
+    },
     "igPoisson": "Ganancia de información vs Poisson",
     "igEtas": "Ganancia de información vs ETAS",
     "necessaryNotSufficient": "Pasar las pruebas de consistencia calibra un modelo; nunca establece habilidad. La habilidad vive en las pruebas de comparación contra ETAS y la sismicidad suavizada. La ganancia de información va en nats, no en bits."
@@ -369,8 +947,14 @@
       "viewSummary": "Resumen sin mapa"
     },
     "bound": {
-      "lo": { "label": "Optimista (P10)", "tip": "La cota optimista del percentil 10." },
-      "expected": { "label": "Esperada (mediana)", "tip": "El pronóstico esperado / mediana." },
+      "lo": {
+        "label": "Optimista (P10)",
+        "tip": "La cota optimista del percentil 10."
+      },
+      "expected": {
+        "label": "Esperada (mediana)",
+        "tip": "El pronóstico esperado / mediana."
+      },
       "hi": {
         "label": "Pesimista (P90)",
         "tip": "La cota pesimista del percentil 90 — un mal caso plausible.",

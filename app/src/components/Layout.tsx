@@ -1,21 +1,24 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
+import { Activity, Briefcase, Github, Globe } from "lucide-react";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { EXTERNAL_LINKS } from "@/lib/links";
 import { ROUTES } from "@/lib/routes";
 import { APP_BRANCH, APP_BUILD_TIME, APP_COMMIT_SHA, APP_VERSION } from "@/lib/version";
-import { ensureLanguageLoaded, persistLanguage, type Language } from "@/i18n/config";
-import { useThemeStore } from "@/state/useThemeStore";
 
 /**
- * The application shell: a sticky header (brand + the six-route nav + theme toggle +
- * language toggle + external links) and a footer (attribution / credits + the always-on
- * honest disclaimer + build provenance).
+ * The application shell: a sticky, backdrop-blurred header (brand + the six-route nav +
+ * external icon-links + dedicated theme/language toggles) and a footer (attribution /
+ * credits + the always-on honest disclaimer + build provenance).
  *
- * Styling uses the dark/light CSS variables in src/styles/globals.css (the dark-technical
- * palette) via the `.site-header`, `.main-nav`, `.site-footer` etc. classes already defined
- * there. No CSS framework — plain classes only.
+ * Visual pattern mirrors the sister LDA-HSI app — lucide-react icons (never unicode
+ * glyphs), an icon-button hover-opacity treatment, accent-soft active nav, and a vertical
+ * separator before the toggles — but is implemented with this product's plain-CSS classes
+ * in src/styles/globals.css (no Tailwind). The brand mark is a seismic `Activity` glyph in
+ * the accent colour.
  *
  * The honest framing is structural, not optional: the footer disclaimer renders on every
  * page and states plainly that this is a forecaster, never a predictor, and never an alarm.
@@ -25,28 +28,14 @@ export interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { t, i18n } = useTranslation();
-  const theme = useThemeStore((s) => s.theme);
-  const toggleTheme = useThemeStore((s) => s.toggleTheme);
-
-  const currentLang = (i18n.resolvedLanguage ?? i18n.language ?? "en").slice(0, 2) as Language;
-  const nextLang: Language = currentLang === "en" ? "es" : "en";
-
-  async function switchLanguage(): Promise<void> {
-    await ensureLanguageLoaded(nextLang);
-    await i18n.changeLanguage(nextLang);
-    persistLanguage(nextLang);
-  }
-
-  // The label shows the language you would switch TO (so the affordance reads clearly).
-  const otherLangLabel = nextLang.toUpperCase();
+  const { t } = useTranslation();
 
   return (
     <div className="app-shell">
       <header className="site-header">
         <div className="header-inner">
           <NavLink to="/" className="brand" aria-label={t("product.name")}>
-            <span className="brand-mark">◆</span>
+            <Activity size={18} aria-hidden="true" className="brand-mark" />
             <span>{t("product.name")}</span>
           </NavLink>
 
@@ -64,39 +53,15 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           <div className="header-actions">
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={toggleTheme}
-              aria-label={t("header.toggleTheme")}
-              title={t("header.toggleTheme")}
-            >
-              <span aria-hidden="true">{theme === "dark" ? "☾" : "☀"}</span>
-              <span className="sr-only">
-                {theme === "dark" ? t("header.darkThemeShort") : t("header.lightThemeShort")}
-              </span>
-            </button>
-
-            <button
-              type="button"
-              className="icon-btn"
-              onClick={() => void switchLanguage()}
-              aria-label={t("header.toggleLanguage")}
-              title={t("header.toggleLanguage")}
-            >
-              <span aria-hidden="true">{otherLangLabel}</span>
-            </button>
-
-            <span className="header-sep" aria-hidden="true" />
-
             <a
               className="icon-btn"
               href={EXTERNAL_LINKS.github}
               target="_blank"
               rel="noreferrer noopener"
+              aria-label={t("header.github")}
               title={t("header.github")}
             >
-              <span aria-hidden="true">{"</>"}</span>
+              <Github size={18} aria-hidden="true" />
               <span className="sr-only">{t("header.github")}</span>
             </a>
             <a
@@ -104,9 +69,10 @@ export default function Layout({ children }: LayoutProps) {
               href={EXTERNAL_LINKS.personal}
               target="_blank"
               rel="noreferrer noopener"
+              aria-label={t("header.personal")}
               title={t("header.personal")}
             >
-              <span aria-hidden="true">⌂</span>
+              <Globe size={18} aria-hidden="true" />
               <span className="sr-only">{t("header.personal")}</span>
             </a>
             <a
@@ -114,11 +80,17 @@ export default function Layout({ children }: LayoutProps) {
               href={EXTERNAL_LINKS.portfolio}
               target="_blank"
               rel="noreferrer noopener"
+              aria-label={t("header.portfolio")}
               title={t("header.portfolio")}
             >
-              <span aria-hidden="true">▦</span>
+              <Briefcase size={18} aria-hidden="true" />
               <span className="sr-only">{t("header.portfolio")}</span>
             </a>
+
+            <span className="header-sep" aria-hidden="true" />
+
+            <LanguageToggle />
+            <ThemeToggle />
           </div>
         </div>
       </header>

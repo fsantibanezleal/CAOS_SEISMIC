@@ -1,9 +1,12 @@
 import { useId, useState, type ReactNode } from "react";
 
 /**
- * A minimal, accessible tab strip for the Methodology page (classical theories vs the
- * analytical / ML tab). No external dependency — a roving-tabindex tablist with arrow-key
- * navigation and `aria-selected` / `aria-controls` wiring.
+ * Top-level tab strip used by the deep content pages (e.g. Methodology's three model tabs).
+ *
+ * An accessible roving-tabindex tablist with arrow-key navigation and `aria-selected` /
+ * `aria-controls` wiring — no external dependency. The visual treatment mirrors the sister
+ * LDA-HSI app: an accent-soft "pill" for the active tab (see `.tablist` / `.tab` in
+ * globals.css), not just an underline.
  *
  * Each tab is `{ id, label, content }`; the label is pre-translated by the caller.
  */

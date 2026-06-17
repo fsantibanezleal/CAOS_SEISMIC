@@ -233,6 +233,7 @@
     "tabs3": {
       "theory": "Theoretical approaches",
       "analytical": "Analytical / ML methods",
+      "data": "Data & features",
       "employed": "The version employed"
     },
     "theory": {
@@ -518,6 +519,233 @@
       "title": "Exceedance probability (what the legend encodes)",
       "body": "The public scalar is the probability of at least one event at or above M* over the horizon, by the Poisson exceedance map. The expected count integrates the conditional intensity against the Gutenberg–Richter magnitude term up to the bounding Mmax.",
       "caption": "Φ(M*) folds the magnitude distribution into the rate; this is the number the field colours"
+    },
+    "data": {
+      "intro": "Where the numbers come from, and what the model is actually fed. This page is in two parts: the Sources — the public catalogs that drive the forecast and the global enrichers that may add context — and the Data types & features — the catalog record, magnitude homogenization, completeness, the catalog-derived features, and the geophysical covariates. Everything here is reproducible from public data; the heavy ingestion runs offline once per day, never from the browser.",
+      "creedTitle": "The catalog is the signal; everything else is upside",
+      "creed": "The dominant signal in every published short-term forecasting skill is the <b>earthquake catalog itself</b> — its clustering (aftershocks and foreshocks). Geodesy, fault geometry, slab geometry and tides are <b>context covariates</b>: each ships only if it shows positive, significant prospective information gain over a catalog-only ETAS baseline. None of them lets anyone predict an earthquake; they refine bounded, calibrated conditional rates.",
+      "subtabsAria": "Data sources and features",
+      "sources": {
+        "tab": "Sources",
+        "body": "The forecast is built from open, scriptable seismic catalogs accessed mainly through the FDSN <i>event</i> web-service standard, plus a small set of static geophysical layers. Catalogs are the foundation; the enrichers are optional context. Each source below states what it gives, its license, and how often it changes — the licensing obligations are tracked because the public app must display the credits.",
+        "spineTitle": "The spine, the anchor, the cross-check",
+        "spine": "Three roles carry the catalog stack. The <b>spine</b> is USGS ComCat (FDSN <i>event</i>): real-time, no-auth, global, the daily driver. The <b>homogeneous anchor</b> is ISC-GEM (Mw-homogenized, relocated, 1904–2021) for long-term b-value and the magnitude-conversion overlap. A <b>regional network</b> (e.g. CSN in Chile, SCEDC/NCEDC in California, GeoNet in New Zealand, INGV in Italy) gives the low, stable completeness that drives short-horizon skill; EMSC provides an independent de-duplication cross-check.",
+        "colName": "Source",
+        "colGives": "What it gives",
+        "colLicense": "License",
+        "colCadence": "Cadence",
+        "catalogsTitle": "Global catalogs",
+        "catalogs": [
+          {
+            "name": "USGS ComCat",
+            "role": "FDSN event — the spine",
+            "gives": "Global real-time event catalog: time, location, depth, magnitude and magType (kept first-class). Incremental updatedafter deltas; 20,000-event request cap, tiled.",
+            "license": "US Government public domain (non-US networks keep their own attribution)",
+            "cadence": "real-time"
+          },
+          {
+            "name": "ISC-GEM",
+            "role": "homogeneous long-term anchor",
+            "gives": "Mw-homogenized, relocated instrumental catalog (1904–2021, M ≥ 5.5). Anchor for b-value, large-event recurrence, and the mb/ML → Mw conversion overlap.",
+            "license": "CC-BY-SA 3.0 (share-alike on redistributed derivatives)",
+            "cadence": "versioned (DOI'd)"
+          },
+          {
+            "name": "ISC Bulletin (Reviewed)",
+            "role": "clean retrospective bulletin",
+            "gives": "Analyst-reviewed, relocated global bulletin (ISC-EHB subset for the cleanest hypocenters) — training-quality history, ~24-month lag.",
+            "license": "open for research with attribution",
+            "cadence": "~24-month lag"
+          },
+          {
+            "name": "GCMT",
+            "role": "mechanism enricher",
+            "gives": "Centroid moment tensors for ~all M ≳ 5 events since 1976: Mw, nodal planes, P/T axes → focal-mechanism and stress features.",
+            "license": "free for research with citation",
+            "cadence": "monthly + QuickCMT"
+          },
+          {
+            "name": "EMSC SeismicPortal",
+            "role": "real-time cross-check",
+            "gives": "Independent Euro-Med + global feed for de-duplication against ComCat; low-latency WebSocket push and felt reports.",
+            "license": "open for research with attribution",
+            "cadence": "real-time"
+          }
+        ],
+        "regionalTitle": "Regional networks (source of short-horizon skill)",
+        "regional": [
+          {
+            "name": "CSN (Chile)",
+            "role": "network C / C1",
+            "gives": "Dense national catalog with low, stable Mc along the subduction margin; daily GNSS is a built-in geodetic enricher for Chile. Accessed via EarthScope/IRIS FDSN or ISC.",
+            "license": "public use with mandatory CSN attribution",
+            "cadence": "real-time"
+          },
+          {
+            "name": "SCEDC + NCEDC (California)",
+            "role": "networks CI / NC",
+            "gives": "1932-to-present catalogs incl. moment tensors and focal mechanisms; also on AWS open-data buckets (no-sign-request).",
+            "license": "open research use + AWS Open Data terms",
+            "cadence": "daily"
+          },
+          {
+            "name": "GeoNet (New Zealand)",
+            "role": "FDSN + near-real-time",
+            "gives": "National catalog (~20k eq/yr) with an under-5-minute NRT feed for the last 8 days.",
+            "license": "CC-BY 3.0 NZ (attribute Earth Sciences New Zealand)",
+            "cadence": "real-time + NRT"
+          },
+          {
+            "name": "INGV ISIDe (Italy)",
+            "role": "network IV",
+            "gives": "Analyst-reviewed Italian Seismic Bulletin, M ≥ 1.5, QuakeML over FDSN.",
+            "license": "CC-BY (confirm version on the dataset page)",
+            "cadence": "reviewed"
+          }
+        ],
+        "enrichersBody": "The enrichers are global static (or slow-changing) geophysical layers the spatial-context encoder can ingest. They are ranked by <b>expected</b> lift for a conditional short-term forecast — a ranking that must be confirmed by measured information gain on held-out data before any of them touches a public number. None substitutes for the catalog.",
+        "enrichersTitle": "Global enrichers (context covariates)",
+        "enrichers": [
+          {
+            "name": "Slab2",
+            "role": "subduction geometry (highest)",
+            "gives": "Depth-to-slab, dip, strike and interface distance on a 0.05° grid — the geometry generic isotropic ETAS ignores at subduction margins.",
+            "license": "USGS public domain",
+            "cadence": "static (versioned)"
+          },
+          {
+            "name": "GEM Active Faults",
+            "role": "fault context",
+            "gives": "Distance-to-fault and fault style from the global active-faults database (GeoJSON / GPKG).",
+            "license": "CC-BY-SA 4.0 (verify repo LICENSE)",
+            "cadence": "versioned"
+          },
+          {
+            "name": "Bird PB2002 plate model",
+            "role": "plate context",
+            "gives": "Distance-to-boundary, boundary type and plate-pair relative velocity from the digital plate-boundary model.",
+            "license": "open for research",
+            "cadence": "static"
+          },
+          {
+            "name": "NGL GNSS / MIDAS",
+            "role": "geodetic strain",
+            "gives": "Long-term station velocities and a strain-rate field (background term) from the Nevada Geodetic Lab time series.",
+            "license": "open + attribution",
+            "cadence": "daily–weekly"
+          },
+          {
+            "name": "World Stress Map",
+            "role": "in-situ stress orientation",
+            "gives": "Crustal stress orientations (SHmax azimuth, regime) to resolve fault-normal/shear and Coulomb-stress context, complementing GCMT mechanisms.",
+            "license": "CC-BY (cite the WSM database release)",
+            "cadence": "versioned"
+          },
+          {
+            "name": "Tidal stress (computed)",
+            "role": "physically-motivated covariate",
+            "gives": "Body tide (pygtide) + ocean tidal loading (SPOTL/TPXO) resolved to a tidal Coulomb stress, stressing rate, circular phase and the fortnightly Mf envelope. Not a downloaded catalog — a computed feature.",
+            "license": "open tools (TPXO has academic-use terms)",
+            "cadence": "computed per issue"
+          }
+        ],
+        "flowCap": "Figure 1 — the catalog data-flow: multiple providers are de-duplicated, magType is kept, completeness Mc(x,y,t) is estimated and magnitudes homogenized to Mw, then the catalog is split into a declustered view (for the Poisson background μ) and the full un-declustered view (for the conditional/triggering features). Declustering the conditional input is the single most common pipeline mistake — it is never done here.",
+        "flowAlt": "A flow diagram from four raw catalog sources through clean-and-dedupe, completeness and Mw homogenization, to a dual-catalog split into background and full-catalog features.",
+        "flowSpine": "spine · real-time",
+        "flowRegional": "low, stable Mc",
+        "flowAnchor": "Mw anchor + mechanism",
+        "flowCross": "dedup cross-check",
+        "flowClean": "Clean + dedupe by preferred origin",
+        "flowKept": "kept",
+        "flowMcMw": "Mc + homogenize to Mw",
+        "flowDecl": "Declustered (GK)",
+        "flowFull": "Full catalog (un-declustered)",
+        "flowFeatures": "features",
+        "stackCap": "Figure 2 — the global context feature stack. The earthquake catalog is the wide, load-bearing base; each enricher is a thinner layer above it, ordered by expected lift. The width is the point: enrichers are upside on top of the catalog, never a replacement for it, and each must earn its layer with measured prospective information gain.",
+        "stackAlt": "A stacked-layer diagram with the earthquake catalog as the widest base layer and progressively narrower enricher layers (Slab2, faults and plates, GNSS strain, stress orientation, tides) above it.",
+        "stackCatalog": "Earthquake catalog (foundation)",
+        "stackFaults": "GEM faults + Bird plates",
+        "stackStrain": "NGL GNSS strain",
+        "stackStress": "World Stress Map",
+        "stackTides": "tides",
+        "stackUpside": "← thinner = more speculative",
+        "stackBase": "← wider = load-bearing",
+        "licenseTitle": "Credits are an obligation, not a courtesy",
+        "license": "Several sources carry attribution or share-alike terms the public app must honour: <b>ISC-GEM</b> CC-BY-SA 3.0 (keep the license on any redistributed derived catalog), and attribution for <b>CSN-Chile, GeoNet / Earth Sciences NZ, EMSC, GCMT, NGL, Slab2 / USGS, GEM faults, the World Stress Map</b>, plus TPXO's academic-use terms for the tidal channel. These are not redistribution blockers, but the credits page is part of the deliverable."
+      },
+      "features": {
+        "tab": "Data types & features",
+        "body": "From the cleaned catalog the pipeline derives the quantities the model actually sees. They fall into three families: the <b>catalog record</b> itself (the homogenized, completeness-cut event list), the <b>catalog-derived features</b> (recent rates, ETAS intensities, nearest-neighbour proximities), and the <b>context covariates</b> (the geophysical layers joined on the forecast grid). The order in which they are built is load-bearing: a model trained on a dirty catalog learns the network's detection changes, not the Earth.",
+        "recordTitle": "The catalog record",
+        "record": "Each event carries time, longitude, latitude, depth, a magnitude with its <b>native magnitude type</b> (ML, mb, Ms, Md, Mw — kept, never silently merged), origin/network provenance, and a preferred-origin id used to de-duplicate across providers. Mixing magnitude types distorts the Gutenberg–Richter tail, so magType is a first-class field that the homogenization step depends on.",
+        "mwTitle": "Magnitude homogenization to Mw",
+        "mw": "Catalogs mix magnitude scales with different saturation and physics, so all magnitudes are converted to the non-saturating moment magnitude Mw. Where Mw is missing for small events, a regional <b>total-least-squares</b> fit (both axes carry error — not ordinary least squares) maps ML → Mw and mb → Mw, anchored on the ISC-GEM / GCMT overlap. Both native and homogenized magnitudes are stored, and the conversion is versioned — a wrong conversion shifts the whole frequency–magnitude curve and every rate forecast.",
+        "mwCap": "Regional total-least-squares magnitude conversion, anchored on the homogeneous reference catalogs.",
+        "mcTitle": "Completeness Mc(x, y, t)",
+        "mc": "The magnitude of completeness <mc> — the threshold above which the catalog records every event — is estimated <b>per spatial cell and time epoch</b>, not as a single global number (a global Mc injects fake non-stationarity). Events below the local Mc are cut before declustering and feature-building, and the Mc grid is stored as a first-class versioned artifact alongside b(t).",
+        "mcCaveatTitle": "Short-term aftershock incompleteness — the highest-stakes moment",
+        "mcCaveat": "Right after a large mainshock — exactly when the forecast matters most and is most consumed — Mc spikes for hours to days and a naive model <b>under-forecasts</b> aftershock productivity. The daily update therefore uses an incompleteness-aware likelihood with a time-dependent Mc(t), not the static-Mc fit. This is a decided method and a flagged limitation of the most important real-time updates.",
+        "zbzTitle": "Declustering — features, not just labels",
+        "zbz": "The catalog is kept in a <b>dual view</b>. A declustered catalog (Gardner–Knopoff windows) feeds only the stationary Poisson background rate μ(x,y); the <b>full, un-declustered catalog</b> feeds the conditional model, because aftershock and foreshock triggering <b>is</b> the predictable signal. The Zaliapin–Ben-Zion nearest-neighbour proximity is computed as continuous features (not just keep/drop labels) and as the principled cluster labeller.",
+        "zbzCap": "The Baiesi–Paczuski / Zaliapin–Ben-Zion nearest-neighbour proximity η and its time (T) and rescaled-distance (R) factors; df is the fractal dimension and b the local Gutenberg–Richter slope.",
+        "zbzBimodal": "In log space, <b>log₁₀ η is bimodal</b>: a background mode and a clustered mode, separating independent events from triggered ones. T and R enter the feature store directly, so the model sees how close in rescaled time and space each event sits to its nearest stronger neighbour.",
+        "tableTitle": "The feature store",
+        "tableIntro": "A representative slice of the per-cell, per-issue feature vector evaluated on the fine forecast grid. Catalog-derived features dominate; the context covariates are joined on top.",
+        "table": [
+          {
+            "group": "Recent activity",
+            "name": "Windowed counts / rates",
+            "formula": "N(t−Δ, t) for Δ ∈ {1d, 7d, 30d}",
+            "meaning": "Recent event counts and rates per cell — the rawest expression of an active sequence."
+          },
+          {
+            "group": "Recent activity",
+            "name": "Rolling b-value, Mc",
+            "formula": "b(t), Mc(x,y,t)",
+            "meaning": "Local frequency–magnitude slope and completeness, re-estimated on a rolling space–time window."
+          },
+          {
+            "group": "ETAS intensity",
+            "name": "Conditional intensity",
+            "formula": "λ(t,x,y | H_t)",
+            "meaning": "The ETAS self-exciting rate at the cell, summed over the triggering history — the core predictor."
+          },
+          {
+            "group": "ETAS intensity",
+            "name": "Productivity / Omori terms",
+            "formula": "k(m) e^{α(m−M₀)}, (t−t_i+c)^{−p}",
+            "meaning": "Per-event triggering strength and its time decay, the ingredients of the conditional intensity."
+          },
+          {
+            "group": "ZBZ proximity",
+            "name": "Nearest-neighbour η, T, R",
+            "formula": "η_ij, T_j, R_j (q ≈ 0.5)",
+            "meaning": "Rescaled time/space proximity to the nearest stronger event; separates background from clustered."
+          },
+          {
+            "group": "Context",
+            "name": "Slab / fault / plate geometry",
+            "formula": "depth, dip, dist-to-fault, dist-to-boundary",
+            "meaning": "Static geophysical context joined per cell (Slab2, GEM faults, Bird plates)."
+          },
+          {
+            "group": "Context",
+            "name": "Geodetic strain",
+            "formula": "ε̇(x,y) from NGL/MIDAS",
+            "meaning": "Background loading-rate field; a slow, weakly-informative covariate."
+          },
+          {
+            "group": "Context",
+            "name": "Tidal Coulomb stress",
+            "formula": "ΔCFS_tide, Mf envelope, sin/cos phase",
+            "meaning": "Physically-motivated, regularized covariate that may shrink to ~0 for most regions."
+          }
+        ],
+        "contextTitle": "Context covariates — joined, gated, honest",
+        "context": "The context covariates from Figure 2 are joined onto the forecast grid and offered to the spatial-context encoder. Each is <b>gated</b>: it enters a public forecast only after it shows positive, significant prospective information gain over the catalog-only baseline. For most regions the geodetic and tidal terms are expected to be near-null and are reported as such — the encoder is a context layer, never a standalone forecaster.",
+        "clockTitle": "The forecast clock — no feature can see the future",
+        "clock": "Every feature is computed strictly from the catalog slice up to the issue time t; the label is the events in the horizon [t, t+H). At each daily issue the model is handed only data before t, the forecast is sealed, and the input state is snapshotted immutably. This makes temporal leakage <b>structurally impossible</b>, not a matter of discipline — and it is what lets a past forecast be re-scored honestly months later."
+      }
     },
     "ml": {
       "intro": "This tab is theory and state of the art — not the version this product ships. It surveys the analytical and machine-learned approaches to seismic forecasting through the single lens that unifies them all: the conditional intensity of a temporal point process. Each method is given with its assumptions, its key equation, and an honest reading of the evidence. The blunt headline first.",

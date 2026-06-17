@@ -4,6 +4,7 @@ import { ReferenceList } from "@/components/content/Cite";
 import { Tabs, type TabDef } from "@/components/content/Tabs";
 import { MethodologyTheory } from "@/components/methodology/MethodologyTheory";
 import { MethodologyAnalytical } from "@/components/methodology/MethodologyAnalytical";
+import { MethodologyData } from "@/components/methodology/MethodologyData";
 import { MethodologyEmployed } from "@/components/methodology/MethodologyEmployed";
 import type { CitationId } from "@/lib/citations";
 
@@ -15,7 +16,10 @@ import type { CitationId } from "@/lib/citations";
  *  1. "Theoretical approaches"  → <MethodologyTheory/>     — the classical, citable equations.
  *  2. "Analytical / ML methods" → <MethodologyAnalytical/> — point processes + the honest
  *                                                            ML-vs-ETAS verdict.
- *  3. "The version employed"    → <MethodologyEmployed/>   — the v0 ETAS-class model that ships.
+ *  3. "Data & features"         → <MethodologyData/>       — the catalogs + enrichers (Sources)
+ *                                                            and the catalog-derived + context
+ *                                                            features the model ingests.
+ *  4. "The version employed"    → <MethodologyEmployed/>   — the v0 ETAS-class model that ships.
  *
  * The three components carry the deep per-topic content (rendered with react-katex equations,
  * real citations, and the content primitives); this file only owns the tab shell, the page
@@ -55,6 +59,7 @@ export default function Methodology() {
   const tabs: TabDef[] = [
     { id: "theory", label: t("method.tabs3.theory"), content: <MethodologyTheory /> },
     { id: "analytical", label: t("method.tabs3.analytical"), content: <MethodologyAnalytical /> },
+    { id: "data", label: t("method.tabs3.data"), content: <MethodologyData /> },
     { id: "employed", label: t("method.tabs3.employed"), content: <MethodologyEmployed /> },
   ];
 

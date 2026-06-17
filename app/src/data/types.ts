@@ -69,10 +69,15 @@ export interface CellValue {
   lo: number;
   /** Pessimistic bound (P90). */
   hi: number;
-  /** Expected event count N_{>=M*} (lambda * T) for the cell/horizon/threshold. */
+  /** Expected event count N_{>=M*} (lambda * T) for the cell/horizon/threshold. On compacted
+   *  (production) artifacts this is decoded by the client from the quantized `q` code via the
+   *  artifact `rate_legend` at load time (see `decodeRates`). */
   rate: number;
   /** Long-term Poisson baseline probability for the same cell — the honesty companion. */
   baseline: number;
+  /** Quantized log-uint16 rate code AS SHIPPED (publish-stage compaction). Decoded into `rate` at
+   *  load time; absent on uncompacted (sample) artifacts. */
+  q?: number;
 }
 
 /**
@@ -255,29 +260,68 @@ export interface ForecastArtifact {
   provenance: Record<string, unknown>;
   /** Generated / next-run / ok staleness indicator. */
   staleness: Staleness;
+  /** Quantization legend for the compacted per-cell `q` rate codes (absent on uncompacted artifacts). */
+  rate_legend?: RateLegend;
+  /** Publish-stage compaction metadata (H3 cell counts, floors). Informational. */
+  compaction?: Record<string, unknown>;
+}
+
+/**
+ * Log-domain uint16 quantization legend for the compacted per-cell `q` rate codes — the publish
+ * stage stores the expected-count rate as a 16-bit code to keep the world payload small. Decode:
+ * `rate = q <= 0 ? 0 : rate_min * (rate_max / rate_min) ** ((q - 1) / (levels - 1))`.
+ */
+export interface RateLegend {
+  /** Quantization scheme tag, e.g. "log_uint16". */
+  kind: string;
+  rate_min: number;
+  rate_max: number;
+  levels: number;
+  note?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // index.json — the latest-pointer + rolling-calibration manifest (web-app-spec.md §8.3)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** One entry in the rolling history of daily artifacts. */
-export interface ForecastIndexEntry {
-  /** Forecast date, "YYYY-MM-DD". */
-  date: string;
-  /** Relative path under the static data host, e.g. "forecast-2026-06-16.json". */
-  file: string;
-  /** Whether `file` is gzip-compressed on disk (".json.gz"). */
-  gzipped?: boolean;
-  /** ISO-8601 UTC issue time for this entry. */
-  issued_at?: string;
+/** One country view sliceable out of a (global) artifact — the region-selector menu entry. */
+export interface IndexViewEntry {
+  id: string;
+  name_en: string;
+  n_cells: number;
 }
 
 /**
- * `data/index.json` — the latest pointer + rolling CSEP calibration the client reads
- * first. Mirrors the publish stage's `results/index.json` (data-and-pipelines.md §4 (G),
- * §7). `latest` names the most recent artifact; `history` is the rolling list for the
- * "forecast from {past date}" selector and the time-series summary.
+ * One forecast entry in the index — both the `latest` pointer and every element of the rolling
+ * `forecasts` history share this shape. Mirrors the publish stage's index entry written by
+ * `inference/artifact.py: update_index` (data-and-pipelines.md §4 (G), §7).
+ */
+export interface ForecastIndexEntry {
+  /** ISO-8601 UTC issue time, e.g. "2026-06-17T00:00:00Z". */
+  issued_at: string;
+  /** Region id this artifact is for ("global" or a focused region). */
+  region: string;
+  /** Relative path under the static data host, e.g. "forecast-global-2026-06-17.json.gz". */
+  file: string;
+  horizons_days: number[];
+  magnitude_thresholds: number[];
+  /** Compressed payload size on disk. */
+  size_bytes?: number;
+  /** Whether the artifact passed the staleness gate when it was published. */
+  staleness_ok?: boolean;
+  /** ISO-8601 UTC time the artifact's underlying data was generated. */
+  generated?: string;
+  /** ISO-8601 UTC time the next scheduled run is expected. */
+  next_run?: string;
+  /** The country views available as slices of this field (the SPA's region selector). */
+  views?: IndexViewEntry[];
+}
+
+/**
+ * `data/index.json` — the latest pointer + rolling history + CSEP calibration the client reads
+ * first. Mirrors the publish stage's `results/index.json` (data-and-pipelines.md §4 (G), §7).
+ * `latest` is the most recent artifact entry; `forecasts` is the rolling list (oldest→newest) for
+ * the "forecast from {past date}" selector; `latest_by_region` is the per-region newest entry.
  */
 export interface ForecastIndex {
   /** == ARTIFACT_SCHEMA_VERSION of the artifacts this index points at. */
@@ -285,16 +329,14 @@ export interface ForecastIndex {
   product: string;
   /** ISO-8601 UTC time this index was written. */
   updated_at: string;
-  /** Filename (relative) of the latest artifact, e.g. "forecast-2026-06-16.json". */
-  latest: string;
-  /** Whether `latest` is gzip-compressed on disk. */
-  gzipped?: boolean;
-  /** Rolling history of daily artifacts, newest first. */
-  history: ForecastIndexEntry[];
+  /** The most recent artifact entry (the default Monitoring view points here). */
+  latest: ForecastIndexEntry;
+  /** Most recent entry per region id. */
+  latest_by_region?: Record<string, ForecastIndexEntry>;
+  /** Rolling history of daily artifacts, oldest→newest (bounded window). */
+  forecasts: ForecastIndexEntry[];
   /** Optional rolling-window CSEP calibration snapshot for the always-on badge. */
   calibration?: CalibrationSummary;
-  /** Optional staleness mirror so the staleness banner can render before the artifact loads. */
-  staleness?: Staleness;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

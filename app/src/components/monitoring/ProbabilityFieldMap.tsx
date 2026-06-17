@@ -5,9 +5,14 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MapboxOverlay } from "@deck.gl/mapbox";
 import { H3HexagonLayer } from "@deck.gl/geo-layers";
+import { HeatmapLayer } from "@deck.gl/aggregation-layers";
+import { cellToLatLng } from "h3-js";
 
-import { valueToColor, type ScaleOptions } from "@/components/monitoring/colormap";
+import { sampleRamp, valueToColor, valueToT, type RGB, type ScaleOptions } from "@/components/monitoring/colormap";
 import type { CellSelection } from "@/data/types";
+
+/** The two field renderings (purely visual — same data, same scale). */
+export type FieldMode = "hexbins" | "heatmap";
 
 /**
  * The world / per-country probability FIELD (web-app-spec.md §7.1, §7.2).
@@ -61,6 +66,9 @@ export interface ProbabilityFieldMapProps {
   scale?: ScaleOptions;
   /** Stale/failed run → desaturate the whole field (visible degradation). */
   degraded?: boolean;
+  /** Field rendering: discrete H3 hexbins (default) or a continuous KDE heatmap. Visual only —
+   * both read the SAME per-cell values on the SAME perceptually-uniform colormap. */
+  mode?: FieldMode;
   /** Called when a hexagon is clicked/hovered, for the drill-down panel. */
   onPick?: (cell: CellSelection | null) => void;
 }
@@ -72,6 +80,7 @@ export function ProbabilityFieldMap({
   zoom = 4,
   scale,
   degraded = false,
+  mode = "hexbins",
   onPick,
 }: ProbabilityFieldMapProps) {
   const { t } = useTranslation();
@@ -95,6 +104,58 @@ export function ProbabilityFieldMap({
       const fieldCells = cells.filter((c) => !maskedSet.has(c.cell));
       const alphaScale: ScaleOptions = degraded ? { ...scale, alpha: 70 } : (scale ?? {});
 
+      // Coverage mask: a flat desaturated grey hatch surrogate (blank != safe). Shared by both modes.
+      const maskLayer = new H3HexagonLayer<{ cell: string }>({
+        id: "coverage-mask",
+        data: maskCells,
+        pickable: false,
+        filled: true,
+        stroked: true,
+        getHexagon: (d) => d.cell,
+        getFillColor: [120, 120, 120, 60],
+        getLineColor: [150, 150, 150, 120],
+        lineWidthMinPixels: 0.5,
+      });
+
+      if (mode === "heatmap") {
+        // Continuous KDE surface: each cell centroid weighted by its normalized value (same scale as
+        // the hexbins), smoothed on the GPU. Colours come from the SAME perceptually-uniform ramp.
+        const ramp = scale?.ramp ?? "viridis";
+        const colorRange = [0.15, 0.3, 0.45, 0.6, 0.78, 0.95].map(
+          (s) => sampleRamp(s, ramp) as RGB,
+        );
+        const points = fieldCells.map((c) => {
+          const [lat, lng] = cellToLatLng(c.cell);
+          return { position: [lng, lat] as [number, number], weight: valueToT(c.value, scale) };
+        });
+        const heatLayer = new HeatmapLayer<{ position: [number, number]; weight: number }>({
+          id: "probability-heatmap",
+          data: points,
+          getPosition: (d) => d.position,
+          getWeight: (d) => d.weight,
+          colorRange,
+          aggregation: "SUM",
+          radiusPixels: 38,
+          intensity: 1,
+          threshold: 0.05,
+          opacity: degraded ? 0.4 : 0.85,
+          pickable: false,
+          updateTriggers: { getWeight: [scale] },
+        });
+        // Invisible but pickable hexbins UNDER the heatmap, so the cell drill-down still works.
+        const pickLayer = new H3HexagonLayer<CellSelection>({
+          id: "heatmap-pick",
+          data: fieldCells,
+          pickable: true,
+          filled: true,
+          stroked: false,
+          getHexagon: (d: CellSelection) => d.cell,
+          getFillColor: [0, 0, 0, 0],
+          onClick: (info) => onPick?.((info.object as CellSelection) ?? null),
+        });
+        return [maskLayer, pickLayer, heatLayer];
+      }
+
       const fieldLayer = new H3HexagonLayer<CellSelection>({
         id: "probability-field",
         data: fieldCells,
@@ -113,22 +174,9 @@ export function ProbabilityFieldMap({
         },
       });
 
-      // Coverage mask: a flat desaturated grey hatch surrogate (blank != safe).
-      const maskLayer = new H3HexagonLayer<{ cell: string }>({
-        id: "coverage-mask",
-        data: maskCells,
-        pickable: false,
-        filled: true,
-        stroked: true,
-        getHexagon: (d) => d.cell,
-        getFillColor: [120, 120, 120, 60],
-        getLineColor: [150, 150, 150, 120],
-        lineWidthMinPixels: 0.5,
-      });
-
       return [maskLayer, fieldLayer];
     };
-  }, [cells, maskCells, maskedSet, scale, degraded, onPick]);
+  }, [cells, maskCells, maskedSet, scale, degraded, mode, onPick]);
 
   // Create the MapLibre map + deck overlay once.
   useEffect(() => {

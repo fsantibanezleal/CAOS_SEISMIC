@@ -101,13 +101,23 @@ export default function Layout({ children }: LayoutProps) {
             </a>
             <a
               className="icon-btn"
-              href={EXTERNAL_LINKS.projects}
+              href={EXTERNAL_LINKS.personal}
               target="_blank"
               rel="noreferrer noopener"
-              title={t("header.projects")}
+              title={t("header.personal")}
             >
-              <span aria-hidden="true">↗</span>
-              <span className="sr-only">{t("header.projects")}</span>
+              <span aria-hidden="true">⌂</span>
+              <span className="sr-only">{t("header.personal")}</span>
+            </a>
+            <a
+              className="icon-btn"
+              href={EXTERNAL_LINKS.portfolio}
+              target="_blank"
+              rel="noreferrer noopener"
+              title={t("header.portfolio")}
+            >
+              <span aria-hidden="true">▦</span>
+              <span className="sr-only">{t("header.portfolio")}</span>
             </a>
           </div>
         </div>
@@ -130,8 +140,12 @@ export default function Layout({ children }: LayoutProps) {
               {t("header.github")}
             </a>
             <span aria-hidden="true">·</span>
-            <a href={EXTERNAL_LINKS.projects} target="_blank" rel="noreferrer noopener">
-              {t("header.projects")}
+            <a href={EXTERNAL_LINKS.personal} target="_blank" rel="noreferrer noopener">
+              {t("header.personal")}
+            </a>
+            <span aria-hidden="true">·</span>
+            <a href={EXTERNAL_LINKS.portfolio} target="_blank" rel="noreferrer noopener">
+              {t("header.portfolio")}
             </a>
             <span aria-hidden="true">·</span>
             <span className="faint">{t("footer.license")}</span>

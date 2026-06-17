@@ -14,7 +14,8 @@
   },
   "header": {
     "github": "Código en GitHub",
-    "projects": "Más proyectos",
+    "personal": "Sitio personal",
+    "portfolio": "Portafolio (fasl-work.com)",
     "toggleTheme": "Alternar tema claro / oscuro",
     "toggleLanguage": "Cambiar idioma",
     "lightThemeShort": "Claro",

@@ -4,6 +4,8 @@
 export const EXTERNAL_LINKS = {
   /** The project's public source repository. */
   github: "https://github.com/fsantibanezleal/CAOS_SEISMIC",
-  /** Felipe's public projects / portfolio page. */
-  projects: "https://fsantibanezleal.github.io",
+  /** Felipe's personal site. */
+  personal: "https://fsantibanezleal.github.io",
+  /** Felipe's portfolio. */
+  portfolio: "https://fasl-work.com",
 } as const;

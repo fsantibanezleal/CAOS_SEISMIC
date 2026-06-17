@@ -185,29 +185,56 @@ def gardner_knopoff(
     # Process from largest to smallest magnitude (NaN/-inf last; they can only be independent).
     order = np.argsort(-np.where(np.isfinite(mag), mag, -np.inf))
     next_cluster = 0
+
+    # Spatial index so each mainshock's window is a ball query (O(log N + neighbours)) instead of an
+    # all-pairs haversine (O(N) per event → O(N^2) overall, which hung on the 10^5-event global
+    # catalog). Events map to 3-D unit vectors whose Euclidean **chord** distance is monotonic in
+    # great-circle distance, so a chord-radius ball returns exactly the events within ``L(M)`` km.
+    tree = None
+    pts = None
+    try:
+        from scipy.spatial import cKDTree
+
+        latr = np.radians(lat)
+        lonr = np.radians(lon)
+        coslat = np.cos(latr)
+        pts = np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
+        tree = cKDTree(pts)
+    except ModuleNotFoundError:  # pragma: no cover - SciPy is a core dependency
+        tree = None
+    r_earth = 6371.0088
+
     for k in order:
         if assigned[k] or not np.isfinite(mag[k]):
             # NaN-magnitude rows: independent singletons (cannot open a window).
             if not assigned[k]:
                 assigned[k] = True
             continue
-        # Open this event's window and capture unassigned neighbours within space + time.
-        dist = haversine_km(lat[k], lon[k], lat, lon)
-        dt = np.abs(t_days - t_days[k])
-        within = (dist <= l_km[k]) & (dt <= t_win[k]) & (~assigned)
-        within[k] = True  # the mainshock belongs to its own cluster
-        idx = np.where(within)[0]
+        # Candidate neighbours within the L(M) km space window, then filtered by the T(M) time window.
+        if tree is not None:
+            theta = min(float(l_km[k]) / r_earth, np.pi)
+            chord = 2.0 * np.sin(theta / 2.0)
+            cand = np.asarray(tree.query_ball_point(pts[k], chord), dtype=int)
+            dt = np.abs(t_days[cand] - t_days[k])
+            sel = (dt <= t_win[k]) & (~assigned[cand])
+            idx = cand[sel]
+            if k not in idx:  # the mainshock belongs to its own cluster
+                idx = np.append(idx, k)
+        else:
+            dist = haversine_km(lat[k], lon[k], lat, lon)
+            dt = np.abs(t_days - t_days[k])
+            within = (dist <= l_km[k]) & (dt <= t_win[k]) & (~assigned)
+            within[k] = True
+            idx = np.where(within)[0]
+
         cluster_id = next_cluster
         next_cluster += 1
-        for j in idx:
-            assigned[j] = True
-            labels[int(orig[j])] = cluster_id
-        # Within this cluster the current event k is the largest (we sweep mag-descending), so all
-        # other members are dependents and drop out of the background.
-        for j in idx:
-            is_main[int(orig[j])] = (j == k)
-        # A singleton cluster is an independent event: keep it, and mark label -1 for clarity.
-        if idx.size == 1:
+        # Vectorized assignment (the per-member Python loop was a second O(N) hotspot).
+        assigned[idx] = True
+        labels[orig[idx]] = cluster_id
+        # k is the largest event of its cluster (mag-descending sweep); only it stays in the background.
+        is_main[orig[idx]] = idx == k
+        if idx.size == 1:  # singleton cluster ⇒ independent event
             labels[int(orig[k])] = -1
 
     return DeclusterResult(labels, is_main, "gardner_knopoff", _gk_stats(labels, is_main))

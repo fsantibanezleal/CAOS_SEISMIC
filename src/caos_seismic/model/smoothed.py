@@ -119,25 +119,49 @@ def _kernel_normalization(d: float, s: float) -> float:
     return (s - 1.0) * d ** (2.0 * (s - 1.0)) / np.pi
 
 
+#: Mean Earth radius (km) for the chord→great-circle conversion in the KD-tree bandwidth.
+_EARTH_R_KM = 6371.0088
+
+
 def _nth_nearest_bandwidth(
     lat: np.ndarray, lon: np.ndarray, n_neighbors: int, d_min_km: float
 ) -> np.ndarray:
     """Adaptive bandwidth ``d_i`` = great-circle distance (km) to each event's ``n``-th neighbour.
 
-    Floored at ``d_min_km`` so coincident/very-close events do not yield a singular kernel. ``O(N^2)``
-    in the catalog size, which is fine for regional daily catalogs (10^3–10^5 events); a KD-tree
-    refinement is deferred until profiling shows it is needed.
+    Floored at ``d_min_km`` so coincident/very-close events do not yield a singular kernel.
+
+    Computed in **O(N log N)** with a 3-D unit-sphere KD-tree (``scipy.spatial.cKDTree``): events are
+    mapped to unit vectors, whose Euclidean **chord** distance is monotonic in great-circle distance,
+    so the ``k``-th nearest neighbour is identical to the on-sphere one; the chord is then converted
+    back to a great-circle arc-length in km. This is the change that makes the **global** (10^5-event)
+    smoothed-null fit tractable — the previous O(N^2) all-pairs loop hung on a worldwide catalog. A
+    pure-numpy O(N^2) fallback is kept for the (rare) case SciPy is unavailable.
     """
     n_events = lat.size
-    d = np.empty(n_events, dtype=float)
-    # Rank we actually take: the n-th *other* event (index n among sorted distances, since index 0
-    # is the event itself at distance 0).
-    k = min(n_neighbors, max(1, n_events - 1))
-    for i in range(n_events):
-        dist = haversine_km(lat[i], lon[i], lat, lon)
-        dist_sorted = np.partition(dist, k)[: k + 1]
-        d[i] = max(np.sort(dist_sorted)[k], d_min_km)
-    return d
+    if n_events <= 1:
+        return np.full(n_events, d_min_km, dtype=float)
+    # Rank we actually take: the n-th *other* event (the self-match at distance 0 is column 0).
+    k = min(int(n_neighbors), max(1, n_events - 1))
+
+    try:
+        from scipy.spatial import cKDTree
+    except ModuleNotFoundError:  # pragma: no cover - SciPy is a core dependency
+        d = np.empty(n_events, dtype=float)
+        for i in range(n_events):
+            dist = haversine_km(lat[i], lon[i], lat, lon)
+            dist_sorted = np.partition(dist, k)[: k + 1]
+            d[i] = max(np.sort(dist_sorted)[k], d_min_km)
+        return d
+
+    latr = np.radians(lat)
+    lonr = np.radians(lon)
+    coslat = np.cos(latr)
+    pts = np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
+    tree = cKDTree(pts)
+    chord, _ = tree.query(pts, k=k + 1)          # (N, k+1); column 0 is the self-match (0.0)
+    chord_k = np.clip(np.atleast_2d(chord)[:, k], 0.0, 2.0)
+    arc_km = 2.0 * np.arcsin(chord_k / 2.0) * _EARTH_R_KM   # chord → great-circle arc length (km)
+    return np.maximum(arc_km, d_min_km)
 
 
 @dataclass
@@ -168,10 +192,17 @@ class SmoothedSeismicityForecaster(BaseForecaster):
     d_min_km: float = 2.0
     b_value: float | None = None
     mc: float | None = None
+    #: Number of nearest events summed per query point at INFERENCE. The adaptive kernel decays as
+    #: ``r^{-2s}``, so the few-dozen nearest events carry essentially all of a point's density; querying
+    #: them with a KD-tree makes the field O(cells · k log N) instead of O(cells · N) — the difference
+    #: between an instant and a 10^5-events × 10^6-cells global evaluation. ``None`` sums all events.
+    inference_k: int = 96
 
     # Fitted state (populated by `fit`).
     _ev_lat: np.ndarray | None = field(default=None, repr=False)
     _ev_lon: np.ndarray | None = field(default=None, repr=False)
+    _ev_xyz: np.ndarray | None = field(default=None, repr=False)  # 3-D unit-sphere coords for the KD-tree
+    _tree: object | None = field(default=None, repr=False)        # scipy.spatial.cKDTree over _ev_xyz
     _ev_d: np.ndarray | None = field(default=None, repr=False)  # adaptive bandwidths (km)
     _ev_norm: np.ndarray | None = field(default=None, repr=False)  # per-event C(d_i)
     _exponent_s: float = field(default=0.0, repr=False)
@@ -215,6 +246,17 @@ class SmoothedSeismicityForecaster(BaseForecaster):
         lat = complete["latitude"].to_numpy(dtype=float)
         lon = complete["longitude"].to_numpy(dtype=float)
         self._ev_lat, self._ev_lon = lat, lon
+        # 3-D unit-sphere index, reused for the O(k) k-nearest queries at inference.
+        latr = np.radians(lat)
+        lonr = np.radians(lon)
+        coslat = np.cos(latr)
+        self._ev_xyz = np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
+        try:
+            from scipy.spatial import cKDTree
+
+            self._tree = cKDTree(self._ev_xyz)
+        except ModuleNotFoundError:  # pragma: no cover - SciPy is a core dependency
+            self._tree = None
         self._ev_d = _nth_nearest_bandwidth(lat, lon, self.n_neighbors, self.d_min_km)
         self._ev_norm = np.array(
             [_kernel_normalization(d, self._exponent_s) for d in self._ev_d], dtype=float
@@ -236,6 +278,20 @@ class SmoothedSeismicityForecaster(BaseForecaster):
         area to get an expected count.
         """
         self._require_fit()
+        n = self._ev_lat.size
+        if self._tree is not None and self.inference_k is not None and n > int(self.inference_k):
+            # Sum the kernel over the k nearest events only — the decaying ``r^{-2s}`` kernel makes the
+            # far events' contribution negligible, so this is O(k log N) instead of O(N) per query.
+            latr = np.radians(lat)
+            lonr = np.radians(lon)
+            cl = np.cos(latr)
+            q = np.array([cl * np.cos(lonr), cl * np.sin(lonr), np.sin(latr)])
+            kk = min(int(self.inference_k), n)
+            _, idx = self._tree.query(q, k=kk)
+            idx = np.atleast_1d(np.asarray(idx, dtype=int))
+            r = haversine_km(lat, lon, self._ev_lat[idx], self._ev_lon[idx])
+            ker = self._ev_norm[idx] * np.power(r * r + self._ev_d[idx] ** 2, -self._exponent_s)
+            return float(np.sum(ker))
         r = haversine_km(lat, lon, self._ev_lat, self._ev_lon)
         k = self._ev_norm * np.power(r * r + self._ev_d * self._ev_d, -self._exponent_s)
         return float(np.sum(k))

@@ -147,22 +147,29 @@ def run_train(
     etas_rejection: str | None = None
     primary_name, primary_version = null.name, null.version
     primary = None
+    require_lt = bool(etas_cfg.get("stability", {}).get("require_alpha_lt_beta", True))
+    reject_super = bool(etas_cfg.get("stability", {}).get("reject_supercritical", True))
     try:
-        etas = ETASForecaster(
+        # Regime-aware TILED ETAS: fit ETAS per tectonic tile and aggregate into the global field. This
+        # is the tractable, physically-honest primary at global scope — a single monolithic ETAS over a
+        # worldwide 10^5-event catalog is both O(N^2) and wrong (subduction ≠ stable interior). Each tile
+        # enforces both stability gates and falls back to its smoothed null on violation.
+        from .tiled import TiledForecaster
+
+        etas = TiledForecaster(
             m0=m0,
             mc=mc,
             b_value=b_value,
-            require_alpha_lt_beta=bool(etas_cfg.get("stability", {}).get("require_alpha_lt_beta", True)),
-            reject_supercritical=bool(etas_cfg.get("stability", {}).get("reject_supercritical", True)),
-            background=SmoothedSeismicityForecaster(b_value=b_value, mc=mc),
+            require_alpha_lt_beta=require_lt,
+            reject_supercritical=reject_super,
         )
         etas.fit(past, reg, cutoff)
         etas_params = dict(etas.params_used)
-        etas_fitted = True
+        etas_fitted = int(etas_params.get("n_tiles_etas", 0)) > 0
         primary, primary_name, primary_version = etas, etas.name, etas.version
-    except (ETASStabilityError, ValueError) as exc:
+    except ValueError as exc:
         etas_rejection = str(exc)
-        logger.warning("ETAS rejected (%s); R-J fallback carries the region this cycle", exc)
+        logger.warning("tiled ETAS fit failed (%s); R-J fallback carries the region this cycle", exc)
 
     # Transparent fallback model (always available for the consistency comparison).
     rj = ReasenbergJonesForecaster(b=b_value)
@@ -192,6 +199,8 @@ def run_train(
         "etas_fitted": etas_fitted,
         "etas_rejection": etas_rejection,
         "branching_ratio": etas_params.get("branching_ratio"),
+        "n_tiles_etas": etas_params.get("n_tiles_etas"),
+        "n_tiles_null_fallback": etas_params.get("n_tiles_null_fallback"),
         "primary_model": primary_name,
         "n_test_passed": consistency.get("n_test", {}).get("passed"),
         "n_test_quantile": consistency.get("n_test", {}).get("quantile"),
@@ -268,13 +277,17 @@ def _self_consistency_check(
     and the closed-form IGPE for the comparison. The published pseudo-prospective record is produced
     by :mod:`caos_seismic.eval.backanalysis`.
     """
-    from ..inference.daily import build_fit_cells
+    from ..inference.daily import build_global_fit_cells
 
     horizon = float(holdout_days)
     thresholds = [float(m) for m in forecast_cfg.get("magnitude_thresholds", [5.0])]
     m_star = min(thresholds)  # the most populated band → the most informative consistency check
 
-    cells = build_fit_cells(region, load("grid"))
+    # Use the multi-resolution grid (coarse worldwide baseline + fine coverage tiles around recent
+    # seismicity), NEVER the dense 0.1° grid — over the GLOBAL bbox that is ~6.5M cells and would hang
+    # just materializing the Cell list. build_global_fit_cells is also correct for a bounded view.
+    cond = conditioning_slice(full, cutoff)
+    cells = build_global_fit_cells(region, load("grid"), cond)
     if not cells:
         return {"gate_passed": None, "note": "empty fit grid"}
 

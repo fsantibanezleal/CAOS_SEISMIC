@@ -580,32 +580,6 @@ def _point_in_any_bbox(lat: float, lon: float, boxes: list[BBox]) -> bool:
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _construct_etas(EtasForecaster: Any, smoothed: SmoothedSeismicityForecaster, mc: float, b_value: float) -> Any:
-    """Construct an ETAS forecaster, passing the declustered-fit background + Mc/b when accepted.
-
-    The contracts only mandate ``fit``/``expected_counts``; concrete ETAS implementations vary in
-    their constructor surface (some accept ``background``/``mc``/``b_value``, some don't). We probe
-    the accepted kwargs and pass only those, so this orchestrator stays decoupled from the exact
-    ETAS class signature while still honouring the dual-catalog rule (smoothed background fit on the
-    *declustered* catalog) whenever the implementation supports it.
-    """
-    import inspect
-
-    accepted: set[str] = set()
-    try:
-        accepted = set(inspect.signature(EtasForecaster).parameters)
-    except (TypeError, ValueError):
-        accepted = set()
-    kwargs: dict[str, Any] = {}
-    if "background" in accepted:
-        kwargs["background"] = smoothed
-    if "mc" in accepted:
-        kwargs["mc"] = mc
-    if "b_value" in accepted:
-        kwargs["b_value"] = b_value
-    return EtasForecaster(**kwargs)
-
-
 def _fit_model_family(
     *,
     conditional_cat: pd.DataFrame,
@@ -615,11 +589,12 @@ def _fit_model_family(
     mc: float,
     b_value: float,
 ) -> dict[str, Any]:
-    """Fit ETAS (primary, lazy), Reasenberg–Jones (fallback), and the smoothed null (mandatory floor).
+    """Fit the regime-tiled ETAS (primary), Reasenberg–Jones (fallback), and the smoothed null (floor).
 
     Returns a dict carrying the fitted forecasters plus the name/version/params of whichever is the
-    *primary* estimator (ETAS if it landed and fit cleanly, else R-J). The smoothed null is always
-    present — it is the cold-start floor and the CSEP reference.
+    *primary* estimator (the tiled ETAS if it fit cleanly, else R-J). The smoothed null is always
+    present — it is the cold-start floor and the CSEP reference. The primary is the SAME tiled model
+    `train` fits, so the served forecast matches the trained manifest's ``primary_model``.
     """
     # Mandatory null + floor: the smoothed-seismicity background on the DECLUSTERED catalog.
     smoothed = SmoothedSeismicityForecaster(b_value=b_value, mc=mc)
@@ -629,26 +604,29 @@ def _fit_model_family(
     rj = ReasenbergJonesForecaster(b=b_value)
     rj.fit(conditional_cat, region, t_issue)
 
-    # Primary: ETAS, imported lazily. If the stage has not landed or the fit is rejected by the
-    # stability gates, the primary degrades to R-J (recorded in provenance, never silently).
+    # Primary: regime-aware TILED ETAS — fit ETAS per tectonic tile and aggregate into the global
+    # field, IDENTICAL to `train` (so the served forecast matches the manifest's primary_model). A
+    # single monolithic ETAS over a worldwide 10^5-event catalog is both O(N^2) and physically wrong
+    # (subduction ≠ stable interior); each tile enforces both stability gates and falls back to its own
+    # smoothed null on violation. If the whole tiled fit raises, the primary degrades to R-J (recorded
+    # in provenance, never silently).
     etas = None
     primary_name, primary_version, params = rj.name, rj.version, dict(rj.params_used)
     try:
-        etas_mod = importlib.import_module("caos_seismic.model.etas")
-        EtasForecaster = getattr(etas_mod, "EtasForecaster", None) or getattr(
-            etas_mod, "ETASForecaster", None
+        etas_cfg = load("etas")
+        stability = etas_cfg.get("stability", {})
+        from ..model.tiled import TiledForecaster
+
+        etas = TiledForecaster(
+            m0=float(etas_cfg.get("m0", mc)),
+            mc=mc,
+            b_value=b_value,
+            require_alpha_lt_beta=bool(stability.get("require_alpha_lt_beta", True)),
+            reject_supercritical=bool(stability.get("reject_supercritical", True)),
         )
-        if EtasForecaster is not None:
-            # Construct with the declustered-fit background + Mc/b (dual-catalog rule) when accepted.
-            etas = _construct_etas(EtasForecaster, smoothed, mc, b_value)
-            if hasattr(etas, "set_background"):  # alternative wiring some implementations expose
-                try:
-                    etas.set_background(smoothed)
-                except Exception:
-                    pass
-            etas.fit(conditional_cat, region, t_issue)
-            primary_name, primary_version = etas.name, etas.version
-            params = dict(getattr(etas, "params_used", {}) or getattr(etas, "params", {}) or {})
+        etas.fit(conditional_cat, region, t_issue)
+        primary_name, primary_version = etas.name, etas.version
+        params = dict(etas.params_used)
     except Exception:
         etas = None  # degrade to R-J; provenance keeps R-J as the primary on this issue
 

@@ -54,6 +54,12 @@ Thumbs.db
 .idea/
 *.swp
 
+# ── Local scratch / diagnostics (process-validation only, never committed) ──
+.diag_*
+.train*.log
+.train*.py
+.infer.log
+
 # ── KEEP (explicitly tracked) ─────────────────────────────────────────────
 # configs/, manifests/, docs/, src/, scripts/, app/src/, and the compact
 # daily forecast artifacts under results/ are versioned on purpose.

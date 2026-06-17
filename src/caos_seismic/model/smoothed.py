@@ -119,25 +119,49 @@ def _kernel_normalization(d: float, s: float) -> float:
     return (s - 1.0) * d ** (2.0 * (s - 1.0)) / np.pi
 
 
+#: Mean Earth radius (km) for the chord→great-circle conversion in the KD-tree bandwidth.
+_EARTH_R_KM = 6371.0088
+
+
 def _nth_nearest_bandwidth(
     lat: np.ndarray, lon: np.ndarray, n_neighbors: int, d_min_km: float
 ) -> np.ndarray:
     """Adaptive bandwidth ``d_i`` = great-circle distance (km) to each event's ``n``-th neighbour.
 
-    Floored at ``d_min_km`` so coincident/very-close events do not yield a singular kernel. ``O(N^2)``
-    in the catalog size, which is fine for regional daily catalogs (10^3–10^5 events); a KD-tree
-    refinement is deferred until profiling shows it is needed.
+    Floored at ``d_min_km`` so coincident/very-close events do not yield a singular kernel.
+
+    Computed in **O(N log N)** with a 3-D unit-sphere KD-tree (``scipy.spatial.cKDTree``): events are
+    mapped to unit vectors, whose Euclidean **chord** distance is monotonic in great-circle distance,
+    so the ``k``-th nearest neighbour is identical to the on-sphere one; the chord is then converted
+    back to a great-circle arc-length in km. This is the change that makes the **global** (10^5-event)
+    smoothed-null fit tractable — the previous O(N^2) all-pairs loop hung on a worldwide catalog. A
+    pure-numpy O(N^2) fallback is kept for the (rare) case SciPy is unavailable.
     """
     n_events = lat.size
-    d = np.empty(n_events, dtype=float)
-    # Rank we actually take: the n-th *other* event (index n among sorted distances, since index 0
-    # is the event itself at distance 0).
-    k = min(n_neighbors, max(1, n_events - 1))
-    for i in range(n_events):
-        dist = haversine_km(lat[i], lon[i], lat, lon)
-        dist_sorted = np.partition(dist, k)[: k + 1]
-        d[i] = max(np.sort(dist_sorted)[k], d_min_km)
-    return d
+    if n_events <= 1:
+        return np.full(n_events, d_min_km, dtype=float)
+    # Rank we actually take: the n-th *other* event (the self-match at distance 0 is column 0).
+    k = min(int(n_neighbors), max(1, n_events - 1))
+
+    try:
+        from scipy.spatial import cKDTree
+    except ModuleNotFoundError:  # pragma: no cover - SciPy is a core dependency
+        d = np.empty(n_events, dtype=float)
+        for i in range(n_events):
+            dist = haversine_km(lat[i], lon[i], lat, lon)
+            dist_sorted = np.partition(dist, k)[: k + 1]
+            d[i] = max(np.sort(dist_sorted)[k], d_min_km)
+        return d
+
+    latr = np.radians(lat)
+    lonr = np.radians(lon)
+    coslat = np.cos(latr)
+    pts = np.column_stack([coslat * np.cos(lonr), coslat * np.sin(lonr), np.sin(latr)])
+    tree = cKDTree(pts)
+    chord, _ = tree.query(pts, k=k + 1)          # (N, k+1); column 0 is the self-match (0.0)
+    chord_k = np.clip(np.atleast_2d(chord)[:, k], 0.0, 2.0)
+    arc_km = 2.0 * np.arcsin(chord_k / 2.0) * _EARTH_R_KM   # chord → great-circle arc length (km)
+    return np.maximum(arc_km, d_min_km)
 
 
 @dataclass

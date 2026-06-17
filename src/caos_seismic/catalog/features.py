@@ -33,7 +33,7 @@ from typing import Any
 import pandas as pd
 
 from ..config import REPO_ROOT, load, load_region
-from ..contracts import Region, validate_catalog
+from ..contracts import Cell, Region, validate_catalog
 from ..data.clean import clean_catalog, save_clean_catalog
 from ..inference.provenance import build_manifest, snapshot_id, write_manifest
 from .completeness import aki_utsu_b_value, mc_estimate
@@ -195,3 +195,160 @@ def run_build_features(
         "clean_store": store_path,
         "manifest": manifest_path,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Global context feature matrix — join every enricher onto the forecast grid
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def build_context_features(
+    grid: "list[Cell] | pd.DataFrame",
+    *,
+    enrichers: "list[str] | None" = None,
+    t_issue: "str | pd.Timestamp | None" = None,
+    write_store: bool = False,
+    region_id: str | None = None,
+    enricher_kwargs: dict[str, dict[str, Any]] | None = None,
+) -> pd.DataFrame:
+    """Join the global geophysical enrichers onto the forecast grid → the context feature matrix.
+
+    This is the bridge from the **global static context** to the model. Each cell of the forecast
+    grid is a *view* into the worldwide covariate field (slab geometry, faults, plate boundaries,
+    geodetic strain rate, crustal stress, tidal stress); this function evaluates every enricher's
+    :func:`features_at` at each cell and assembles one wide DataFrame the model ingests alongside the
+    catalog-derived (ETAS / recent-window) features. The enrichers are *global*, so the very same
+    call produces the context matrix for any region — Chile, California, NZ — by passing that
+    region's grid.
+
+    Parameters
+    ----------
+    grid:
+        The forecast grid — a list of :class:`~caos_seismic.contracts.Cell` (the fine fit grid from
+        :func:`caos_seismic.inference.daily.build_fit_cells`) or any DataFrame with ``lat``/``lon``
+        (or ``latitude``/``longitude``) columns and an optional ``key`` cell id.
+    enrichers:
+        Which enricher datasets to join (default: all, in the registry's expected-lift order). Pass a
+        subset (e.g. ``["slab2", "faults", "plates"]``) to build a lighter matrix or to isolate one
+        enricher's marginal information gain over the catalog-only ETAS baseline (the gate every
+        enricher must clear before it ships in a public number — data-and-pipelines.md §1.3).
+    t_issue:
+        Issue time handed to time-dependent enrichers (tides). Defaults to "now" (UTC); the daily
+        forecast clock passes the sealed time so the context matrix is reproducible.
+    write_store:
+        Persist the matrix to the gitignored feature store (``data/features/context_<region>.parquet``)
+        and return it. Off by default (callers usually consume the frame in memory).
+    region_id:
+        Region id used for the store filename / provenance when ``write_store`` is set.
+    enricher_kwargs:
+        Optional per-enricher keyword overrides, e.g.
+        ``{"gnss": {"radius_km": 200.0}, "tides": {"fault": FaultGeometry(...)}}`` — forwarded to the
+        enricher's ``features_at``. (Constructed enrichers use their defaults otherwise.)
+
+    Returns
+    -------
+    pandas.DataFrame
+        One row per grid cell with columns ``key, lat, lon`` followed by every enricher's covariate
+        columns. Cells outside a dataset's footprint carry ``NaN`` for that dataset's columns
+        (e.g. ``slab_*`` is ``NaN`` away from subduction margins) — *blank is information, not error*.
+
+    Notes
+    -----
+    Heavy geospatial dependencies are imported lazily by the individual enrichers; this function and
+    the package import on the core deps alone. An enricher whose cached dataset is missing raises a
+    clear ``FileNotFoundError`` from its loader pointing at the ``download(...)`` call to run first.
+    """
+    from ..data.enrichers import ENRICHERS  # local import keeps the enrichers off the import path
+
+    cells = _grid_to_cells(grid)
+    issued = (
+        pd.Timestamp(t_issue) if t_issue is not None else pd.Timestamp.now(tz="UTC")
+    )
+    if issued.tzinfo is None:
+        issued = issued.tz_localize("UTC")
+
+    selected = list(ENRICHERS) if enrichers is None else list(enrichers)
+    unknown = [e for e in selected if e not in ENRICHERS]
+    if unknown:
+        raise ValueError(f"unknown enricher(s): {unknown}; known: {sorted(ENRICHERS)}")
+
+    kw = enricher_kwargs or {}
+
+    # Base frame: cell identity + coordinates.
+    base = pd.DataFrame(
+        {
+            "key": [c.key for c in cells],
+            "lat": [c.lat for c in cells],
+            "lon": [c.lon for c in cells],
+        }
+    )
+
+    # One enricher at a time so a single enricher's cache miss / heavy-dep error is attributable.
+    matrices: list[pd.DataFrame] = []
+    for name in selected:
+        mod = ENRICHERS[name]
+        extra: dict[str, Any] = dict(kw.get(name, {}))
+        if name == "tides":  # time-dependent enricher — pass the sealed issue time
+            extra.setdefault("t_issue", issued)
+        feature_names = list(getattr(mod, "FEATURE_NAMES", ()))
+        rows: list[dict[str, Any]] = []
+        for c in cells:
+            try:
+                feats = mod.features_at(c.lat, c.lon, **extra)
+            except FileNotFoundError:
+                raise
+            except Exception as exc:  # an enricher failure must not silently corrupt the matrix
+                logger.warning("enricher %s failed at (%s, %s): %s", name, c.lat, c.lon, exc)
+                feats = {fn: None for fn in feature_names}
+            rows.append({fn: feats.get(fn) for fn in feature_names})
+        matrices.append(pd.DataFrame(rows, columns=feature_names))
+
+    out = pd.concat([base, *matrices], axis=1) if matrices else base
+
+    if write_store:
+        rid = region_id or "global"
+        store = REPO_ROOT / "data" / "features" / f"context_{rid}.parquet"
+        store.parent.mkdir(parents=True, exist_ok=True)
+        out.to_parquet(store, index=False)
+        logger.info("wrote context feature matrix: %s (%d cells × %d features)", store, len(out), out.shape[1] - 3)
+
+    return out
+
+
+def context_provenance(
+    enrichers: "list[str] | None" = None, **download_kwargs: dict[str, Any]
+) -> "list[dict[str, Any]]":
+    """Collect each enricher's license/citation :class:`Provenance` for the public credits page.
+
+    This does *not* download — it returns the provenance records (some enrichers need an explicit
+    ``url``/``base_url`` and will raise without one; pass them via ``download_kwargs[name]``). Use it
+    to assemble the attribution block the app must display (data-and-pipelines.md §9).
+    """
+    from ..data.enrichers import ENRICHERS
+
+    selected = list(ENRICHERS) if enrichers is None else list(enrichers)
+    out: list[dict[str, Any]] = []
+    for name in selected:
+        try:
+            prov = ENRICHERS[name].download(**download_kwargs.get(name, {}))  # type: ignore[arg-type]
+            out.append(prov.to_dict())
+        except Exception as exc:  # a missing URL is fine here — record the obligation, not the file
+            out.append({"dataset": name, "error": str(exc)})
+    return out
+
+
+def _grid_to_cells(grid: "list[Cell] | pd.DataFrame") -> list[Cell]:
+    """Normalize the grid argument to a list of :class:`Cell` (accepts Cells or a lat/lon DataFrame)."""
+    if isinstance(grid, pd.DataFrame):
+        df = grid
+        lat_c = "lat" if "lat" in df.columns else ("latitude" if "latitude" in df.columns else None)
+        lon_c = "lon" if "lon" in df.columns else ("longitude" if "longitude" in df.columns else None)
+        if lat_c is None or lon_c is None:
+            raise ValueError("grid DataFrame must have lat/lon (or latitude/longitude) columns")
+        cells: list[Cell] = []
+        for i, row in df.iterrows():
+            la, lo = float(row[lat_c]), float(row[lon_c])
+            key = str(row["key"]) if "key" in df.columns else f"{round(la, 4)},{round(lo, 4)}"
+            cells.append(Cell(key=key, lat=la, lon=lo))
+        return cells
+    return list(grid)

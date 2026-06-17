@@ -1,17 +1,34 @@
 # CAOS_SEISMIC — spatial discretization. Fit fine (CSEP-testable), display coarse.
+# The GLOBAL field is conditioned over the whole Earth then aggregated to multi-resolution H3
+# (coarse world overview + finer per-region tiles) and SPARSIFIED so the worldwide artifact stays a
+# few hundred KB – few MB. The dense single-resolution global CSEP grid (~6.48M cells) is NEVER
+# shipped to the browser.
 fit:
-  # Regular lat/lon cells for fitting + CSEP S-test/M-test (CSEP California convention).
-  cell_deg: 0.1            # 0.1° x 0.1° space cells
+  # Regular lat/lon cells for fitting + CSEP S-test/M-test (CSEP convention).
+  cell_deg: 0.1            # 0.1° x 0.1° space cells (per-regime/per-tile fit grid)
   mag_bin: 0.1            # 0.1 magnitude bins
+  # For the GLOBAL field the dense 0.1° grid over the whole Earth is ~6.5M cells and is never
+  # materialized in full at once: the global fit grid is built coarsely worldwide and refined only
+  # inside coverage tiles (active provinces) — see global_fit below.
+  global_fit:
+    world_cell_deg: 1.0    # coarse worldwide fit cells (the quiet-everywhere baseline)
+    tile_cell_deg: 0.25    # finer cells inside active coverage tiles (recent seismicity provinces)
+    tile_pad_deg: 2.0      # pad (deg) around recent events when carving coverage tiles
+    tile_min_mag: 4.5      # an event must reach this Mw to seed/keep a fine coverage tile
 display:
   # The UI aggregates the fine grid into H3 hexbins (multi-resolution LOD via deck.gl).
-  h3_resolution_world: 3   # coarse world overview
-  h3_resolution_region: 5  # per-country / per-region drill-down
+  h3_resolution_world: 3   # coarse world overview (every surfaced cell at least this coarse)
+  h3_resolution_region: 5  # per-country / per-region drill-down (views may override, see views.yaml)
 sparsity:
   # Store only cells inside the validated footprint and above a rate floor; the rest is implicit
-  # baseline (keeps the committed artifact to a few hundred KB – few MB).
-  rate_floor_quantile: 0.0
+  # baseline. For the WORLD field the floor MUST be > 0 (most of the planet is quiet) or the artifact
+  # blows past a few MB. The per-view drill-down keeps more cells (it is already spatially bounded).
+  rate_floor_quantile: 0.55   # drop the quietest ~55% of world hexbins to the implicit baseline
+  min_world_prob: 1.0e-4      # absolute floor: world cells whose max P(>=1) is below this are dropped
+  keep_view_cells: true       # never drop a cell that a configured view needs (coverage continuity)
 coupling_note: >
   Cell size must support enough events-per-cell-per-horizon to fit and run the S-test/M-test.
   In sparse cells, borrow strength from the smoothed-seismicity background + regional priors
-  rather than shrinking cells until empty.
+  rather than shrinking cells until empty. The world/tile split is exactly this: 1° worldwide
+  baseline cells (always enough strength via the background) refined to 0.25° only where recent
+  seismicity makes a finer cell fittable.

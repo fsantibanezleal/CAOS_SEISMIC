@@ -188,6 +188,14 @@ class ETASForecaster(BaseForecaster):
         Number of sub-steps used for the time integral of the productivity term inside the forecast
         window (the spatial/magnitude parts are closed-form; only the residual coupling between the
         window edge and each parent's age needs a light quadrature).
+    regime, regime_prior:
+        Optional tectonic-regime tag (:class:`~caos_seismic.model.regime.TectonicRegime`) and its
+        :class:`~caos_seismic.model.regime.RegimePrior`. When this ETAS is fit on one tile of the
+        global tiled forecaster, the regime prior **seeds the MLE start** (regime-appropriate ``K``,
+        ``alpha``, ``c``, ``p``) so a thin tile is pulled toward its regime's worldwide behaviour
+        rather than a generic point (empirical-Bayes "borrow strength spatially", model-design §8).
+        The prior is only a *start*; the MLE and both stability gates are unchanged. ``None`` keeps
+        the original generic data-informed start (full backward compatibility).
     """
 
     name: str = "etas"
@@ -201,6 +209,8 @@ class ETASForecaster(BaseForecaster):
     reject_supercritical: bool = True
     background: SmoothedSeismicityForecaster | None = None
     integration_steps: int = 24
+    regime: str | None = None
+    regime_prior: object | None = None  # caos_seismic.model.regime.RegimePrior (avoids an import cycle)
 
     # ── Fitted state ─────────────────────────────────────────────────────────
     params: dict[str, float] = field(default_factory=dict, repr=False)
@@ -289,6 +299,7 @@ class ETASForecaster(BaseForecaster):
             "n_parents": int(self._ev_t.size),
             "train_days": train_days,
             "background": self.background.name,
+            "regime": self.regime,
             "gates": {
                 "require_alpha_lt_beta": self.require_alpha_lt_beta,
                 "reject_supercritical": self.reject_supercritical,
@@ -407,13 +418,25 @@ class ETASForecaster(BaseForecaster):
             return float(min(max(value, lo), hi))
 
         # Data-informed start: alpha just under beta (subcritical), Omori p slightly > 1, modest K.
-        alpha0 = clamp("alpha", min(0.8, 0.9 * self._beta))
+        # A regime prior (when supplied by the tiled forecaster) shifts the start toward the regime's
+        # worldwide behaviour, keeping alpha safely subcritical; otherwise the generic start is used.
+        rp = self.regime_prior
+        if rp is not None:
+            k_start = clamp("K", float(getattr(rp, "productivity_k", 0.1)))
+            alpha0 = clamp("alpha", min(float(getattr(rp, "alpha", 0.8)), 0.9 * self._beta))
+            c_start = clamp("c", float(getattr(rp, "c", 0.01)))
+            p_start = clamp("p", float(getattr(rp, "p", 1.1)))
+        else:
+            k_start = clamp("K", 0.1)
+            alpha0 = clamp("alpha", min(0.8, 0.9 * self._beta))
+            c_start = clamp("c", 0.01)
+            p_start = clamp("p", 1.1)
         x0 = np.array(
             [
-                clamp("K", 0.1),
+                k_start,
                 alpha0,
-                clamp("c", 0.01),
-                clamp("p", 1.1),
+                c_start,
+                p_start,
                 clamp("D", 0.05),
                 clamp("gamma", 0.5),
                 clamp("q", 1.5),

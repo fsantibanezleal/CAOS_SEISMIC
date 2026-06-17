@@ -45,8 +45,9 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from ..config import REPO_ROOT, load, load_region
+from ..config import REPO_ROOT, load, load_region, load_views
 from ..contracts import (
+    BBox,
     CalibrationSummary,
     Cell,
     CellForecast,
@@ -54,6 +55,8 @@ from ..contracts import (
     ForecastField,
     Region,
     Staleness,
+    View,
+    ViewIndexEntry,
     validate_catalog,
 )
 from ..model._common import (
@@ -81,6 +84,7 @@ class DailyInferenceResult:
     qa_passed: bool
     qa_reasons: list[str] = field(default_factory=list)
     n_cells: int = 0
+    n_views: int = 0
     artifact_path: str | None = None
     index_path: str | None = None
     manifest_path: str | None = None
@@ -90,7 +94,8 @@ class DailyInferenceResult:
     def __str__(self) -> str:  # used by the CLI's `infer · done: {result}`
         state = "published" if self.published else ("QA-blocked" if not self.qa_passed else "not published")
         loc = self.artifact_path or "(no artifact written)"
-        return f"{self.region_id} @ {self.issued_at}: {self.n_cells} cells, {state} -> {loc}"
+        views = f", {self.n_views} view(s)" if self.n_views else ""
+        return f"{self.region_id} @ {self.issued_at}: {self.n_cells} cells{views}, {state} -> {loc}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -105,13 +110,23 @@ def run_infer(
     catalog: pd.DataFrame | None = None,
     publish: bool = True,
     rng_seed: int = 20260616,
+    views: list[View] | list[str] | None = None,
+    min_magnitude: float | None = None,
 ) -> DailyInferenceResult:
     """Run one daily inference for ``region`` at ``issue`` and (optionally) write the artifact.
+
+    Global re-scope: when ``region`` is the global field (``id == "global"``) the model is
+    conditioned over the **whole-Earth multi-resolution grid** (coarse world + fine coverage tiles —
+    :func:`build_global_fit_cells`), a single GLOBAL :class:`ForecastArtifact` is assembled, and each
+    configured country **view** is sliced out of that one global field (the web's region selector
+    reads these slices). A non-global region falls back to the regular single-region grid, so the
+    pipeline still works for a focused region.
 
     Parameters
     ----------
     region:
-        A :class:`Region` or a region id (loaded from ``configs/region.<id>.yaml``).
+        A :class:`Region` or a region id (loaded from ``configs/region.<id>.yaml``). Default usage is
+        the global field; pass a country/region id for a focused single-region run.
     issue:
         The issue time ``t_issue``. The forecast clock conditions on events ``< t_issue`` only.
     catalog:
@@ -124,6 +139,13 @@ def run_infer(
         degrades visibly rather than serving a corrupted forecast — web-app-spec §8.2/§9).
     rng_seed:
         Seed for the ensemble simulator and the bootstrap, so a daily run is byte-reproducible.
+    views:
+        Country/region views to slice out of the global field (a list of :class:`View` or view ids).
+        ``None`` ⇒ the configured ``default_views`` when ``region`` is global, and no views otherwise.
+        Pass an empty list to suppress view extraction entirely.
+    min_magnitude:
+        Optional Mw floor applied to the conditioning catalog before fitting (e.g. drop microseismicity
+        below the global completeness when fitting the world field). ``None`` keeps the full catalog.
 
     Returns
     -------
@@ -132,6 +154,7 @@ def run_infer(
         and the paths written (if any).
     """
     reg = load_region(region) if isinstance(region, str) else region
+    is_global = reg.id == "global"
     t_issue = _as_utc_timestamp(issue)
     issued_at = t_issue.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -144,6 +167,8 @@ def run_infer(
     master = _resolve_catalog(catalog, reg)
     full_past = conditioning_slice(master, t_issue)
     assert_no_leakage(full_past, t_issue)
+    if min_magnitude is not None and not full_past.empty:
+        full_past = full_past.loc[full_past["mw"] >= float(min_magnitude)].reset_index(drop=True)
 
     horizons = [int(h) for h in forecast_cfg.get("horizons_days", [1, 2, 7])]
     thresholds = [float(m) for m in forecast_cfg.get("magnitude_thresholds", [5.0, 6.0, 7.0])]
@@ -155,8 +180,12 @@ def run_infer(
     background_cat = hygiene["declustered"]      # feeds the stationary smoothed null
     conditional_cat = full_past                  # feeds the conditional/ETAS model (un-declustered)
 
-    # 3) The display + fit cells.
-    cells = build_fit_cells(reg, grid_cfg)
+    # 3) The display + fit cells. The global field uses the multi-resolution world grid (coarse
+    #    worldwide + fine coverage tiles); a focused region uses the regular fine grid.
+    if is_global:
+        cells = build_global_fit_cells(reg, grid_cfg, conditional_cat)
+    else:
+        cells = build_fit_cells(reg, grid_cfg)
 
     # 4) Fit the model family: ETAS primary (lazy), R-J fallback, smoothed null (mandatory floor).
     models = _fit_model_family(
@@ -224,6 +253,9 @@ def run_infer(
     )
     manifest_p = write_manifest(manifest)
 
+    # 8b) Resolve the country/region views to slice out of the (global) field.
+    resolved_views = _resolve_views(views, is_global)
+
     result = DailyInferenceResult(
         region_id=reg.id,
         issued_at=issued_at,
@@ -231,11 +263,12 @@ def run_infer(
         qa_passed=qa_passed,
         qa_reasons=qa_reasons,
         n_cells=len(cell_forecasts),
+        n_views=len(resolved_views),
         manifest_path=str(manifest_p),
         forecast_field=field_obj,
     )
 
-    # 9) Assemble + (optionally) write the compact artifact.
+    # 9) Assemble + (optionally) write the compact artifact (global field + per-view indices).
     artifact = assemble_artifact(
         field=field_obj,
         region=reg,
@@ -245,6 +278,7 @@ def run_infer(
         calibration=calibration,
         provenance=provenance_block(manifest),
         forecast_cfg=forecast_cfg,
+        views=resolved_views,
     )
     result.artifact = artifact
 
@@ -257,6 +291,24 @@ def run_infer(
         result.index_path = str(paths["index"])
 
     return result
+
+
+def _resolve_views(
+    views: list[View] | list[str] | None, is_global: bool
+) -> list[View]:
+    """Resolve the ``views`` argument to typed :class:`View` objects.
+
+    ``None`` ⇒ the configured ``default_views`` for a global run, none otherwise. A list of ids is
+    loaded from ``configs/views.yaml``; a list of :class:`View` passes through. An empty list
+    suppresses view extraction.
+    """
+    if views is None:
+        return load_views() if is_global else []
+    if not views:
+        return []
+    if all(isinstance(v, View) for v in views):
+        return list(views)  # type: ignore[arg-type]
+    return load_views([str(v) for v in views])
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -389,10 +441,17 @@ def build_fit_cells(region: Region, grid_cfg: dict) -> list[Cell]:
     """Build the regular fine fit grid (``configs/grid.yaml: fit.cell_deg``) over the region bbox.
 
     Cell keys are ``"lat,lon"`` at the cell centre (the fine-grid convention in contracts.Cell). The
-    artifact writer later aggregates these to coarser H3 hexbins for display.
+    artifact writer later aggregates these to coarser H3 hexbins for display. This is the
+    *per-region / per-view* grid; the **global** field uses :func:`build_global_fit_cells`, which
+    refuses to materialize a dense ~6.5M-cell whole-Earth grid.
     """
     cell_deg = float(grid_cfg.get("fit", {}).get("cell_deg", 0.1))
     bb = region.bbox
+    return _regular_cells(bb, cell_deg)
+
+
+def _regular_cells(bb: BBox, cell_deg: float) -> list[Cell]:
+    """Regular ``cell_deg``-pitch lat/lon centre cells over a bbox, keyed ``"lat,lon"``."""
     lats = np.arange(bb.lat_min + cell_deg / 2.0, bb.lat_max, cell_deg)
     lons = np.arange(bb.lon_min + cell_deg / 2.0, bb.lon_max, cell_deg)
     cells: list[Cell] = []
@@ -401,6 +460,119 @@ def build_fit_cells(region: Region, grid_cfg: dict) -> list[Cell]:
             la, lo = round(float(lat), 4), round(float(lon), 4)
             cells.append(Cell(key=f"{la},{lo}", lat=la, lon=lo))
     return cells
+
+
+def build_global_fit_cells(
+    region: Region, grid_cfg: dict, conditioning: pd.DataFrame
+) -> list[Cell]:
+    """Build the GLOBAL multi-resolution fit grid: coarse worldwide + fine coverage tiles.
+
+    The dense single-resolution global CSEP grid (0.1° over the whole Earth) is ~6.5M cells and is
+    **never** materialized (model-design.md §9.6 / web-app-spec.md §8.2). Instead the global field is
+    fit on a *multi-resolution* grid (``configs/grid.yaml: fit.global_fit``):
+
+    1. a **coarse worldwide baseline grid** at ``world_cell_deg`` (e.g. 1°) covering the whole region
+       bbox — enough cells to carry the quiet-everywhere smoothed background everywhere on the planet
+       without exploding (a 1° world grid is ~64k cells, not 6.5M); and
+    2. **fine coverage tiles** at ``tile_cell_deg`` (e.g. 0.25°) carved only around recent seismicity
+       (events ``>= tile_min_mag`` in the conditioning slice, padded by ``tile_pad_deg``) — the
+       active provinces where a finer cell is actually fittable and where short-horizon skill lives.
+
+    Where a fine tile overlaps the coarse grid, the coarse cells under the tile are dropped (no double
+    forecasting of the same area at two resolutions). Returns the union, keyed ``"lat,lon"``. The
+    cold-start floor (the smoothed background) still applies to every cell, so a quiet world cell is
+    honest rather than empty.
+    """
+    gf = grid_cfg.get("fit", {}).get("global_fit", {}) or {}
+    world_deg = float(gf.get("world_cell_deg", 1.0))
+    tile_deg = float(gf.get("tile_cell_deg", 0.25))
+    pad_deg = float(gf.get("tile_pad_deg", 2.0))
+    tile_min_mag = float(gf.get("tile_min_mag", 4.5))
+
+    bb = region.bbox
+
+    # 1) Coarse worldwide baseline.
+    coarse = _regular_cells(bb, world_deg)
+
+    # 2) Fine coverage tiles around recent significant seismicity.
+    tile_bboxes = _coverage_tile_bboxes(conditioning, tile_min_mag, pad_deg, bb)
+    fine: list[Cell] = []
+    fine_keys: set[str] = set()
+    for tb in tile_bboxes:
+        for c in _regular_cells(tb, tile_deg):
+            if c.key not in fine_keys:
+                fine_keys.add(c.key)
+                fine.append(c)
+
+    # 3) Drop coarse cells whose centre falls inside any fine tile (avoid double resolution).
+    kept_coarse = [c for c in coarse if not _point_in_any_bbox(c.lat, c.lon, tile_bboxes)]
+
+    return kept_coarse + fine
+
+
+def _coverage_tile_bboxes(
+    conditioning: pd.DataFrame, min_mag: float, pad_deg: float, clip: BBox
+) -> list[BBox]:
+    """Carve padded bboxes around recent events ``>= min_mag``, merged into a few coverage tiles.
+
+    Each qualifying event contributes a ``±pad_deg`` box; overlapping boxes are greedily merged so the
+    fine grid is a handful of provinces, not thousands of tiny tiles. All boxes are clipped to the
+    region bbox. An empty conditioning catalog yields no tiles (the coarse world grid still covers
+    the planet via the smoothed background floor).
+    """
+    if conditioning is None or conditioning.empty:
+        return []
+    sig = conditioning.loc[conditioning["mw"] >= float(min_mag)]
+    if sig.empty:
+        return []
+
+    raw: list[list[float]] = []
+    for lat, lon in zip(sig["latitude"].to_numpy(float), sig["longitude"].to_numpy(float)):
+        raw.append([
+            max(clip.lat_min, lat - pad_deg),
+            min(clip.lat_max, lat + pad_deg),
+            max(clip.lon_min, lon - pad_deg),
+            min(clip.lon_max, lon + pad_deg),
+        ])
+
+    # Greedy merge of overlapping boxes (a few passes converge for typical daily catalogs).
+    merged = _merge_bboxes(raw)
+    return [BBox(lat_min=m[0], lat_max=m[1], lon_min=m[2], lon_max=m[3]) for m in merged]
+
+
+def _merge_bboxes(boxes: list[list[float]]) -> list[list[float]]:
+    """Greedily union overlapping ``[lat_min, lat_max, lon_min, lon_max]`` boxes until stable."""
+    boxes = [list(b) for b in boxes]
+    changed = True
+    while changed:
+        changed = False
+        out: list[list[float]] = []
+        for b in boxes:
+            placed = False
+            for o in out:
+                if _bboxes_overlap(b, o):
+                    o[0], o[1] = min(o[0], b[0]), max(o[1], b[1])
+                    o[2], o[3] = min(o[2], b[2]), max(o[3], b[3])
+                    placed = True
+                    changed = True
+                    break
+            if not placed:
+                out.append(b)
+        boxes = out
+    return boxes
+
+
+def _bboxes_overlap(a: list[float], b: list[float]) -> bool:
+    """True if two ``[lat_min, lat_max, lon_min, lon_max]`` boxes intersect (inclusive edges)."""
+    return not (a[1] < b[0] or b[1] < a[0] or a[3] < b[2] or b[3] < a[2])
+
+
+def _point_in_any_bbox(lat: float, lon: float, boxes: list[BBox]) -> bool:
+    """True if ``(lat, lon)`` falls inside any of ``boxes``."""
+    for b in boxes:
+        if b.lat_min <= lat <= b.lat_max and b.lon_min <= lon <= b.lon_max:
+            return True
+    return False
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -831,13 +1003,19 @@ def assemble_artifact(
     calibration: CalibrationSummary,
     provenance: dict,
     forecast_cfg: dict,
+    views: list[View] | None = None,
 ) -> ForecastArtifact:
     """Assemble a :class:`ForecastArtifact` from a :class:`ForecastField` (fine cells, not yet H3).
 
     The ``forecast`` dict is keyed ``forecast[cell][str(horizon)][str(M*)] -> {p, lo, hi, rate,
     baseline}`` exactly per contracts.py. The writer (:mod:`caos_seismic.inference.artifact`)
-    aggregates these fine cells to H3, quantizes rates, and gzips. The grid block records the
-    *display* H3 resolution the writer will aggregate to (configs/grid.yaml).
+    aggregates these fine cells to H3, quantizes rates, gzips, and (for a global field) fills each
+    view's H3 cell-key index. The grid block records the world + per-region display H3 resolutions
+    the writer aggregates to (configs/grid.yaml ``display``).
+
+    ``views`` carries the per-country slices of a GLOBAL field. Only the view *metadata*
+    (bbox/m_max/attribution/resolution) is set here; the ``cells`` index per view is computed by the
+    writer once the fine cells have been aggregated to H3 display keys (the keys the SPA reads).
     """
     nested: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
     for cf in field.cells:
@@ -849,7 +1027,26 @@ def assemble_artifact(
             "baseline": round(cf.baseline, 6),
         }
 
-    h3_res = int(grid_cfg.get("display", {}).get("h3_resolution_region", 5))
+    display = grid_cfg.get("display", {})
+    h3_world = int(display.get("h3_resolution_world", 3))
+    h3_region = int(display.get("h3_resolution_region", 5))
+    # The base display resolution: world overview for a global field, region resolution otherwise.
+    base_res = h3_world if region.id == "global" else h3_region
+
+    view_entries = [
+        ViewIndexEntry(
+            id=v.id,
+            name_en=v.name_en,
+            name_es=v.name_es,
+            bbox=v.bbox,
+            m_max=v.m_max,
+            attribution=v.attribution,
+            h3_resolution=v.h3_resolution if v.h3_resolution is not None else h3_region,
+            cells=[],   # filled by the writer once fine cells are aggregated to H3
+            n_cells=0,
+        )
+        for v in (views or [])
+    ]
 
     schedule = load("publish").get("schedule", {})
     next_run = _next_run_iso(field.issued_at, schedule)
@@ -860,13 +1057,100 @@ def assemble_artifact(
         horizons_days=[int(h) for h in horizons],
         magnitude_thresholds=[float(m) for m in thresholds],
         m_max=float(region.m_max),
-        grid={"type": "h3", "resolution": h3_res},
+        grid={
+            "type": "h3",
+            "resolution": base_res,
+            "resolution_world": h3_world,
+            "resolution_region": h3_region,
+        },
         forecast=nested,
         calibration=calibration,
         coverage_mask=[],
+        views=view_entries,
         provenance=provenance,
         staleness=Staleness(generated=field.issued_at, next_run=next_run, ok=True),
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Per-view extraction — slice the GLOBAL field down to one country VIEW
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def extract_view(artifact: ForecastArtifact, view: View | str) -> ForecastArtifact:
+    """Slice a GLOBAL :class:`ForecastArtifact` down to a single country/region **view**.
+
+    The global field is the single source of truth; this returns a *standalone* artifact carrying
+    only the cells inside the view's bbox, with the view's own ``region``/``m_max``/``attribution``.
+    It is what ``/api/region/{iso}`` serves and what the web's country selector renders when a user
+    drills into a country — no separate model, just a window into the one global field.
+
+    Cell membership is decided by the H3 cell centre when ``h3`` is available (display keys), and by
+    the ``"lat,lon"`` key otherwise (fine keys / no-h3 fallback). The forecast payload is shared
+    verbatim (no recomputation), so a view is byte-consistent with the global field it came from.
+    """
+    v = view if isinstance(view, View) else load_views([view])[0]
+    bb = v.bbox
+
+    sub: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
+    for key, payload in artifact.forecast.items():
+        lat, lon = _cell_centroid(key)
+        if lat is None or lon is None:
+            continue
+        if bb.lat_min <= lat <= bb.lat_max and bb.lon_min <= lon <= bb.lon_max:
+            sub[key] = payload
+
+    view_region = v.as_region()
+    base = artifact.model_dump(mode="json")
+    base.update(
+        {
+            "region": view_region.model_dump(mode="json"),
+            "m_max": float(v.m_max),
+            "forecast": sub,
+            "views": [],  # a per-view artifact does not nest further views
+            "coverage_mask": [c for c in artifact.coverage_mask if c in sub],
+        }
+    )
+    return ForecastArtifact.model_validate(base)
+
+
+def view_cell_keys(
+    forecast: dict[str, dict[str, dict[str, dict[str, float]]]], view: View
+) -> list[str]:
+    """The cell keys of ``forecast`` whose centre falls inside ``view``'s bbox (the view index)."""
+    bb = view.bbox
+    out: list[str] = []
+    for key in forecast:
+        lat, lon = _cell_centroid(key)
+        if lat is None or lon is None:
+            continue
+        if bb.lat_min <= lat <= bb.lat_max and bb.lon_min <= lon <= bb.lon_max:
+            out.append(key)
+    return out
+
+
+def _cell_centroid(key: str) -> tuple[float | None, float | None]:
+    """Centroid ``(lat, lon)`` of a cell key — ``"lat,lon"`` directly, or an H3 cell via lazy h3."""
+    # Fine "lat,lon" key — parse directly (no h3 needed).
+    if "," in key:
+        a, _, b = key.partition(",")
+        try:
+            return float(a), float(b)
+        except ValueError:
+            pass
+    # H3 display key — resolve the cell centre lazily (h3 is a core dep but imported on use only).
+    try:
+        import h3
+    except ModuleNotFoundError:
+        return None, None
+    try:
+        if hasattr(h3, "cell_to_latlng"):
+            lat, lon = h3.cell_to_latlng(key)          # h3 v4
+        else:
+            lat, lon = h3.h3_to_geo(key)               # type: ignore[attr-defined]  # h3 v3
+        return float(lat), float(lon)
+    except Exception:
+        return None, None
 
 
 # ─────────────────────────────────────────────────────────────────────────────

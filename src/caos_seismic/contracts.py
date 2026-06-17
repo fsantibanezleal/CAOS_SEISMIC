@@ -70,6 +70,39 @@ class Region(BaseModel):
     attribution: list[str] = []
 
 
+class View(BaseModel):
+    """A country / region **view** into the single global forecast field.
+
+    Core thesis of the global re-scope: the model trains on worldwide seismicity and conditions a
+    single global field; *any country is a VIEW into that field*, never a separately-trained model.
+    A view is a lightweight spatial window (an ISO-3166 country, a tectonic province, …) the static
+    web's region selector slices the global artifact down to. It is NOT a fitting unit — fitting is
+    always global; the view only bounds which cells are surfaced and which ``m_max`` / attribution
+    apply when the artifact is read back as a per-country slice.
+    """
+
+    id: str = Field(..., description="stable view id (ISO-3166 alpha-2/-3 for countries, e.g. 'CL', 'JP')")
+    name_en: str
+    name_es: str
+    bbox: BBox
+    m_max: float = Field(..., description="view-local maximum magnitude bounding the exceedance integral")
+    attribution: list[str] = []
+    h3_resolution: int | None = Field(
+        default=None, description="optional finer display H3 resolution for this view (overrides world)"
+    )
+
+    def as_region(self) -> "Region":
+        """Project this view to a :class:`Region` (so model/grid code that takes a Region can reuse it)."""
+        return Region(
+            id=self.id,
+            name_en=self.name_en,
+            name_es=self.name_es,
+            bbox=self.bbox,
+            m_max=self.m_max,
+            attribution=self.attribution,
+        )
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # The Forecaster port — every model (ETAS, Reasenberg–Jones, smoothed, neural) implements this
 # ─────────────────────────────────────────────────────────────────────────────
@@ -195,9 +228,38 @@ class Staleness(BaseModel):
     ok: bool = True           # false → degrade visibly (banner + desaturation)
 
 
+class ViewIndexEntry(BaseModel):
+    """One entry in the artifact's ``views`` index — a country slice of the global field.
+
+    The global artifact ships ONE field; the SPA's country selector resolves a view to its cell-key
+    list (``cells``) and reads only those keys from the shared ``forecast`` dict. Storing the cell
+    keys (a few hundred per country) is far cheaper than duplicating the per-cell forecast payload
+    per country, and keeps the global field the single source of truth.
+    """
+
+    id: str
+    name_en: str
+    name_es: str
+    bbox: BBox
+    m_max: float
+    attribution: list[str] = []
+    h3_resolution: int | None = None
+    cells: list[str] = Field(
+        default_factory=list, description="H3 cell keys of the global field falling in this view's bbox"
+    )
+    n_cells: int = 0
+
+
 class ForecastArtifact(BaseModel):
     """The single compact JSON (gzipped on disk) the SPA renders. Keep it small: sparse cells,
-    H3 keys, quantized rates. NEVER ship the full dense global grid."""
+    H3 keys, quantized rates. NEVER ship the full dense global grid.
+
+    Global re-scope: ``region`` is the GLOBAL field's bounding region (whole earth); the per-country
+    drill-downs are carried as ``views`` (each a lightweight cell-key index into the shared
+    ``forecast`` dict, NOT a duplicated payload). ``grid`` may declare a base world resolution plus a
+    per-view finer resolution (multi-resolution H3). Backward compatible: a single-region artifact
+    simply ships an empty ``views`` list and a single-resolution ``grid``.
+    """
 
     schema_version: str = ARTIFACT_SCHEMA_VERSION
     product: str = "CAOS_SEISMIC"
@@ -206,12 +268,16 @@ class ForecastArtifact(BaseModel):
     horizons_days: list[int]
     magnitude_thresholds: list[float]
     m_max: float
-    grid: dict = Field(..., description="{type:'h3', resolution:int}")
+    grid: dict = Field(..., description="{type:'h3', resolution:int} (+ optional 'resolution_world'/'resolution_region')")
     # forecast[cell_key][str(horizon)][str(M*)] -> {p, lo, hi, rate, baseline}
     forecast: dict[str, dict[str, dict[str, dict[str, float]]]]
     calibration: CalibrationSummary
     coverage_mask: list[str] = Field(
         default_factory=list, description="cell keys explicitly OUT of validated coverage (blank != safe)"
+    )
+    views: list[ViewIndexEntry] = Field(
+        default_factory=list,
+        description="per-country slices of the global field for the web's region selector (cell-key indices)",
     )
     provenance: dict = Field(default_factory=dict)
     staleness: Staleness

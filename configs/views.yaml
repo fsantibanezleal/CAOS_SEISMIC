@@ -1,0 +1,203 @@
+# CAOS_SEISMIC — country / region VIEWS into the single global field.
+#
+# A view is NOT a separately-trained model. The model conditions ONE global field (region.global);
+# each view here is a lightweight spatial window the static web's country selector slices that field
+# down to. Adding a country = adding a bbox + m_max + attribution here; no retraining. Inference
+# attaches each view's cell-key index to the global ForecastArtifact (contracts.ViewIndexEntry) so
+# the SPA reads only the relevant cells when a user drills into a country.
+#
+# `default_views` is the set inference materializes when `--views` is not passed on the CLI.
+# bbox = lat/lon WGS84; m_max bounds the per-view exceedance integral; attribution is MANDATORY on
+# any public surface that surfaces this view. `h3_resolution` (optional) gives a country a finer
+# display resolution than the world overview (multi-resolution H3 / LOD).
+
+default_views: [CL, JP, NZ, IT, US-CA, GR, MX, PE, TR, ID, CN, PH, CL-N]
+
+# Pre-registered set the GLOBAL back-analysis scores over (eval.global_backanalysis). Chosen for
+# tectonic diversity BEFORE scoring (evaluation-plan §2) and split high/low so the high-vs-low
+# bias comparison is a fixed partition, not a post-hoc split. Stable interiors (US-CE, EU-W, AU-E)
+# are LOW-seismicity controls that expose a model that only looks good on the loud margins.
+default_backanalysis_views: [CL, JP, US-CA, NZ, US-CE, EU-W, AU-E]
+
+# `seismicity_class` (high | low) per view tags the pre-registered partition for the bias check:
+#   high = active plate boundary (dense, abundant sequences; dominates any pooled skill number)
+#   low  = stable interior / slow-deforming (sparse, intermittent; the over-fit control)
+
+views:
+  CL:
+    name: { en: "Chile (subduction margin)", es: "Chile (margen de subducción)" }
+    bbox: { lat_min: -56.0, lat_max: -17.0, lon_min: -76.0, lon_max: -66.0 }
+    m_max: 9.5            # 1960 Valdivia Mw 9.5 (global maximum)
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Nazca–South America megathrust)"
+    attribution:
+      - "Centro Sismológico Nacional (CSN), Universidad de Chile"
+      - "USGS ComCat / ANSS"
+
+  CL-N:
+    name: { en: "Northern Chile (Iquique–Antofagasta)", es: "Norte de Chile (Iquique–Antofagasta)" }
+    bbox: { lat_min: -32.0, lat_max: -17.0, lon_min: -72.0, lon_max: -68.0 }
+    m_max: 9.0
+    h3_resolution: 6     # higher-quality / higher-seismicity drill-down
+    seismicity_class: high
+    plate_setting: "subduction (Nazca–South America megathrust)"
+    attribution:
+      - "Centro Sismológico Nacional (CSN), Universidad de Chile"
+      - "USGS ComCat / ANSS"
+
+  JP:
+    name: { en: "Japan", es: "Japón" }
+    bbox: { lat_min: 24.0, lat_max: 46.0, lon_min: 122.0, lon_max: 148.0 }
+    m_max: 9.1            # 2011 Tōhoku Mw 9.1
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Pacific / Philippine Sea plates)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  NZ:
+    name: { en: "New Zealand", es: "Nueva Zelanda" }
+    bbox: { lat_min: -48.0, lat_max: -34.0, lon_min: 165.0, lon_max: 179.5 }
+    m_max: 8.5
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "mixed subduction / transform (Hikurangi + Alpine Fault)"
+    attribution:
+      - "GeoNet (GNS Science / Toka Tū Ake EQC)"
+      - "USGS ComCat / ANSS"
+
+  IT:
+    name: { en: "Italy", es: "Italia" }
+    bbox: { lat_min: 36.0, lat_max: 47.5, lon_min: 6.0, lon_max: 19.0 }
+    m_max: 7.5
+    h3_resolution: 6
+    seismicity_class: high
+    plate_setting: "Apennine extension / Africa–Eurasia convergence"
+    attribution:
+      - "Istituto Nazionale di Geofisica e Vulcanologia (INGV) — ISIDe"
+      - "USGS ComCat / ANSS"
+
+  US-CA:
+    name: { en: "California (USA)", es: "California (EE. UU.)" }
+    bbox: { lat_min: 32.0, lat_max: 42.0, lon_min: -125.0, lon_max: -114.0 }
+    m_max: 8.3
+    h3_resolution: 6
+    seismicity_class: high
+    plate_setting: "transform (San Andreas system)"
+    attribution:
+      - "SCEDC (Caltech) and NCEDC (UC Berkeley)"
+      - "USGS ComCat / ANSS"
+
+  GR:
+    name: { en: "Greece / Aegean", es: "Grecia / Egeo" }
+    bbox: { lat_min: 34.0, lat_max: 42.0, lon_min: 19.0, lon_max: 29.0 }
+    m_max: 8.0
+    h3_resolution: 6
+    seismicity_class: high
+    plate_setting: "Aegean extension / Hellenic subduction"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "EMSC / SeismicPortal"
+
+  MX:
+    name: { en: "Mexico", es: "México" }
+    bbox: { lat_min: 14.0, lat_max: 33.0, lon_min: -118.0, lon_max: -86.0 }
+    m_max: 8.6
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Cocos / Rivera) + Gulf of California transform"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  PE:
+    name: { en: "Peru", es: "Perú" }
+    bbox: { lat_min: -19.0, lat_max: 0.0, lon_min: -82.0, lon_max: -68.0 }
+    m_max: 9.0
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Nazca–South America megathrust)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "ISC-GEM Global Instrumental Earthquake Catalogue (CC-BY-SA 3.0)"
+
+  TR:
+    name: { en: "Türkiye", es: "Turquía" }
+    bbox: { lat_min: 35.0, lat_max: 43.0, lon_min: 25.0, lon_max: 45.0 }
+    m_max: 8.0
+    h3_resolution: 6
+    seismicity_class: high
+    plate_setting: "North Anatolian / East Anatolian transform faults"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  ID:
+    name: { en: "Indonesia", es: "Indonesia" }
+    bbox: { lat_min: -11.0, lat_max: 6.0, lon_min: 95.0, lon_max: 141.0 }
+    m_max: 9.3            # 2004 Sumatra–Andaman Mw ~9.1–9.3
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Sunda / Banda arcs)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  CN:
+    name: { en: "China", es: "China" }
+    bbox: { lat_min: 18.0, lat_max: 54.0, lon_min: 73.0, lon_max: 135.0 }
+    m_max: 8.5
+    h3_resolution: 4
+    seismicity_class: high
+    plate_setting: "continental collision / intraplate (Tibetan plateau margins)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  PH:
+    name: { en: "Philippines", es: "Filipinas" }
+    bbox: { lat_min: 4.0, lat_max: 21.0, lon_min: 116.0, lon_max: 127.0 }
+    m_max: 8.5
+    h3_resolution: 5
+    seismicity_class: high
+    plate_setting: "subduction (Philippine / Sunda) + Philippine Fault transform"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Global CMT Project"
+
+  # ── LOW-seismicity controls (stable interiors / slow-deforming) ──────────────────────────────
+  # Sparse, intermittent seismicity. Included to expose a model that only looks calibrated on the
+  # loud active margins. These dominate the LOW class of the high-vs-low bias comparison.
+  US-CE:
+    name: { en: "Central & Eastern US", es: "EE. UU. central y oriental" }
+    bbox: { lat_min: 31.0, lat_max: 42.0, lon_min: -98.0, lon_max: -82.0 }
+    m_max: 7.7            # 1811–1812 New Madrid sequence upper bound
+    h3_resolution: 4
+    seismicity_class: low
+    plate_setting: "stable continental interior (intraplate; New Madrid / Wabash)"
+    attribution:
+      - "USGS ComCat / ANSS"
+
+  EU-W:
+    name: { en: "Western Europe", es: "Europa occidental" }
+    bbox: { lat_min: 42.0, lat_max: 52.0, lon_min: -5.0, lon_max: 16.0 }
+    m_max: 7.0            # Alpine foreland / Rhine graben moderate-seismicity bound
+    h3_resolution: 5
+    seismicity_class: low
+    plate_setting: "slow intraplate deformation (Alpine foreland, Rhine graben)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "EMSC / SeismicPortal"
+
+  AU-E:
+    name: { en: "Eastern Australia", es: "Australia oriental" }
+    bbox: { lat_min: -39.0, lat_max: -25.0, lon_min: 145.0, lon_max: 154.0 }
+    m_max: 7.2            # stable-craton intraplate bound
+    h3_resolution: 4
+    seismicity_class: low
+    plate_setting: "stable continental craton (intraplate)"
+    attribution:
+      - "USGS ComCat / ANSS"
+      - "Geoscience Australia"

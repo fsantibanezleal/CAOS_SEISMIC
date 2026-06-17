@@ -24,11 +24,14 @@ data/clean/
 data/interim/
 data/mc/
 data/features/
+data/enrichers/
 models/
 checkpoints/
 *.grd
 *.tenv3
 *.ndk
+*.geojson
+*.gpkg
 *.parquet
 *.h5
 *.hdf5

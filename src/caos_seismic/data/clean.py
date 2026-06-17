@@ -475,6 +475,131 @@ def _spatiotemporal_dedupe_mask(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Multi-provider merge (the input to dedupe)
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def merge_providers(*frames: pd.DataFrame) -> pd.DataFrame:
+    """Concatenate per-provider catalogs into the single merged stream the dedupe consumes.
+
+    The global pipeline pulls several providers independently — the worldwide ComCat spine, each
+    country **view**'s regional network (CSN/SCEDC/GeoNet/INGV), the EMSC cross-check, and the
+    ISC-GEM/GCMT Mw anchors. Each returns a CATALOG_COLUMNS frame; this stacks them (dropping empties),
+    coerces ``time`` to UTC, and returns one validated frame ready for :func:`dedupe_events`. It does
+    **not** dedupe — that is dedupe's job, after the merge, using the provider authority order.
+
+    Empty / all-empty inputs return a typed-empty CATALOG_COLUMNS frame.
+    """
+    usable = [f for f in frames if f is not None and not f.empty]
+    if not usable:
+        empty = pd.DataFrame({c: pd.Series(dtype="object") for c in CATALOG_COLUMNS})
+        empty["time"] = pd.to_datetime(empty["time"], utc=True)
+        for c in ("latitude", "longitude", "depth_km", "mag", "mw"):
+            empty[c] = pd.to_numeric(empty[c], errors="coerce")
+        return validate_catalog(empty[list(CATALOG_COLUMNS)])
+    for f in usable:
+        validate_catalog(f)
+    merged = pd.concat([f[list(CATALOG_COLUMNS)] for f in usable], ignore_index=True)
+    merged["time"] = pd.to_datetime(merged["time"], utc=True)
+    return validate_catalog(merged)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL space-time Mc handling hook
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def global_mc_grid(
+    catalog: pd.DataFrame,
+    *,
+    cell_deg: float = 5.0,
+    window_days: float = 365.0,
+    step_days: float | None = None,
+    dm: float = 0.1,
+    correction: float = 0.2,
+    min_events: int = 50,
+    global_default: float | None = 4.5,
+) -> pd.DataFrame:
+    """Estimate ``Mc(x, y, t)`` on a coarse GLOBAL space-time grid — the global completeness hook.
+
+    A worldwide catalog has wildly non-stationary completeness: ``Mc`` differs by network era and by
+    region (a dense regional view sees ``Mc≈1``; the open ocean only ``Mc≈4.5+``). A single global
+    ``Mc`` injects fake non-stationarity into the Gutenberg–Richter tail and every rate, so the global
+    pipeline estimates ``Mc`` **per spatial cell and per time epoch** (synthesis §3 step 1). This hook
+    bins the catalog into ``cell_deg`` lat/lon cells and runs the existing rolling-time estimator
+    (:func:`caos_seismic.catalog.completeness.rolling_mc`, MAXC + GFT cross-check) inside each cell.
+
+    The result is the per-cell-per-epoch ``Mc`` table that stage (C) cuts events below before
+    declustering/feature-building. It is a *hook*: a coarse, leakage-safe (right-labelled windows)
+    first cut that the full stage (C) Mc artifact refines per region view — here we provide the global
+    field so the spine is never cut at a single planet-wide ``Mc``.
+
+    Parameters
+    ----------
+    catalog:
+        A clean (Mw-homogenized) global catalog with ``time``/``latitude``/``longitude``/``mw``.
+    cell_deg:
+        Spatial cell size in degrees (default 5° — coarse on purpose; the global field is smooth and a
+        finer grid starves cells of the ``min_events`` an Mc estimate needs).
+    window_days, step_days, dm, correction, min_events:
+        Passed through to the per-cell rolling Mc estimator.
+    global_default:
+        Conservative worldwide floor used where a cell-epoch has too few events to estimate ``Mc``
+        (default 4.5 — the same homogeneity floor the global ComCat spine is pulled at).
+
+    Returns
+    -------
+    DataFrame with columns ``cell_lat``, ``cell_lon`` (the cell's lower-left corner), ``window_start``,
+    ``window_end``, ``mc``, ``maxc_raw``, ``n_events``, ``method``. Empty catalog → empty frame with
+    those columns. Core deps only (the estimator is numpy/pandas/scipy).
+    """
+    from ..catalog.completeness import rolling_mc
+
+    cols = [
+        "cell_lat", "cell_lon", "window_start", "window_end",
+        "mc", "maxc_raw", "n_events", "method",
+    ]
+    if catalog.empty:
+        return pd.DataFrame(columns=cols)
+
+    df = catalog.dropna(subset=["time", "latitude", "longitude", "mw"]).copy()
+    if df.empty:
+        return pd.DataFrame(columns=cols)
+    df["time"] = pd.to_datetime(df["time"], utc=True)
+
+    lat = pd.to_numeric(df["latitude"], errors="coerce")
+    lon = pd.to_numeric(df["longitude"], errors="coerce")
+    # Floor each event into its grid cell (the cell's lower-left corner identifies it).
+    df["cell_lat"] = (np.floor(lat / cell_deg) * cell_deg).astype(float)
+    df["cell_lon"] = (np.floor(lon / cell_deg) * cell_deg).astype(float)
+
+    out_rows: list[pd.DataFrame] = []
+    for (clat, clon), grp in df.groupby(["cell_lat", "cell_lon"], sort=True):
+        roll = rolling_mc(
+            grp,
+            window_days=window_days,
+            step_days=step_days,
+            dm=dm,
+            correction=correction,
+            min_events=min_events,
+            regional_default=global_default,
+            mag_col="mw",
+            time_col="time",
+        )
+        if roll.empty:
+            continue
+        roll = roll.copy()
+        roll.insert(0, "cell_lon", float(clon))
+        roll.insert(0, "cell_lat", float(clat))
+        out_rows.append(roll)
+
+    if not out_rows:
+        return pd.DataFrame(columns=cols)
+    grid = pd.concat(out_rows, ignore_index=True)
+    return grid[cols]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # End-to-end clean
 # ─────────────────────────────────────────────────────────────────────────────
 

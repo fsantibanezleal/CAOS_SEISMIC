@@ -62,6 +62,26 @@ FDSN_EVENT_CAP = 20_000
 #: (ComCat updates continuously) cannot tip a tile over the limit mid-pull.
 DEFAULT_TILE_TARGET = 15_000
 
+#: Whole-Earth bbox — the GLOBAL field the model trains on (any country is a VIEW into this).
+GLOBAL_BBOX = BBox(lat_min=-90.0, lat_max=90.0, lon_min=-180.0, lon_max=180.0)
+
+#: Default worldwide completeness floor for the global pull. The historical global catalog only gets
+#: homogeneous and complete around M≳4.5 (below it ComCat's worldwide Mc drifts hard with network era
+#: and region); M>=4.5 keeps a multi-decade global volume tractable. Override with ``--min-magnitude``.
+DEFAULT_GLOBAL_MIN_MAGNITUDE = 4.5
+
+#: Latitude bands for the first cut of the worldwide tiling. Splitting by latitude before time keeps
+#: each band's seismicity density (the circum-Pacific belt dominates) from forcing a single global
+#: time window into pathologically deep bisection. Time tiling then refines each band under the cap.
+DEFAULT_LAT_BANDS: tuple[tuple[float, float], ...] = (
+    (-90.0, -60.0),
+    (-60.0, -30.0),
+    (-30.0, 0.0),
+    (0.0, 30.0),
+    (30.0, 60.0),
+    (60.0, 90.0),
+)
+
 #: HTTP statuses we retry (transient) vs. treat as "tile smaller".
 _RETRY_STATUSES = frozenset({429, 502, 503, 504})
 _TOO_LARGE_STATUSES = frozenset({400, 413})
@@ -468,10 +488,12 @@ def run_fetch(
     region: Region | str = "chile",
     days: int | None = None,
     focus: str | None = None,
+    min_magnitude: float | None = None,
+    updatedafter: str | None = None,
     write_raw: bool = True,
     session: requests.Session | None = None,
 ) -> dict[str, Any]:
-    """Stage (A) entry point the ``caos-seismic fetch`` command calls.
+    """Stage (A) entry point the ``caos-seismic fetch`` command calls (a single REGION view).
 
     Resolves the region, picks the fetch window (``--days N`` ⇒ the last ``N`` days; otherwise the
     region default ``starttime`` so the whole historical span is pulled), optionally narrows the
@@ -479,6 +501,9 @@ def run_fetch(
     ``configs/region.<id>.yaml: focus_<key>``), runs the tiled ComCat spine pull, writes the raw
     Parquet store + a ``stage="fetch"`` provenance manifest, and returns a small JSON-able summary
     (the CLI prints it). The ComCat spine needs only ``requests`` + ``pandas`` — no science deps.
+
+    ``min_magnitude`` overrides the configured completeness floor; ``updatedafter`` (ISO-8601 UTC)
+    switches to the incremental delta path (only revised/new events) for the daily job.
 
     Returns ``{"region", "n_events", "time_min", "time_max", "raw_path"}``.
     """
@@ -509,6 +534,8 @@ def run_fetch(
         bbox_region,
         starttime=starttime,
         endtime=endtime,
+        minmagnitude=min_magnitude,
+        updatedafter=updatedafter,
         write_raw=write_raw,
         write_manifest=True,
         session=session,
@@ -661,6 +688,239 @@ def _value_counts(df: pd.DataFrame, col: str) -> dict[str, int]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL ComCat fetch — worldwide spine, tiled by latitude band × time around the 20k cap
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Core thesis of the product: GLOBAL context conditions short-term LOCAL forecasts. The model trains
+# on worldwide seismicity; any country is a *view* into one global field. So the spine must be a real,
+# multi-decade, whole-Earth pull — not a region box. The worldwide event density (the circum-Pacific
+# belt) makes a single global window blow past the 20,000-event/request cap by orders of magnitude, so
+# we tile in TWO axes: first by latitude band (coarse, density-aware), then by time within each band
+# (the recursive ``/count``-driven bisection already used for the region spine). The same
+# ``updatedafter`` mechanism gives cheap daily deltas over the whole globe.
+
+
+def fetch_comcat_global(
+    *,
+    starttime: str | datetime | pd.Timestamp,
+    endtime: str | datetime | pd.Timestamp,
+    minmagnitude: float | None = DEFAULT_GLOBAL_MIN_MAGNITUDE,
+    updatedafter: str | datetime | pd.Timestamp | None = None,
+    lat_bands: Sequence[tuple[float, float]] = DEFAULT_LAT_BANDS,
+    source: str = "usgs_comcat",
+    tile_target: int = DEFAULT_TILE_TARGET,
+    session: requests.Session | None = None,
+    extra: dict[str, Any] | None = None,
+) -> pd.DataFrame:
+    """Fetch a **worldwide** ComCat catalog, tiled by latitude band × time around the 20k cap.
+
+    This is the global spine the conditional model trains on. The workflow per latitude band is the
+    same proven recipe as :func:`fetch_comcat` (``/count`` → recursive time bisection → ``/query``
+    each tile with a defensive re-bisection), but the bbox is the band's lat slice over the full
+    longitude range. Bands are fetched independently and concatenated; the final frame is de-duplicated
+    by ``event_id`` (band edges are open intervals so this is mostly defensive) and time-sorted. The
+    result matches :data:`caos_seismic.contracts.CATALOG_COLUMNS`.
+
+    Parameters
+    ----------
+    starttime, endtime:
+        The global pull window (e.g. ``"1990-01-01"`` → now for a multi-decade spine).
+    minmagnitude:
+        Worldwide completeness floor (default :data:`DEFAULT_GLOBAL_MIN_MAGNITUDE` = 4.5 — below it the
+        historical global catalog is neither complete nor homogeneous and the volume explodes). Pass a
+        lower value for a recent, smaller window where you specifically want the small events.
+    updatedafter:
+        Daily incremental delta: only events revised/added since this time (whole globe).
+    lat_bands:
+        The coarse latitude split (default :data:`DEFAULT_LAT_BANDS`, six 30° bands). Each band is
+        time-tiled independently so dense belts do not force the sparse poles into deep bisection.
+    tile_target:
+        Per-tile soft cap (default :data:`DEFAULT_TILE_TARGET` = 15,000), kept below the hard 20k so a
+        catalog revision between ``/count`` and ``/query`` cannot tip a tile over.
+
+    Notes
+    -----
+    For a true multi-decade M≥4.5 worldwide pull this issues many requests; respect ComCat fair-use
+    (the caller throttles the daily job). For daily inference you call this with ``updatedafter`` set,
+    which returns only the (small) global delta.
+    """
+    start = _to_ts(starttime)
+    end = _to_ts(endtime)
+    if end <= start:
+        raise ValueError(f"endtime ({end}) must be after starttime ({start})")
+
+    frames: list[pd.DataFrame] = []
+    for lat_min, lat_max in lat_bands:
+        band = BBox(lat_min=lat_min, lat_max=lat_max, lon_min=-180.0, lon_max=180.0)
+        logger.info("global fetch · latitude band [%.0f, %.0f)", lat_min, lat_max)
+        band_df = fetch_comcat(
+            starttime=start,
+            endtime=end,
+            bbox=band,
+            minmagnitude=minmagnitude,
+            updatedafter=updatedafter,
+            source=source,
+            tile_target=tile_target,
+            session=session,
+            extra=extra,
+        )
+        if not band_df.empty:
+            frames.append(band_df)
+
+    if not frames:
+        return _features_to_frame([], source=source)
+    df = pd.concat(frames, ignore_index=True)
+    df = df.drop_duplicates(subset="event_id", keep="last").reset_index(drop=True)
+    df = df.sort_values("time").reset_index(drop=True)
+    return validate_catalog(df)
+
+
+def fetch_global_comcat(
+    *,
+    starttime: str | datetime | pd.Timestamp = "1990-01-01",
+    endtime: str | datetime | pd.Timestamp | None = None,
+    minmagnitude: float | None = DEFAULT_GLOBAL_MIN_MAGNITUDE,
+    updatedafter: str | datetime | pd.Timestamp | None = None,
+    lat_bands: Sequence[tuple[float, float]] = DEFAULT_LAT_BANDS,
+    write_raw: bool = True,
+    write_manifest: bool = True,
+    raw_dir: Path | None = None,
+    manifest_dir: Path | None = None,
+    session: requests.Session | None = None,
+) -> tuple[pd.DataFrame, Manifest]:
+    """End-to-end runnable **global** ComCat pull, with raw store + ``stage="fetch"`` manifest.
+
+    This is the function ``scripts/fetch --global`` calls. It runs the worldwide tiled pull
+    (:func:`fetch_comcat_global`), writes the raw global catalog to ``data/raw/comcat_global.parquet``
+    (gitignored), and writes a provenance :class:`~caos_seismic.contracts.Manifest` (``region_id =
+    "global"``) recording the window, bands, minmagnitude, retrieved-at, and row counts.
+
+    With ``updatedafter`` set it performs an **incremental global delta** and writes it to a separate
+    ``comcat_global.delta.<stamp>.parquet`` so the merge into the base store stays explicit and
+    auditable (the caller merges delta → base, then re-runs clean). Returns ``(catalog_df, manifest)``.
+    """
+    if endtime is None:
+        endtime = pd.Timestamp.now(tz="UTC")
+
+    retrieved_at = datetime.now(timezone.utc).isoformat()
+    df = fetch_comcat_global(
+        starttime=starttime,
+        endtime=endtime,
+        minmagnitude=minmagnitude,
+        updatedafter=updatedafter,
+        lat_bands=lat_bands,
+        source="usgs_comcat",
+        session=session,
+    )
+
+    raw_dir = raw_dir or (REPO_ROOT / "data" / "raw")
+    manifest_dir = manifest_dir or (REPO_ROOT / "manifests")
+    raw_path = raw_dir / "comcat_global.parquet"
+    if updatedafter is not None:
+        stamp = pd.Timestamp(updatedafter).strftime("%Y%m%dT%H%M%S")
+        raw_path = raw_dir / f"comcat_global.delta.{stamp}.parquet"
+
+    if write_raw and not df.empty:
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        df.to_parquet(raw_path, index=False)
+        logger.info("wrote raw global store: %s (%d events)", raw_path, len(df))
+
+    manifest = Manifest(
+        stage="fetch",
+        created_at=retrieved_at,
+        region_id="global",
+        config_hash=_safe_config_hash("completeness"),
+        inputs={
+            "source": "usgs_comcat",
+            "fdsn_base": _comcat_base(),
+            "scope": "global",
+            "bbox": GLOBAL_BBOX.model_dump(),
+            "lat_bands": [list(b) for b in lat_bands],
+            "starttime": _iso(starttime),
+            "endtime": _iso(endtime),
+            "minmagnitude": minmagnitude,
+            "updatedafter": _iso(updatedafter) if updatedafter is not None else None,
+            "incremental": updatedafter is not None,
+        },
+        outputs={
+            "raw_path": str(raw_path.relative_to(REPO_ROOT)) if write_raw and not df.empty else None,
+            "format": "parquet",
+        },
+        stats={
+            "n_events": int(len(df)),
+            "time_min": df["time"].min().isoformat() if not df.empty else None,
+            "time_max": df["time"].max().isoformat() if not df.empty else None,
+            "mag_types": _value_counts(df, "mag_type"),
+            "lat_band_counts": _lat_band_counts(df, lat_bands),
+        },
+    )
+    if write_manifest:
+        write_manifest_json(manifest, manifest_dir, "global")
+    return df, manifest
+
+
+def _lat_band_counts(
+    df: pd.DataFrame, lat_bands: Sequence[tuple[float, float]]
+) -> dict[str, int]:
+    """Event count per latitude band (a quick density sanity stat for the global fetch manifest)."""
+    if df.empty:
+        return {}
+    lat = pd.to_numeric(df["latitude"], errors="coerce")
+    out: dict[str, int] = {}
+    for lat_min, lat_max in lat_bands:
+        sel = (lat >= lat_min) & (lat < lat_max)
+        out[f"[{lat_min:.0f},{lat_max:.0f})"] = int(sel.sum())
+    return out
+
+
+def run_fetch_global(
+    *,
+    days: int | None = None,
+    min_magnitude: float | None = DEFAULT_GLOBAL_MIN_MAGNITUDE,
+    start: str | None = None,
+    updatedafter: str | None = None,
+    write_raw: bool = True,
+    session: requests.Session | None = None,
+) -> dict[str, Any]:
+    """Stage (A) GLOBAL entry point — what ``caos-seismic fetch --global`` calls.
+
+    Picks the window (``--days N`` ⇒ last N days; else ``--start`` or the multi-decade default
+    ``"1990-01-01"``), runs the worldwide tiled ComCat pull, writes the raw global store + a
+    ``region_id="global"`` fetch manifest, and returns a small JSON-able summary the CLI prints.
+
+    ``--updatedafter`` (ISO-8601 UTC) takes precedence for the **daily incremental** global delta — it
+    is the cheap path the production job uses every day; pair it with the existing base global store.
+    """
+    endtime = pd.Timestamp.now(tz="UTC")
+    if days is not None and days > 0:
+        starttime: str | pd.Timestamp = endtime - pd.Timedelta(days=int(days))
+    elif start:
+        starttime = start
+    else:
+        starttime = "1990-01-01"
+
+    df, manifest = fetch_global_comcat(
+        starttime=starttime,
+        endtime=endtime,
+        minmagnitude=min_magnitude,
+        updatedafter=updatedafter,
+        write_raw=write_raw,
+        write_manifest=True,
+        session=session,
+    )
+    return {
+        "scope": "global",
+        "min_magnitude": min_magnitude,
+        "incremental": updatedafter is not None,
+        "n_events": int(len(df)),
+        "time_min": df["time"].min().isoformat() if not df.empty else None,
+        "time_max": df["time"].max().isoformat() if not df.empty else None,
+        "raw_path": manifest.outputs.get("raw_path"),
+        "lat_band_counts": manifest.stats.get("lat_band_counts"),
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Optional helpers (regional networks + long-term anchors) — lazy heavy imports
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -739,6 +999,144 @@ def fetch_fdsn_obspy(
     return _obspy_catalog_to_frame(cat, source=src)
 
 
+def fetch_region_fdsn(
+    region: Region | str,
+    provider: str | None = None,
+    *,
+    starttime: str | datetime | pd.Timestamp = "2000-01-01",
+    endtime: str | datetime | pd.Timestamp | None = None,
+    minmagnitude: float | None = None,
+    network: str | None = None,
+    window_days: float = 90.0,
+    source: str | None = None,
+) -> pd.DataFrame:
+    """Per-VIEW regional FDSN pull for a country view — the local-network catalog (low, stable Mc).
+
+    The product trains globally but each country is a *view*; the short-horizon skill of a view scales
+    with how low and stable its local Mc is, so each view is driven by its **regional network**
+    (Chile → CSN via EarthScope/IRIS net ``C``/``C1``; California → SCEDC/NCEDC; NZ → GeoNet; Italy →
+    INGV). This helper resolves the provider (explicit ``provider`` or the region config's
+    ``catalogs.regional`` key), clips to the region bbox, and pulls the window in ``window_days`` slices
+    (``get_events`` has no bulk analogue and each provider enforces the 20k cap), concatenating into one
+    CATALOG_COLUMNS frame deduped against the ComCat spine downstream. ObsPy is imported lazily.
+
+    Parameters
+    ----------
+    region:
+        A :class:`~caos_seismic.contracts.Region` or region id (its bbox + ``catalogs.regional`` are read).
+    provider:
+        FDSN provider key (``csn``/``earthscope``/``scedc``/``geonet``/``ingv``/…). If ``None``, read
+        ``catalogs.regional`` from ``configs/region.<id>.yaml``.
+    window_days:
+        Time-slice width for the windowed pull (kept well under each provider's per-request cap).
+    """
+    from ..config import load_region as _load_region
+
+    region_obj = region if isinstance(region, Region) else _load_region(region)
+    prov = provider or _region_regional_provider(region_obj.id)
+    if not prov:
+        raise ValueError(
+            f"no regional FDSN provider for region {region_obj.id!r}: pass `provider=` or set "
+            f"`catalogs.regional` in configs/region.{region_obj.id}.yaml"
+        )
+    end = _to_ts(endtime) if endtime is not None else pd.Timestamp.now(tz="UTC")
+    start = _to_ts(starttime)
+    if end <= start:
+        raise ValueError(f"endtime ({end}) must be after starttime ({start})")
+
+    src = source or prov.strip().lower()
+    step = pd.Timedelta(days=float(window_days))
+    frames: list[pd.DataFrame] = []
+    t0 = start
+    while t0 < end:
+        t1 = min(t0 + step, end)
+        try:
+            chunk = fetch_fdsn_obspy(
+                prov,
+                starttime=t0,
+                endtime=t1,
+                bbox=region_obj.bbox,
+                minmagnitude=minmagnitude,
+                network=network,
+                source=src,
+            )
+        except Exception as exc:  # one empty/oversized window must not abort the whole pull
+            logger.warning("regional FDSN window [%s, %s) failed for %s: %s", t0, t1, prov, exc)
+            chunk = _obspy_catalog_to_frame_empty(src)
+        if not chunk.empty:
+            frames.append(chunk)
+        t0 = t1
+
+    if not frames:
+        return _obspy_catalog_to_frame_empty(src)
+    df = pd.concat(frames, ignore_index=True)
+    df = df.drop_duplicates(subset="event_id", keep="last").reset_index(drop=True)
+    df = df.sort_values("time").reset_index(drop=True)
+    return validate_catalog(df)
+
+
+def _region_regional_provider(region_id: str) -> str | None:
+    """Read ``catalogs.regional`` (the view's local network) from ``configs/region.<id>.yaml``."""
+    try:
+        import yaml
+
+        from ..config import CONFIG_DIR
+
+        raw = yaml.safe_load((CONFIG_DIR / f"region.{region_id}.yaml").read_text(encoding="utf-8"))
+    except Exception:  # pragma: no cover - config optional
+        return None
+    cat = (raw or {}).get("catalogs") or {}
+    prov = cat.get("regional")
+    return str(prov) if prov else None
+
+
+def _obspy_catalog_to_frame_empty(source: str) -> pd.DataFrame:
+    """Empty CATALOG_COLUMNS frame (typed ``time`` column) for skipped/failed regional windows."""
+    return _features_to_frame([], source=source)
+
+
+def fetch_emsc_crosscheck(
+    *,
+    starttime: str | datetime | pd.Timestamp,
+    endtime: str | datetime | pd.Timestamp,
+    bbox: BBox | None = None,
+    minmagnitude: float | None = None,
+    window_days: float = 30.0,
+) -> pd.DataFrame:
+    """Independent EMSC SeismicPortal cross-check pull (deduped against the ComCat spine downstream).
+
+    EMSC is the *independent* provider that lets the clean stage catch ComCat false/retracted events
+    and disagreements (it is the lowest-authority source in the dedupe priority, used only to confirm).
+    Pulled in ``window_days`` slices via the ObsPy ``EMSC`` FDSN client (lazy import). Returns a
+    CATALOG_COLUMNS frame tagged ``source="emsc"``.
+    """
+    end = _to_ts(endtime)
+    start = _to_ts(starttime)
+    if end <= start:
+        raise ValueError(f"endtime ({end}) must be after starttime ({start})")
+    step = pd.Timedelta(days=float(window_days))
+    frames: list[pd.DataFrame] = []
+    t0 = start
+    while t0 < end:
+        t1 = min(t0 + step, end)
+        try:
+            chunk = fetch_fdsn_obspy(
+                "emsc", starttime=t0, endtime=t1, bbox=bbox,
+                minmagnitude=minmagnitude, source="emsc",
+            )
+        except Exception as exc:
+            logger.warning("EMSC cross-check window [%s, %s) failed: %s", t0, t1, exc)
+            chunk = _obspy_catalog_to_frame_empty("emsc")
+        if not chunk.empty:
+            frames.append(chunk)
+        t0 = t1
+    if not frames:
+        return _obspy_catalog_to_frame_empty("emsc")
+    df = pd.concat(frames, ignore_index=True)
+    df = df.drop_duplicates(subset="event_id", keep="last").reset_index(drop=True)
+    return validate_catalog(df.sort_values("time").reset_index(drop=True))
+
+
 def _obspy_utc(t: str | datetime | pd.Timestamp):
     from obspy import UTCDateTime
 
@@ -802,6 +1200,105 @@ def download_isc_gem(dest: Path, *, url: str | None = None, session: requests.Se
     dest.write_bytes(resp.content)
     logger.info("downloaded ISC-GEM CSV → %s (%d bytes)", dest, len(resp.content))
     return dest
+
+
+#: ISC-GEM CSV column → catalog column. The ISC-GEM main CSV is a ``#``-commented, comma-separated file
+#: whose data header row is ``date, lat, lon, smajax, sminax, ..., depth, ..., mw, ...`` with columns
+#: identified by name in the last comment line. We map by name to stay robust to column re-ordering
+#: across versions. All ISC-GEM magnitudes are already Mw-homogenized (the catalog's whole point).
+_ISC_GEM_COLMAP: dict[str, str] = {
+    "eventid": "event_id",
+    "date": "time",
+    "lat": "latitude",
+    "lon": "longitude",
+    "depth": "depth_km",
+    "mw": "mag",
+}
+
+
+def read_isc_gem_csv(path: Path, *, source: str = "isc_gem") -> pd.DataFrame:
+    """Parse the ISC-GEM Global Instrumental Catalogue main CSV into the CATALOG_COLUMNS frame.
+
+    ISC-GEM (1904–present, **Mw-homogenized**, relocated) is the long-term homogeneous anchor for the
+    global b-value, large-event recurrence, and — crucially — the ``native → Mw`` TLS conversion overlap
+    in :mod:`caos_seismic.data.clean`. Every magnitude here is already Mw, so ``mag_type = "Mw"`` and
+    ``mw == mag``. Core deps only (``pandas``); the file is a ``#``-commented CSV whose last comment line
+    is the column header. **License: CC-BY-SA 3.0** — keep attribution on any redistributed derivative.
+
+    Robust to ISC-GEM's quirks: leading ``#`` comment block, a header carried as the final comment line,
+    columns identified by *name* (order varies across versions), and whitespace padding.
+    """
+    header: list[str] | None = None
+    data_lines: list[str] = []
+    with Path(path).open("r", encoding="utf-8", errors="replace") as fh:
+        for raw_line in fh:
+            line = raw_line.rstrip("\n")
+            if line.startswith("#"):
+                # The data header is the last comment line that names the known columns.
+                candidate = [c.strip().lower() for c in line.lstrip("#").split(",")]
+                if "lat" in candidate and "lon" in candidate and "mw" in candidate:
+                    header = candidate
+                continue
+            if line.strip():
+                data_lines.append(line)
+
+    if header is None or not data_lines:
+        raise ComCatError(
+            f"could not locate an ISC-GEM data header (lat/lon/mw) in {path}; the file format may have "
+            "changed — inspect the CSV header comment block."
+        )
+
+    from io import StringIO
+
+    # ISC-GEM repeats quality columns ("unc", "q") several times, so the header has duplicate names.
+    # Parse positionally (uniquified names) and resolve the columns we want by their FIRST occurrence.
+    seen: dict[str, int] = {}
+    uniq_header: list[str] = []
+    first_index: dict[str, int] = {}
+    for idx, name in enumerate(header):
+        if name not in first_index:
+            first_index[name] = idx
+        if name in seen:
+            seen[name] += 1
+            uniq_header.append(f"{name}.{seen[name]}")
+        else:
+            seen[name] = 0
+            uniq_header.append(name)
+
+    frame = pd.read_csv(
+        StringIO("\n".join(data_lines)),
+        header=None,
+        names=uniq_header,
+        skipinitialspace=True,
+    )
+    # Map the named ISC-GEM columns we use (by first occurrence) into the catalog schema.
+    out = pd.DataFrame(index=frame.index)
+    for src, dst in _ISC_GEM_COLMAP.items():
+        if src in first_index and first_index[src] < frame.shape[1]:
+            out[dst] = frame.iloc[:, first_index[src]]
+    for col in ("event_id", "time", "latitude", "longitude", "depth_km", "mag"):
+        if col not in out.columns:
+            out[col] = pd.NA
+
+    out["time"] = pd.to_datetime(out["time"], utc=True, errors="coerce")
+    for c in ("latitude", "longitude", "depth_km", "mag"):
+        out[c] = pd.to_numeric(out[c], errors="coerce")
+    out["event_id"] = out["event_id"].astype("string")
+    if out["event_id"].isna().all():
+        # Fall back to a stable synthetic id from origin time + hypocenter when none is provided.
+        out["event_id"] = (
+            "iscgem_"
+            + out["time"].astype("string").fillna("NaT")
+            + "_"
+            + out["latitude"].round(3).astype("string")
+            + "_"
+            + out["longitude"].round(3).astype("string")
+        )
+    out["mag_type"] = "Mw"
+    out["mw"] = out["mag"]
+    out["source"] = source
+    out = out.dropna(subset=["time", "latitude", "longitude"]).reset_index(drop=True)
+    return validate_catalog(out[list(CATALOG_COLUMNS)])
 
 
 def download_gcmt_ndk(dest: Path, *, url: str | None = None, session: requests.Session | None = None) -> Path:

@@ -17,7 +17,8 @@ Subcommands (kept 1:1 with the scripts):
     train            fit the smoothed-seismicity null + space-time ETAS (+ R-J fallback)
     infer            run the daily forecast clock -> compact artifact under results/
     daily            the production job: fetch -> infer -> scoped publish (commit + push)
-    backanalysis     pseudo-prospective CSEP back-analysis over a date range
+    backanalysis     pseudo-prospective CSEP back-analysis over a date range (one region/view)
+    backanalysis-global  multi-view + global back-analysis: context gain vs ETAS + high/low bias
     check            environment + repo + config sanity checks (no network, no science deps required)
 
 Framing (non-negotiable): this is a *forecaster*, never a *predictor*. See `contracts.py`.
@@ -36,7 +37,15 @@ from typing import Optional
 import typer
 
 from . import __version__
-from .config import REPO_ROOT, config_hash, load, load_region
+from .config import (
+    REPO_ROOT,
+    config_hash,
+    default_view_ids,
+    list_view_ids,
+    load,
+    load_region,
+    load_views,
+)
 
 app = typer.Typer(
     name="caos-seismic",
@@ -106,33 +115,64 @@ def _utc_now_iso() -> str:
 @app.command()
 def fetch(
     region: str = typer.Option("chile", "--region", "-r", help="Region id (configs/region.<id>.yaml)."),
+    is_global: bool = typer.Option(
+        False, "--global", help="Pull the WORLDWIDE catalog (the global spine the model trains on), "
+        "tiled by latitude band x time; ignores --region/--focus."
+    ),
     days: Optional[int] = typer.Option(
         None, "--days", help="Only pull the last N days (default: the configured fetch window)."
     ),
     focus: Optional[str] = typer.Option(
         None, "--focus", help="Optional sub-region focus key (e.g. 'north' for Chile)."
     ),
+    min_magnitude: Optional[float] = typer.Option(
+        None, "--min-magnitude", "-m",
+        help="Minimum magnitude floor. Global default 4.5 (keeps the worldwide multi-decade volume "
+        "tractable + homogeneous); region default is the configured completeness floor."
+    ),
+    start: Optional[str] = typer.Option(
+        None, "--start", help="Global pull start (YYYY-MM-DD); default 1990-01-01 for the spine."
+    ),
+    updatedafter: Optional[str] = typer.Option(
+        None, "--updatedafter",
+        help="Incremental delta: only events revised/added since this ISO-8601 UTC time (the daily path)."
+    ),
 ) -> None:
     """Pull the catalog (USGS ComCat spine + regional/anchor sources) and write a provenance manifest.
 
-    The ComCat spine works with `requests` + `pandas` alone; regional FDSN / ISC-GEM / GCMT enrichers may
-    pull in optional science deps lazily inside the stage.
+    Default mode pulls one REGION view (its bbox); `--global` pulls the WORLDWIDE field the conditional
+    model trains on (any country is a view into it). The ComCat spine works with `requests` + `pandas`
+    alone; regional FDSN / ISC-GEM / GCMT enrichers pull optional science deps lazily inside the stage.
     """
-    reg = load_region(region)
     mod = _require_stage("data.fetch")
-    _echo(f"fetch · region={reg.id} ({reg.name_en})")
-    result = mod.run_fetch(region=reg, days=days, focus=focus)
+    if is_global:
+        _echo("fetch · scope=GLOBAL (worldwide spine)")
+        result = mod.run_fetch_global(
+            days=days,
+            min_magnitude=(min_magnitude if min_magnitude is not None
+                           else mod.DEFAULT_GLOBAL_MIN_MAGNITUDE),
+            start=start,
+            updatedafter=updatedafter,
+        )
+    else:
+        reg = load_region(region)
+        _echo(f"fetch · region={reg.id} ({reg.name_en})")
+        result = mod.run_fetch(
+            region=reg, days=days, focus=focus,
+            min_magnitude=min_magnitude, updatedafter=updatedafter,
+        )
     _echo(f"fetch · done: {result}")
 
 
 @app.command(name="build-features")
 def build_features(
-    region: str = typer.Option("chile", "--region", "-r", help="Region id."),
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
 ) -> None:
     """Mc + b-value estimation, Mw homogenization, dual-catalog declustering, and feature extraction.
 
-    Implements the dual-catalog rule (configs/declustering.yaml): the declustered catalog feeds the
-    stationary background; the FULL un-declustered catalog feeds the conditional/ETAS model.
+    Operates on the worldwide catalog by default. Implements the dual-catalog rule
+    (configs/declustering.yaml): the declustered catalog feeds the stationary background; the FULL
+    un-declustered catalog feeds the conditional/ETAS model.
     """
     reg = load_region(region)
     mod = _require_stage("catalog.features")
@@ -143,12 +183,13 @@ def build_features(
 
 @app.command()
 def train(
-    region: str = typer.Option("chile", "--region", "-r", help="Region id."),
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
 ) -> None:
     """Fit the stationary smoothed-seismicity null and the space-time ETAS model (+ R-J fallback).
 
-    Rejects any ETAS fit that violates either stability gate (alpha < beta; branching ratio n < 1;
-    see configs/etas.yaml).
+    Trains on worldwide seismicity by default (the global field any country views into). Rejects any
+    ETAS fit that violates either stability gate (alpha < beta; branching ratio n < 1; see
+    configs/etas.yaml).
     """
     reg = load_region(region)
     mod = _require_stage("model.train")
@@ -159,28 +200,41 @@ def train(
 
 @app.command()
 def infer(
-    region: str = typer.Option("chile", "--region", "-r", help="Region id."),
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
     issue: Optional[str] = typer.Option(
         None, "--issue", help="Issue date (YYYY-MM-DD, UTC). Default: today (UTC)."
     ),
+    views: Optional[str] = typer.Option(
+        None, "--views",
+        help="Comma-separated country view ids to slice out of the global field (default: the "
+        "configured default_views; 'none' suppresses view extraction). See `caos-seismic views`."
+    ),
+    min_magnitude: Optional[float] = typer.Option(
+        None, "--min-magnitude", "-m", help="Mw floor applied to the conditioning catalog before fitting."
+    ),
 ) -> None:
-    """Run the forecast clock for the issue date and write a compact artifact under results/.
+    """Run the forecast clock for the issue date and write a compact GLOBAL artifact under results/.
 
-    The forecast clock hands the model only the catalog slice strictly before the issue time (no
-    leakage), then writes `results/forecast-<region>-<date>.json.gz` + updates `results/index.json` and a
-    provenance manifest. Matches the ForecastArtifact schema in contracts.py.
+    Global by default: the model conditions ONE worldwide field (any country is a view into it). The
+    forecast clock hands the model only the catalog slice strictly before the issue time (no leakage),
+    then writes `results/forecast-<region>-<date>.json.gz` (the global field + per-country view
+    indices) + updates `results/index.json` and a provenance manifest. Matches the ForecastArtifact
+    schema in contracts.py.
     """
     reg = load_region(region)
     issue_dt = _parse_issue(issue)
+    view_ids = _parse_views_opt(views)
     mod = _require_stage("inference.daily")
-    _echo(f"infer · region={reg.id} · issue={issue_dt.isoformat()}")
-    result = mod.run_infer(region=reg, issue=issue_dt)
+    _echo(f"infer · region={reg.id} · issue={issue_dt.isoformat()} · views={view_ids if view_ids is not None else 'default'}")
+    result = mod.run_infer(
+        region=reg, issue=issue_dt, views=view_ids, min_magnitude=min_magnitude
+    )
     _echo(f"infer · done: {result}")
 
 
 @app.command()
 def backanalysis(
-    region: str = typer.Option("chile", "--region", "-r", help="Region id."),
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
     start: str = typer.Option(..., "--start", help="First issue date (YYYY-MM-DD, UTC)."),
     end: str = typer.Option(..., "--end", help="Last issue date (YYYY-MM-DD, UTC)."),
 ) -> None:
@@ -200,6 +254,34 @@ def backanalysis(
     _echo(f"backanalysis · done: {result}")
 
 
+@app.command(name="backanalysis-global")
+def backanalysis_global(
+    start: str = typer.Option(..., "--start", help="First issue date (YYYY-MM-DD, UTC)."),
+    end: str = typer.Option(..., "--end", help="Last issue date (YYYY-MM-DD, UTC)."),
+    no_global: bool = typer.Option(
+        False, "--no-global", help="Score only the country views, skip the whole-Earth GLOBAL view."
+    ),
+) -> None:
+    """Multi-view + global pseudo-prospective back-analysis — the THESIS measurement.
+
+    Runs the leakage-free forecast-clock back-analysis through every pre-registered country VIEW
+    (high- and low-seismicity sets) AND a global view, then reduces to (1) the information gain of
+    the context-conditioned model over catalog-only ETAS — how much the global context contributes —
+    per view + pooled, and (2) the HIGH-vs-LOW-seismicity bias comparison (does the model over-fit
+    high-seismicity zones?). Emits a compact global JSON into results/ for the web app.
+    """
+    start_dt = _parse_issue(start)
+    end_dt = _parse_issue(end)
+    if end_dt < start_dt:
+        raise _fail("--end is before --start.")
+    mod = _require_stage("eval.global_backanalysis", extra="science")
+    _echo(f"backanalysis-global · {start_dt.isoformat()} -> {end_dt.isoformat()} · global={not no_global}")
+    result = mod.run_global_backanalysis(
+        start=start_dt, end=end_dt, include_global=not no_global
+    )
+    _echo(f"backanalysis-global · done: {result}")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # daily — the production job (fetch -> infer -> scoped publish). Owned here (ops layer).
 # ─────────────────────────────────────────────────────────────────────────────
@@ -207,7 +289,7 @@ def backanalysis(
 
 @app.command()
 def daily(
-    region: str = typer.Option("chile", "--region", "-r", help="Region id."),
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
     no_publish: bool = typer.Option(
         False, "--no-publish", help="Run fetch + infer but skip the git commit/push (local dry run)."
     ),
@@ -315,6 +397,19 @@ def check(
             warnings.append(f"region '{reg.id}' has no attribution list (required on public surfaces).")
     except Exception as exc:  # noqa: BLE001
         problems.append(f"region '{region}' failed to load: {exc}")
+
+    # Global field + country views (the global re-scope: any country is a view into one field).
+    try:
+        load_region("global")
+        default_ids = default_view_ids()
+        loaded = load_views()  # the default set must all resolve + carry attribution
+        for v in loaded:
+            if not v.attribution:
+                warnings.append(f"view '{v.id}' has no attribution list (required on public surfaces).")
+        _echo(f"views     · {len(loaded)} default of {len(list_view_ids())} configured "
+              f"(default_views={default_ids})")
+    except Exception as exc:  # noqa: BLE001
+        problems.append(f"views.yaml / region.global failed to load: {exc}")
 
     # Publish allowlist sanity (must be explicit, must NOT be '.' or '-A').
     try:
@@ -442,6 +537,43 @@ def _smoke_pipeline(region_id: str) -> tuple[bool, str]:
     )
 
 
+@app.command(name="views")
+def views_cmd(
+    all_views: bool = typer.Option(
+        False, "--all", help="List every configured view, not just the default_views set."
+    ),
+) -> None:
+    """List the configured country/region VIEWS into the global field (the region selector's menu).
+
+    Each view is a window into the single global forecast field (any country is a view, never a
+    separately-trained model). Shows the id, name, bbox, m_max, display H3 resolution, and whether it
+    is in the default set inference materializes. Network-free, core-deps only.
+    """
+    configured = list_view_ids()
+    defaults = set(default_view_ids())
+    if not configured:
+        _echo("views · none configured (configs/views.yaml is missing or empty).")
+        return
+
+    ids = configured if all_views else default_view_ids()
+    loaded = load_views(ids)
+    _echo(f"views · {len(loaded)} {'configured' if all_views else 'default'} "
+          f"(of {len(configured)} configured):")
+    for v in loaded:
+        bb = v.bbox
+        flag = "*" if v.id in defaults else " "
+        res = v.h3_resolution if v.h3_resolution is not None else "-"
+        _echo(
+            f"  {flag} {v.id:<6} {v.name_en:<34} "
+            f"m_max={v.m_max:<4} h3={res} "
+            f"bbox=[{bb.lat_min:g},{bb.lat_max:g} x {bb.lon_min:g},{bb.lon_max:g}]"
+        )
+    if not all_views and len(configured) > len(loaded):
+        extra = sorted(set(configured) - {v.id for v in loaded})
+        _echo(f"  (+{len(extra)} non-default: {extra} — pass --all to include)")
+    _echo("  * = in default_views (materialized by `infer` unless --views overrides)")
+
+
 @app.command()
 def version() -> None:
     """Print the package version (used by the scripts' `--version` smoke test)."""
@@ -451,6 +583,29 @@ def version() -> None:
 # ─────────────────────────────────────────────────────────────────────────────
 # Internal helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+
+def _parse_views_opt(value: str | None) -> Optional[list[str]]:
+    """Parse the ``--views`` option for `infer`.
+
+    ``None`` (flag absent) ⇒ ``None`` (the inference layer uses the configured ``default_views``).
+    ``"none"``/``""`` ⇒ ``[]`` (suppress view extraction). Otherwise a comma-separated id list,
+    validated against the configured views so a typo fails fast with the available set.
+    """
+    if value is None:
+        return None
+    cleaned = value.strip().lower()
+    if cleaned in {"none", "off", ""}:
+        return []
+    ids = [tok.strip() for tok in value.split(",") if tok.strip()]
+    configured = set(list_view_ids())
+    unknown = [i for i in ids if i not in configured]
+    if unknown:
+        raise _fail(
+            f"unknown view id(s) {unknown}; configured views are {sorted(configured)} "
+            f"(see `caos-seismic views --all`)."
+        )
+    return ids
 
 
 def _parse_issue(value: str | None) -> datetime:

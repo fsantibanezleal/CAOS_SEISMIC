@@ -1,0 +1,53 @@
+# CAOS_SEISMIC — region config: GLOBAL (the default, whole-Earth field).
+#
+# Core thesis of the re-scope: global context conditions short-term LOCAL forecasts. The model
+# trains on worldwide seismicity + all complementary global covariates; ANY country is a VIEW into
+# this single global field (see configs/views.yaml), never a separately-trained model. This is the
+# default region for fetch / build-features / train / infer.
+#
+# All distances in km, times in days, magnitudes homogenized to Mw where possible.
+id: global
+name: { en: "Global (worldwide seismicity)", es: "Global (sismicidad mundial)" }
+
+# Whole-Earth bounding box (lat/lon, WGS84). The global field is conditioned over this extent and
+# then sliced to each country VIEW for display. Latitudes are clipped slightly inside the poles
+# because H3 / equal-area handling and seismicity both vanish at the caps.
+bbox: { lat_min: -85.0, lat_max: 85.0, lon_min: -180.0, lon_max: 180.0 }
+
+# Catalog sources for the global field (see docs/data-and-pipelines.md for access + licenses).
+# The ComCat spine is the global real-time backbone updated DAILY for inference; regional FDSN
+# networks add short-horizon skill per tectonic province; the static context (Slab2/faults/plates)
+# is refreshed periodically, never daily.
+catalogs:
+  spine: usgs_comcat            # global real-time spine (FDSN, public domain) — DAILY inference feed
+  long_term_anchor: isc_gem     # Mw-homogenized 1904–2021 (CC-BY-SA 3.0); b-value + Mw conversion
+  mechanisms: gcmt              # moment tensors for M>=5
+  cross_check: emsc             # independent dedup
+  regional:                     # regional networks that sharpen specific provinces (optional enrichers)
+    - csn                       # Chile — Centro Sismológico Nacional (net C/C1)
+    - geonet                    # New Zealand
+    - ingv                      # Italy — ISIDe
+    - scedc                     # California — Caltech
+    - ncedc                     # California — Berkeley
+
+# Tectonic enrichers (global, periodic refresh — NOT a daily download). Each gated on measured IGPE.
+enrichers: [slab2, gem_faults, bird_pb2002, ngl_gnss]
+notes:
+  - "Global ETAS conditions one field; the per-regime parameters (subduction / transform / intraplate)
+     are tiled so a megathrust province and a stable-continental interior do not share productivity."
+  - "Subduction megathrusts violate the isotropic-kernel / point-source ETAS assumptions for great
+     earthquakes; condition on Slab2 geometry where a regime tile is a subduction margin."
+  - "Ocean tidal loading dominates the tidal stress along coastal/subduction margins."
+
+# Maximum magnitude bounding the global exceedance integral. The largest instrumentally recorded
+# earthquake worldwide is the 1960 Valdivia, Chile event (Mw 9.5); per-VIEW m_max may be lower (see
+# configs/views.yaml) where a province cannot host a 9.5.
+m_max: 9.5
+
+# Attribution required on any public surface that uses the global field.
+attribution:
+  - "USGS ComCat / ANSS"
+  - "ISC-GEM Global Instrumental Earthquake Catalogue (CC-BY-SA 3.0)"
+  - "Global CMT Project"
+  - "EMSC / SeismicPortal"
+  - "Regional networks per view (see configs/views.yaml attribution)"

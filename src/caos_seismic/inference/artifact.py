@@ -1,22 +1,32 @@
 """Compact artifact serialization — the contract between the offline job and the static SPA.
 
-The dense fine grid (0.1° cells over a region; the global single-resolution CSEP grid is ~6.48M
-cells) is **never** shipped to the browser (web-app-spec.md §8.2). This module turns an in-memory
+The dense fine grid (the global single-resolution 0.1° CSEP grid is ~6.48M cells) is **never**
+shipped to the browser (web-app-spec.md §8.2). This module turns an in-memory
 :class:`~caos_seismic.contracts.ForecastArtifact` (keyed by fine ``"lat,lon"`` cells) into the
 compact on-disk form the SPA reads:
 
-1. **Aggregate** the fine cells to **H3** hexbins at the display resolution (configs/grid.yaml
-   ``display.h3_resolution_region``). Per H3 cell × horizon × threshold the exceedance probability is
-   combined as ``p = 1 - Π(1 - p_i)`` (the probability that *at least one* contained fine cell
-   exceeds — the correct aggregation of independent "≥1 event" events), rates are summed, and the
-   baseline is aggregated the same way as ``p``.
+1. **Aggregate** the fine cells to **H3** hexbins. For a focused region this is a single display
+   resolution; for the **GLOBAL** field it is **multi-resolution** — the coarse
+   ``display.h3_resolution_world`` everywhere, refined to each country view's finer resolution inside
+   that view's bbox (:func:`aggregate_to_h3_multi`), so the world stays light while a country
+   drill-down is detailed. Per H3 cell × horizon × threshold the exceedance probability combines as
+   ``p = 1 - Π(1 - p_i)`` (the probability that *at least one* contained fine cell exceeds — the
+   correct aggregation of independent "≥1 event" events), rates sum, and the baseline aggregates as
+   ``p``.
 2. **Quantize** the per-cell rate to a small integer via a log scale + legend lookup, so the browser
    decodes ``uint16 → rate`` with a shared legend rather than carrying float64 (web-app-spec §8.2).
-3. **Sparsity**: drop H3 cells whose maximum probability across all horizons/thresholds is below a
-   rate floor (``configs/grid.yaml: sparsity.rate_floor_quantile``) — the rest is the implicit
-   baseline. The coverage mask carries cells explicitly *out* of validated coverage (blank ≠ safe).
-4. **gzip** the JSON to ``results/forecast-<region>-YYYY-MM-DD.json.gz`` (a few hundred KB – few MB)
-   and update ``results/index.json`` (the ``latest`` pointer + rolling calibration history).
+3. **Sparsity**: drop H3 cells whose maximum probability is below the relative floor
+   (``sparsity.rate_floor_quantile``) **and** the absolute floor (``sparsity.min_world_prob``) — the
+   rest is the implicit baseline. For the world field these floors are what keep the artifact to a
+   few hundred KB – few MB. Cells a configured **view** needs are protected
+   (``sparsity.keep_view_cells``) so a country never loses coverage continuity. The coverage mask
+   carries cells explicitly *out* of validated coverage (blank ≠ safe).
+4. **Per-view index**: each country view gets the list of H3 cell keys (of the shared global field)
+   inside its bbox, so the SPA's region selector reads only those cells — one global field, many
+   country slices, no duplicated payload.
+5. **gzip** the JSON to ``results/forecast-<region>-YYYY-MM-DD.json.gz`` (a few hundred KB – few MB)
+   and update ``results/index.json`` (the ``latest`` pointer, the per-view list, + rolling
+   calibration history).
 
 A loader (:func:`load_artifact`) round-trips a written file back to a :class:`ForecastArtifact`,
 de-quantizing rates via the embedded legend, so the back-analysis and tests can re-read what shipped.
@@ -38,10 +48,12 @@ from typing import Any
 from ..config import REPO_ROOT, load
 from ..contracts import (
     ARTIFACT_SCHEMA_VERSION,
+    BBox,
     CalibrationSummary,
     ForecastArtifact,
     Region,
     Staleness,
+    ViewIndexEntry,
 )
 
 RESULTS_DIR = REPO_ROOT / "results"
@@ -188,6 +200,86 @@ def aggregate_to_h3(
     return out
 
 
+def aggregate_to_h3_multi(
+    forecast: dict[str, dict[str, dict[str, dict[str, float]]]],
+    world_resolution: int,
+    refinements: list[tuple[BBox, int]],
+) -> dict[str, dict[str, dict[str, dict[str, float]]]]:
+    """Multi-resolution H3 aggregation: coarse worldwide + finer inside refinement bboxes.
+
+    The GLOBAL field is far too large to ship at one fine resolution (web-app-spec.md §8.2). Instead
+    each fine ``"lat,lon"`` cell is binned at:
+
+    * the **world resolution** (coarse) by default — the planet-wide overview the SPA renders first; or
+    * a **finer resolution** when the cell's centre falls inside a refinement bbox (a configured view,
+      e.g. a country drill-down) — so a user zooming into a country sees the higher-resolution field
+      while the world stays light.
+
+    ``refinements`` is ``[(bbox, resolution), ...]``; the **highest** resolution among the bboxes a
+    cell falls inside wins (a country inside a region inside the world resolves to the country's
+    detail). Aggregation within each H3 parent is the same as :func:`aggregate_to_h3` (``≥1``-event
+    probabilities combine via ``1 - Π(1-p)``, rates sum). Already-H3 keys pass through unchanged.
+    """
+    members: dict[str, list[str]] = {}
+    passthrough: dict[str, str] = {}
+    for cell_key in forecast:
+        if not _looks_like_latlon_key(cell_key):
+            passthrough[cell_key] = cell_key
+            continue
+        lat_s, _, lon_s = cell_key.partition(",")
+        lat, lon = float(lat_s), float(lon_s)
+        res = world_resolution
+        for bbox, r in refinements:
+            if _point_in_bbox(lat, lon, bbox) and r > res:
+                res = r
+        h3_key = _to_h3(lat, lon, res)
+        members.setdefault(h3_key, []).append(cell_key)
+
+    out: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
+    for h3_key, fine_keys in members.items():
+        out[h3_key] = _combine_fine_cells(forecast, fine_keys)
+    for key in passthrough:
+        out[key] = forecast[key]
+    return out
+
+
+def _combine_fine_cells(
+    forecast: dict[str, dict[str, dict[str, dict[str, float]]]],
+    fine_keys: list[str],
+) -> dict[str, dict[str, dict[str, float]]]:
+    """Combine several fine cells into one H3 parent (shared by the single/multi aggregators)."""
+    agg: dict[str, dict[str, dict[str, float]]] = {}
+    for fine in fine_keys:
+        for horizon, by_thr in forecast[fine].items():
+            for m_star, vals in by_thr.items():
+                bucket = agg.setdefault(horizon, {}).setdefault(m_star, {
+                    "_p": [], "_lo": [], "_hi": [], "_rate": 0.0, "_baseline": []
+                })
+                bucket["_p"].append(float(vals.get("p", 0.0)))
+                bucket["_lo"].append(float(vals.get("lo", 0.0)))
+                bucket["_hi"].append(float(vals.get("hi", 0.0)))
+                bucket["_baseline"].append(float(vals.get("baseline", 0.0)))
+                bucket["_rate"] += float(vals.get("rate", 0.0))
+    return {
+        horizon: {
+            m_star: {
+                "p": round(_combine_at_least_one(b["_p"]), 6),
+                "lo": round(_combine_at_least_one(b["_lo"]), 6),
+                "hi": round(_combine_at_least_one(b["_hi"]), 6),
+                "rate": round(b["_rate"], 6),
+                "baseline": round(_combine_at_least_one(b["_baseline"]), 6),
+            }
+            for m_star, b in by_thr.items()
+        }
+        for horizon, by_thr in agg.items()
+    }
+
+
+def _point_in_bbox(lat: float, lon: float, bbox: BBox) -> bool:
+    """True if ``(lat, lon)`` falls inside ``bbox`` (inclusive edges)."""
+    return bbox.lat_min <= lat <= bbox.lat_max and bbox.lon_min <= lon <= bbox.lon_max
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Compaction (quantize + sparsify)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -205,32 +297,52 @@ def _max_prob_over_cell(by_horizon: dict[str, dict[str, dict[str, float]]]) -> f
 def compact_forecast(
     h3_forecast: dict[str, dict[str, dict[str, dict[str, float]]]],
     rate_floor_quantile: float,
+    *,
+    min_abs_prob: float = 0.0,
+    protected_keys: set[str] | None = None,
 ) -> tuple[dict[str, dict[str, dict[str, dict[str, float]]]], int]:
     """Quantize rates to uint16 codes and drop near-zero cells (sparsity), returning ``(compact, n_dropped)``.
 
     The probability triad stays as rounded floats (6 dp — small and human-auditable); only the
-    *rate* is quantized, since it spans many orders of magnitude and dominates the byte count. Cells
-    whose max probability is at/below the ``rate_floor_quantile`` of the field are dropped to the
-    implicit baseline (``rate_floor_quantile == 0`` keeps everything, the config default).
+    *rate* is quantized, since it spans many orders of magnitude and dominates the byte count.
+
+    A cell is dropped to the implicit baseline only if it is below BOTH thresholds and is not
+    protected:
+
+    * ``rate_floor_quantile`` — the empirical quantile of per-cell max-probability (the existing
+      relative floor; ``0`` keeps everything). For the WORLD field this is the dominant control (most
+      of the planet is quiet, so dropping the quietest fraction is what keeps the artifact small).
+    * ``min_abs_prob`` — an absolute floor (``grid.yaml: sparsity.min_world_prob``) so that even a
+      field where the quantile is loose never ships cells whose max ``P(>=1)`` is negligibly small.
+    * ``protected_keys`` — H3 keys a configured view needs (``sparsity.keep_view_cells``); never
+      dropped, so a country drill-down keeps coverage continuity even where the world floor would
+      have removed a quiet cell. **Blank never means safe** — the coverage mask, not deletion, marks
+      out-of-coverage.
     """
     if not h3_forecast:
         return {}, 0
 
-    # Threshold for sparsity: the empirical quantile of per-cell max-probability.
+    protected = protected_keys or set()
+
+    # Relative floor: the empirical quantile of per-cell max-probability.
     maxes = sorted(_max_prob_over_cell(v) for v in h3_forecast.values())
     q = min(max(float(rate_floor_quantile), 0.0), 1.0)
     if q <= 0.0 or len(maxes) == 0:
-        floor = -1.0  # keep everything
+        rel_floor = -1.0  # keep everything (relative test passes for all)
     else:
         idx = min(int(q * len(maxes)), len(maxes) - 1)
-        floor = maxes[idx]
+        rel_floor = maxes[idx]
+
+    abs_floor = max(float(min_abs_prob), 0.0)
 
     compact: dict[str, dict[str, dict[str, dict[str, float]]]] = {}
     dropped = 0
     for key, by_horizon in h3_forecast.items():
-        if _max_prob_over_cell(by_horizon) < floor:
-            dropped += 1
-            continue
+        if key not in protected:
+            cell_max = _max_prob_over_cell(by_horizon)
+            if cell_max < rel_floor and cell_max < abs_floor:
+                dropped += 1
+                continue
         compact[key] = {
             horizon: {
                 m_star: {
@@ -266,24 +378,132 @@ def serialize_artifact(
 
     Separated from :func:`write_artifact` so callers/tests can inspect or size the payload in memory.
     The returned dict embeds the rate legend so a loader can de-quantize without external state.
+
+    Global field: when the artifact carries country **views**, the fine cells are aggregated
+    *multi-resolution* — the world resolution everywhere, refined to each view's finer resolution
+    inside that view's bbox — and each view's H3 cell-key index (+ ``n_cells``) is filled from the
+    aggregated keys, so the SPA's country selector reads only the relevant cells of the one global
+    field. Sparsity drops the quietest world cells (relative + absolute floor) but never a cell a
+    view needs.
     """
     grid_cfg = grid_cfg or load("grid")
-    resolution = int(artifact.grid.get("resolution", grid_cfg.get("display", {}).get("h3_resolution_region", 5)))
-    rate_floor_q = float(grid_cfg.get("sparsity", {}).get("rate_floor_quantile", 0.0))
+    display = grid_cfg.get("display", {})
+    sparsity = grid_cfg.get("sparsity", {})
 
-    h3_forecast = aggregate_to_h3(artifact.forecast, resolution)
-    compact, n_dropped = compact_forecast(h3_forecast, rate_floor_q)
+    grid_block = artifact.grid or {}
+    world_res = int(grid_block.get("resolution_world", display.get("h3_resolution_world", 3)))
+    region_res = int(grid_block.get("resolution_region", display.get("h3_resolution_region", 5)))
+    base_res = int(grid_block.get("resolution", region_res))
+
+    rate_floor_q = float(sparsity.get("rate_floor_quantile", 0.0))
+    min_world_prob = float(sparsity.get("min_world_prob", 0.0))
+    keep_view_cells = bool(sparsity.get("keep_view_cells", True))
+
+    is_global = artifact.region.id == "global" or bool(artifact.views)
+
+    if is_global and artifact.views:
+        # Multi-resolution: refine each view's bbox to its own resolution (falls back to region_res).
+        refinements: list[tuple[BBox, int]] = [
+            (v.bbox, int(v.h3_resolution) if v.h3_resolution is not None else region_res)
+            for v in artifact.views
+        ]
+        h3_forecast = aggregate_to_h3_multi(artifact.forecast, world_res, refinements)
+        out_res = world_res
+    else:
+        h3_forecast = aggregate_to_h3(artifact.forecast, base_res)
+        out_res = base_res
+
+    # Compute each view's cell-key index from the aggregated (display) keys BEFORE sparsity so a view
+    # keeps its full footprint, then protect those keys from being dropped.
+    view_indices: dict[str, list[str]] = {}
+    protected: set[str] = set()
+    for v in artifact.views:
+        keys = _cells_in_bbox(h3_forecast, v.bbox)
+        view_indices[v.id] = keys
+        if keep_view_cells:
+            protected.update(keys)
+
+    compact, n_dropped = compact_forecast(
+        h3_forecast,
+        rate_floor_q,
+        min_abs_prob=min_world_prob,
+        protected_keys=protected,
+    )
+
+    # Fill the view entries' cell lists (intersected with what actually survived compaction).
+    surviving = set(compact)
+    filled_views: list[dict[str, Any]] = []
+    for v in artifact.views:
+        keys = [k for k in view_indices[v.id] if k in surviving]
+        entry = ViewIndexEntry(
+            id=v.id,
+            name_en=v.name_en,
+            name_es=v.name_es,
+            bbox=v.bbox,
+            m_max=v.m_max,
+            attribution=v.attribution,
+            h3_resolution=v.h3_resolution if v.h3_resolution is not None else region_res,
+            cells=keys,
+            n_cells=len(keys),
+        )
+        filled_views.append(entry.model_dump(mode="json"))
 
     payload = artifact.model_dump(mode="json")
     payload["forecast"] = compact
-    payload["grid"] = {"type": "h3", "resolution": resolution}
+    payload["grid"] = {
+        "type": "h3",
+        "resolution": out_res,
+        "resolution_world": world_res,
+        "resolution_region": region_res,
+    }
+    payload["views"] = filled_views
     payload["rate_legend"] = _rate_legend()
     payload["compaction"] = {
         "n_h3_cells": len(compact),
         "n_dropped_below_floor": n_dropped,
         "rate_floor_quantile": rate_floor_q,
+        "min_world_prob": min_world_prob,
+        "multi_resolution": bool(is_global and artifact.views),
+        "n_views": len(filled_views),
     }
     return payload
+
+
+def _cells_in_bbox(
+    h3_forecast: dict[str, dict[str, dict[str, dict[str, float]]]], bbox: BBox
+) -> list[str]:
+    """H3 (or ``"lat,lon"``) cell keys whose centre falls inside ``bbox`` — one view's cell index.
+
+    Used to build each view's index into the shared global forecast dict. H3 keys are resolved to
+    their centre via the lazy h3 import; ``"lat,lon"`` keys are parsed directly (no h3 needed).
+    """
+    out: list[str] = []
+    for key in h3_forecast:
+        lat, lon = _key_centroid(key)
+        if lat is None or lon is None:
+            continue
+        if _point_in_bbox(lat, lon, bbox):
+            out.append(key)
+    return out
+
+
+def _key_centroid(key: str) -> tuple[float | None, float | None]:
+    """Centroid ``(lat, lon)`` of a cell key — ``"lat,lon"`` parsed directly, or an H3 cell centre."""
+    if _looks_like_latlon_key(key):
+        a, _, b = key.partition(",")
+        return float(a), float(b)
+    try:
+        import h3
+    except ModuleNotFoundError:
+        return None, None
+    try:
+        if hasattr(h3, "cell_to_latlng"):
+            lat, lon = h3.cell_to_latlng(key)
+        else:
+            lat, lon = h3.h3_to_geo(key)  # type: ignore[attr-defined]
+        return float(lat), float(lon)
+    except Exception:
+        return None, None
 
 
 def write_artifact(
@@ -344,6 +564,11 @@ def update_index(
         "staleness_ok": artifact.staleness.ok,
         "generated": artifact.staleness.generated,
         "next_run": artifact.staleness.next_run,
+        # The country views available as slices of this (global) field — the SPA's region selector.
+        "views": [
+            {"id": v.id, "name_en": v.name_en, "n_cells": v.n_cells}
+            for v in artifact.views
+        ],
     }
 
     forecasts = [e for e in index.get("forecasts", []) if isinstance(e, dict)]
@@ -428,6 +653,8 @@ def load_artifact(path: Path | str) -> ForecastArtifact:
                     row["rate"] = 0.0
                 rehydrated[cell][horizon][m_star] = row
 
+    views = [ViewIndexEntry(**v) for v in data.get("views", []) if isinstance(v, dict)]
+
     return ForecastArtifact(
         schema_version=data.get("schema_version", ARTIFACT_SCHEMA_VERSION),
         product=data.get("product", "CAOS_SEISMIC"),
@@ -440,6 +667,7 @@ def load_artifact(path: Path | str) -> ForecastArtifact:
         forecast=rehydrated,
         calibration=CalibrationSummary(**data.get("calibration", {})),
         coverage_mask=list(data.get("coverage_mask", [])),
+        views=views,
         provenance=data.get("provenance", {}),
         staleness=Staleness(**data["staleness"]),
     )

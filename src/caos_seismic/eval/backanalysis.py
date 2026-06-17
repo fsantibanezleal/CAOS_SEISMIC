@@ -82,6 +82,12 @@ class BackAnalysisConfig:
         Issue time of day (UTC) — matches the live ``publish.yaml`` cadence.
     rng_seed:
         Seed for the per-issue bound simulator, so a back-analysis is byte-reproducible.
+    cell_deg:
+        Optional fit-grid cell size (degrees) override. When ``None`` the configured
+        ``grid.yaml: fit.cell_deg`` (0.1°) is used — correct for a spatially-bounded country view.
+        A large-bbox view (the whole-Earth GLOBAL window) MUST pass a coarse value (e.g. the
+        ``grid.yaml: fit.global_fit.world_cell_deg`` = 1.0°): the dense 0.1° grid over the whole
+        Earth is ~6.5M cells and is never materialized (grid.yaml). The global driver sets this.
     """
 
     region: Region
@@ -92,6 +98,7 @@ class BackAnalysisConfig:
     reliability_threshold: float = 5.0
     issue_hour_utc: int = 0
     rng_seed: int = 20260616
+    cell_deg: float | None = None
 
 
 @dataclass
@@ -101,6 +108,19 @@ class ScoredForecast:
     ``ok=False`` with a ``reason`` records a day that could not be scored (e.g. the model could not
     be conditioned because the lawful past was empty) — those days are *kept*, never dropped, so the
     published record cannot be selection-biased.
+
+    Two information-gain channels are recorded per row, both in **nats** (never bits):
+
+    * ``igpe_vs_null_nats`` — gain of the context-conditioned model over the smoothed-seismicity
+      null. This is the classic "does conditioning on history help at all" number.
+    * ``igpe_vs_etas_nats`` — gain of the context-conditioned model over a **catalog-only ETAS**
+      baseline. This is the THESIS headline: ETAS already reproduces Omori/Utsu clustering, so a
+      positive, significant gain here is *not* "I predicted aftershocks" — it is "the global context
+      (covariates, worldwide seismicity) makes the local short-term forecast better than the standard
+      self-exciting model can on the catalog alone". When no separate context channel has landed yet
+      (the enricher stack is feature-flagged in model-design §6.2), the primary *is* catalog-only
+      ETAS, so this gain is ~0 and ``context_channel_active`` is ``False`` — reported honestly, never
+      faked into a positive number.
     """
 
     issued_at: str
@@ -112,8 +132,12 @@ class ScoredForecast:
     n_test_quantile: float | None = None
     n_test_passed: bool | None = None
     igpe_vs_null_nats: float | None = None
+    n_forecast_etas: float | None = None  # region-total expected count from catalog-only ETAS
+    igpe_vs_etas_nats: float | None = None  # THESIS: context gain over catalog-only ETAS
+    context_channel_active: bool | None = None  # False while the primary IS catalog-only ETAS
     exceedance_prob: float | None = None  # region P(>=1 >= M*) (for the reliability pair at M_rel)
     observed_any: int | None = None       # 1 if >=1 observed >= M* (the reliability outcome)
+    brier_term: float | None = None       # (p - y)^2 for the reliability pair (for a pooled Brier)
     ok: bool = True
     reason: str = ""
 
@@ -199,6 +223,11 @@ def run_back_analysis(
     clock = ForecastClock(master)
     grid_cfg = load("grid")
     completeness_cfg = load("completeness")
+    # Fit-grid cell size: a spatially-bounded country view uses the configured fine 0.1° grid; a
+    # large-bbox view (whole-Earth GLOBAL) MUST coarsen (the dense global 0.1° grid is ~6.5M cells and
+    # is never materialized — grid.yaml). `config.cell_deg` overrides when set (the global driver does).
+    if config.cell_deg is not None:
+        grid_cfg = {**grid_cfg, "fit": {**grid_cfg.get("fit", {}), "cell_deg": float(config.cell_deg)}}
     cells = build_fit_cells(reg, grid_cfg)
 
     horizons = [int(h) for h in config.horizons_days]
@@ -236,6 +265,10 @@ def run_back_analysis(
             )
             primary = models["primary"]
             null = models["smoothed"]
+            # Catalog-only ETAS baseline for the THESIS context-gain channel. When the context
+            # channel is feature-flagged off, `primary` IS catalog-only ETAS, so the gain is ~0 and
+            # `context_active` is False — surfaced honestly, never faked positive.
+            etas_baseline, context_active = _catalog_only_etas_baseline(models)
         except Exception as exc:  # a day we could not score — RECORD it, never drop it
             n_failed_days += 1
             for horizon in horizons:
@@ -259,17 +292,28 @@ def run_back_analysis(
             target = target_slice(master, t_issue, float(horizon))
             target_mw = pd.to_numeric(target["mw"], errors="coerce")
             for m_star in thresholds:
-                lam_primary = np.maximum(
-                    _expected_counts(primary, reg, cells, horizon, m_star, t_issue),
-                    _expected_counts(null, reg, cells, horizon, m_star, t_issue),
-                )
                 lam_null = _expected_counts(null, reg, cells, horizon, m_star, t_issue)
+                # The primary's published rate is floored to the smoothed background (cold-start floor,
+                # daily.py §_forecast_cells). The catalog-only ETAS baseline must receive the *same*
+                # floor, otherwise the floor difference alone (not context) shows up as spurious gain.
+                lam_primary = np.maximum(
+                    _expected_counts(primary, reg, cells, horizon, m_star, t_issue), lam_null
+                )
+                if context_active:
+                    lam_etas = np.maximum(
+                        _expected_counts(etas_baseline, reg, cells, horizon, m_star, t_issue), lam_null
+                    )
+                else:
+                    # Context channel not landed: the baseline IS the primary, so the gain is exactly
+                    # 0 by construction (not a measured null). Use the identical floored rate.
+                    lam_etas = lam_primary
                 obs = target.loc[target_mw >= m_star - 1e-9]
                 n_obs = int(len(obs))
 
                 n_test = csep.n_test_poisson(float(lam_primary.sum()), n_obs)
                 omega = _bin_counts_to_cells(obs, cells)
-                igpe, _ = csep.information_gain_per_earthquake(lam_primary, lam_null, omega)
+                igpe_null, _ = csep.information_gain_per_earthquake(lam_primary, lam_null, omega)
+                igpe_etas, _ = csep.information_gain_per_earthquake(lam_primary, lam_etas, omega)
 
                 row = ScoredForecast(
                     issued_at=issued_at,
@@ -280,13 +324,17 @@ def run_back_analysis(
                     n_observed=n_obs,
                     n_test_quantile=n_test.quantile,
                     n_test_passed=bool(n_test.passed),
-                    igpe_vs_null_nats=round(float(igpe), 6),
+                    igpe_vs_null_nats=round(float(igpe_null), 6),
+                    n_forecast_etas=round(float(lam_etas.sum()), 6),
+                    igpe_vs_etas_nats=round(float(igpe_etas), 6),
+                    context_channel_active=bool(context_active),
                 )
                 # Region exceedance probability at the reliability threshold/horizon → a reliability pair.
                 if abs(m_star - m_rel) < 1e-9:
                     p_region = float(1.0 - np.exp(-np.clip(lam_primary, 0.0, None)).prod())
                     row.exceedance_prob = round(p_region, 6)
                     row.observed_any = int(n_obs > 0)
+                    row.brier_term = round((p_region - float(n_obs > 0)) ** 2, 6)
                     if int(horizon) == rel_horizon:
                         rel_pairs.append((p_region, int(n_obs > 0)))
                 scored.append(row)
@@ -349,11 +397,14 @@ def run_backanalysis(
 
 
 def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep) -> list[dict[str, Any]]:
-    """Per-horizon block: N-test pass rate, mean IGPE over null, totals, and failure counts.
+    """Per-horizon block: N-test pass rate, both IGPE channels, totals, Brier, and failure counts.
 
     Pools across thresholds and issue dates for the headline N-test pass rate / mean information
-    gain, and keeps a per-threshold breakdown so the web app can drill down. Failed (un-scorable)
-    rows are counted but excluded from the rate means — and surfaced via ``n_failed``.
+    gain, and keeps a per-threshold breakdown so the web app can drill down. Two IGPE channels are
+    reduced: ``mean_igpe_vs_null_nats`` (over the smoothed null) and the THESIS
+    ``mean_context_gain_vs_etas_nats`` (over catalog-only ETAS — how much the global context adds).
+    Failed (un-scorable) rows are counted but excluded from the rate means — and surfaced via
+    ``n_failed``.
     """
     out: list[dict[str, Any]] = []
     for horizon in horizons:
@@ -362,18 +413,26 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
         failed = [s for s in rows if not s.ok]
         n_pass = sum(1 for s in ok_rows if s.n_test_passed)
         igpes = [s.igpe_vs_null_nats for s in ok_rows if s.igpe_vs_null_nats is not None]
+        ctx_gains = [s.igpe_vs_etas_nats for s in ok_rows if s.igpe_vs_etas_nats is not None]
+        brier_terms = [s.brier_term for s in ok_rows if s.brier_term is not None]
+        context_active = any(bool(s.context_channel_active) for s in ok_rows)
         by_threshold: dict[str, Any] = {}
         for m_star in sorted({s.m_threshold for s in ok_rows}):
             sub = [s for s in ok_rows if abs(s.m_threshold - m_star) < 1e-9]
             sub_pass = sum(1 for s in sub if s.n_test_passed)
             sub_igpe = [s.igpe_vs_null_nats for s in sub if s.igpe_vs_null_nats is not None]
+            sub_ctx = [s.igpe_vs_etas_nats for s in sub if s.igpe_vs_etas_nats is not None]
             by_threshold[f"{m_star:.1f}"] = {
                 "n": len(sub),
                 "n_test_pass_rate": round(sub_pass / len(sub), 4) if sub else None,
                 "mean_igpe_vs_null_nats": round(float(np.mean(sub_igpe)), 6) if sub_igpe else None,
+                "mean_context_gain_vs_etas_nats": (
+                    round(float(np.mean(sub_ctx)), 6) if sub_ctx else None
+                ),
                 "n_observed_total": int(sum(s.n_observed for s in sub)),
                 "n_forecast_total": round(sum(s.n_forecast for s in sub), 4),
             }
+        mean_ctx = float(np.mean(ctx_gains)) if ctx_gains else None
         out.append(
             {
                 "horizon_days": int(horizon),
@@ -382,11 +441,19 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
                 "n_test_pass_rate": round(n_pass / len(ok_rows), 4) if ok_rows else None,
                 "mean_igpe_vs_null_nats": round(float(np.mean(igpes)), 6) if igpes else None,
                 "skill_over_null_positive": bool(igpes and float(np.mean(igpes)) > 0.0),
+                # THESIS headline: how much the global context adds over catalog-only ETAS (nats).
+                "mean_context_gain_vs_etas_nats": (round(mean_ctx, 6) if mean_ctx is not None else None),
+                "context_gain_positive": bool(mean_ctx is not None and mean_ctx > 0.0),
+                "context_channel_active": context_active,
+                "brier": round(float(np.mean(brier_terms)), 6) if brier_terms else None,
+                "n_reliability_pairs": len(brier_terms),
                 "by_threshold": by_threshold,
                 "note": (
                     "Poisson grid tests over-reject during aftershock sequences; pair with the "
                     "catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), "
-                    "not the consistency pass rate."
+                    "not the consistency pass rate. context_gain_vs_etas is the headline thesis "
+                    "measurement — when context_channel_active is false the context stack has not "
+                    "yet landed and the gain is ~0 by construction (not a measured null)."
                 ),
             }
         )
@@ -430,7 +497,10 @@ def _write_summary(result: BackAnalysisResult, config: BackAnalysisConfig, resul
             "Pseudo-prospective, leakage-free (forecast clock). Every region×horizon cell is "
             "reported including failures (no post-hoc selection). Consistency tests calibrate one "
             "model; skill is established only by the comparison test (information gain vs ETAS). "
-            "This complements official OEF systems; it is not a civil-protection alarm."
+            "The headline thesis measurement is the information gain of the context-conditioned "
+            "model over catalog-only ETAS (mean_context_gain_vs_etas_nats), in nats — it quantifies "
+            "how much global context adds beyond the self-exciting catalog model. This complements "
+            "official OEF systems; it is not a civil-protection alarm."
         ),
     }
     tmp = path.with_suffix(".json.tmp")
@@ -454,6 +524,33 @@ def _resolve_master_catalog(catalog: pd.DataFrame | None, region: Region) -> pd.
     from ..data.clean import load_clean_catalog
 
     return load_clean_catalog(region)
+
+
+def _catalog_only_etas_baseline(models: dict[str, Any]) -> tuple[Any, bool]:
+    """Pick the **catalog-only ETAS** baseline for the context-gain channel + a context-active flag.
+
+    The THESIS headline is the information gain of the *context-conditioned* model (``models[
+    "primary"]``) over a catalog-only ETAS that has seen no global context. Two honest cases:
+
+    * **Context channel active** — a distinct context-conditioned primary landed and a separate
+      catalog-only ETAS (``models["etas"]``) is available: the baseline is that ETAS, and the gain
+      measures exactly what the global context adds. Returns ``(etas, True)``.
+    * **Context channel not yet landed** — the enricher stack is feature-flagged off (model-design
+      §6.2), so the primary IS catalog-only ETAS (or its Reasenberg–Jones fallback). The baseline is
+      then the same estimator as the primary, the gain is ~0 by construction, and the flag is
+      ``False`` so the reduction labels the context contribution as "not yet measured" rather than
+      implying a real zero. Returns ``(primary, False)``.
+
+    Detecting "the primary is a distinct context model" without coupling to a concrete class: the
+    context channel is active only when ``models["etas"]`` exists AND is a *different object* from
+    ``models["primary"]`` (a separate context-conditioned model would replace the primary while
+    keeping the plain ETAS around as the baseline).
+    """
+    primary = models["primary"]
+    etas = models.get("etas")
+    if etas is not None and etas is not primary:
+        return etas, True
+    return primary, False
 
 
 def _bin_counts_to_cells(observed: pd.DataFrame, cells) -> np.ndarray:

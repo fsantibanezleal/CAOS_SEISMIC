@@ -1392,30 +1392,29 @@
           "CL",
           "JP",
           "US-CA",
-          "NZ",
-          "global"
+          "NZ"
         ],
         "by_horizon": {
           "1": {
-            "n_scored": 915,
-            "n_test_pass_rate": 0.94974,
-            "mean_igpe_vs_null_nats": 0.031421,
+            "n_scored": 732,
+            "n_test_pass_rate": 0.97815,
+            "mean_igpe_vs_null_nats": 0.018394,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.102743
+            "brier": 0.127549
           },
           "2": {
-            "n_scored": 915,
-            "n_test_pass_rate": 0.93006,
-            "mean_igpe_vs_null_nats": 0.029036,
+            "n_scored": 732,
+            "n_test_pass_rate": 0.972675,
+            "mean_igpe_vs_null_nats": 0.021149,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.142365
+            "brier": 0.177952
           },
           "7": {
-            "n_scored": 915,
-            "n_test_pass_rate": 0.86668,
-            "mean_igpe_vs_null_nats": 0.018062,
+            "n_scored": 732,
+            "n_test_pass_rate": 0.928975,
+            "mean_igpe_vs_null_nats": 0.016201,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.169791
+            "brier": 0.212239
           }
         }
       },
@@ -1453,16 +1452,16 @@
     "gap": {
       "1": {
         "n_test_pass_rate": {
-          "high": 0.94974,
+          "high": 0.97815,
           "low": 1.0,
-          "gap_high_minus_low": -0.05026,
-          "high_better_by": -0.05026
+          "gap_high_minus_low": -0.02185,
+          "high_better_by": -0.02185
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.031421,
+          "high": 0.018394,
           "low": 0.0,
-          "gap_high_minus_low": 0.031421,
-          "high_better_by": 0.031421
+          "gap_high_minus_low": 0.018394,
+          "high_better_by": 0.018394
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1471,24 +1470,24 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.102743,
+          "high": 0.127549,
           "low": 1e-06,
-          "gap_high_minus_low": 0.102742,
-          "high_better_by": -0.102742
+          "gap_high_minus_low": 0.127548,
+          "high_better_by": -0.127548
         }
       },
       "2": {
         "n_test_pass_rate": {
-          "high": 0.93006,
+          "high": 0.972675,
           "low": 1.0,
-          "gap_high_minus_low": -0.06994,
-          "high_better_by": -0.06994
+          "gap_high_minus_low": -0.027325,
+          "high_better_by": -0.027325
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.029036,
+          "high": 0.021149,
           "low": 0.0,
-          "gap_high_minus_low": 0.029036,
-          "high_better_by": 0.029036
+          "gap_high_minus_low": 0.021149,
+          "high_better_by": 0.021149
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1497,24 +1496,24 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.142365,
+          "high": 0.177952,
           "low": 4e-06,
-          "gap_high_minus_low": 0.142361,
-          "high_better_by": -0.142361
+          "gap_high_minus_low": 0.177948,
+          "high_better_by": -0.177948
         }
       },
       "7": {
         "n_test_pass_rate": {
-          "high": 0.86668,
+          "high": 0.928975,
           "low": 1.0,
-          "gap_high_minus_low": -0.13332,
-          "high_better_by": -0.13332
+          "gap_high_minus_low": -0.071025,
+          "high_better_by": -0.071025
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.018062,
+          "high": 0.016201,
           "low": 0.0,
-          "gap_high_minus_low": 0.018062,
-          "high_better_by": 0.018062
+          "gap_high_minus_low": 0.016201,
+          "high_better_by": 0.016201
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1523,10 +1522,10 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.169791,
+          "high": 0.212239,
           "low": 4.3e-05,
-          "gap_high_minus_low": 0.169748,
-          "high_better_by": -0.169748
+          "gap_high_minus_low": 0.212196,
+          "high_better_by": -0.212196
         }
       }
     }

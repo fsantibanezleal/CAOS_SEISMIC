@@ -234,6 +234,34 @@ and it redirects effort away from a dead end.
 
 ---
 
+## E10 — Geodetic covariate (GNSS strain) wired into the neural challenger (2026-06-17)
+
+**Motivation.** The product's thesis is "how much does global context contribute over catalog-only ETAS?"
+Until now the neural challenger's context channel was **seismicity-only**, so its gate was ≈ 0 by
+construction (E6). The cited evidence ([improvement-evidence](improvement-evidence.md) F2) says **GNSS
+strain rate adds GLOBAL skill** (GEAR1; Strader 2018) but **not regional** skill (Bayona 2022). Turn the
+channel ON with the real covariate and measure the prospective gain.
+
+**Change.**
+- Fixed the NGL MIDAS enricher (`data/enrichers/gnss.py`): HTTPS (the HTTP:80 endpoint times out) + a
+  correct fixed-column lat/lon parse (the old value-range heuristic mis-read the E/N velocity pair as
+  lon/lat → 0 stations). Now 20,168 stations; strain rate **high on active margins** (Japan 95,
+  California 154, Chile 64 nstrain/yr) and **low in stable interiors** (Central US 3.6, W Europe 5.6).
+- New `data/covariate_provider.py` (`make_strain_provider`): a `CovariateFieldProvider` that grids the
+  strain into the CNN's `CovariateField` (`gnss_strain_rate` channel) at a coarse 1° global pitch.
+- Retraining `context_tpp` with the channel **active** and gating its IGPE vs ETAS (the gate itself was
+  fixed in E6-followup to use the coarse grid + tiled-ETAS reference, so it is now tractable).
+
+**Result.** PENDING — the retrain + gate is running; the gate number lands in
+`results/neural_gate_strain.json`.
+
+**Decision/justification.** This is the experiment that actually **measures the context contribution**.
+The honest expectation, set by the evidence before seeing the number: a *small* global gain at most, and
+quite possibly ≈ 0 / negative — no neural-plus-covariate model has robustly beaten ETAS prospectively. The
+value is the honest measurement on our own data, not a hoped-for win.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base

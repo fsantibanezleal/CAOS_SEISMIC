@@ -234,6 +234,78 @@ and it redirects effort away from a dead end.
 
 ---
 
+## E10 — Geodetic covariate (GNSS strain) wired into the neural challenger (2026-06-17)
+
+**Motivation.** The product's thesis is "how much does global context contribute over catalog-only ETAS?"
+Until now the neural challenger's context channel was **seismicity-only**, so its gate was ≈ 0 by
+construction (E6). The cited evidence ([improvement-evidence](improvement-evidence.md) F2) says **GNSS
+strain rate adds GLOBAL skill** (GEAR1; Strader 2018) but **not regional** skill (Bayona 2022). Turn the
+channel ON with the real covariate and measure the prospective gain.
+
+**Change.**
+- Fixed the NGL MIDAS enricher (`data/enrichers/gnss.py`): HTTPS (the HTTP:80 endpoint times out) + a
+  correct fixed-column lat/lon parse (the old value-range heuristic mis-read the E/N velocity pair as
+  lon/lat → 0 stations). Now 20,168 stations; strain rate **high on active margins** (Japan 95,
+  California 154, Chile 64 nstrain/yr) and **low in stable interiors** (Central US 3.6, W Europe 5.6).
+- New `data/covariate_provider.py` (`make_strain_provider`): a `CovariateFieldProvider` that grids the
+  strain into the CNN's `CovariateField` (`gnss_strain_rate` channel) at a coarse 1° global pitch.
+- Retraining `context_tpp` with the channel **active** and gating its IGPE vs ETAS (the gate itself was
+  fixed in E6-followup to use the coarse grid + tiled-ETAS reference, so it is now tractable).
+
+**Result (2026-06-18) — INCONCLUSIVE on the geodetic question, due to a neural calibration bug.**
+The strain channel was filled and the neural retrained (NLL 243), but the gate is catastrophically
+negative: `igpe_vs_etas_nats = -485`. The cause is NOT the covariate — it is the neural's **absolute-rate
+calibration**: its `expected_counts` forecasts **122,148** events over the 30-day global holdout when
+**248** occurred (ETAS forecasts **173.7**, ≈ correct). So the neural over-predicts the rate ~**490×**, and
+the IGPE's rate-normalization term `(N̂_chal − N̂_etas)/N ≈ +492` dominates the score. Diagnosed: the
+softplus `mu_head` (background) is ~490× too high; the training compensator (Monte-Carlo
+`integrated_intensity`) does not constrain the forecast-grid integral to the true rate, so the NLL never
+penalises the over-prediction enough.
+
+**Update (shape-only gate added) — the geodetic context IS a positive contribution.** A SHAPE-only gate
+(renormalize the challenger field to the ETAS total before scoring, isolating the spatial/temporal skill
+from the absolute-rate bug) gives **`igpe_vs_etas_shape_nats = +0.0533`** (raw, calibration-dominated:
+−391.8; neural forecasts 98,932 vs 248 observed; ETAS 173.7). So **net of the calibration bug, the
+strain-conditioned neural places M≥5 events BETTER than ETAS by +0.053 nats/eq** — the same order as the
+global-vs-null IGPE (0.0835) and Japan (0.072). This is the thesis's positive signal: **the global
+geodetic context improves the forecast SHAPE**. Honest caveats: single-window measurement, the neural's
+absolute calibration is still broken (N-test fails) so it is not production-usable as-is, and the literature
+sets the prior at a *modest* global gain (consistent with +0.053).
+
+**Root cause of the calibration bug (diagnosed).** The training compensator (`_compensator_term`)
+approximates the background spatial integral `∫mu dA` by `mu.mean()` at **event locations** — that
+constrains mu only where events occur, leaving the `mu_head` free to inflate mu in event-free cells, so the
+forecast-grid integral in `expected_counts` over-estimates (~490×). The fix is a calibration that ties the
+absolute level to the training rate.
+
+**Calibration FIXED (2026-06-18) — the calibrated context-neural beats ETAS on the in-loop gate.** Added a
+fit-time `rate_cal` scalar (anchors the integrated 1-day forecast rate to the training rate ≥ Mc), computed
+on the **same multi-resolution grid the gate uses** (the first attempt over-corrected — 98,932 → 3.25 —
+because it was fit on a uniform 1° grid whose inferred per-cell area differs from the gate's grid). Result:
+
+| | neural | ETAS | observed |
+|---|---:|---:|---:|
+| forecast count | **218.9** | 173.7 | 248 |
+| N-test | **PASS** (q=0.028) | — | — |
+
+`igpe_vs_etas_nats = +0.0748` (calibrated, raw), `igpe_vs_etas_shape_nats = +0.026`, **`gate_passed = True`**.
+So the **GNSS-strain-conditioned neural TPP, once calibrated, beats ETAS by +0.075 nats/eq on the in-loop
+gate and passes the N-test** — a calibrated positive result, and the strain context is a real channel
+(`gnss_strain_rate` is active; the other geophysical channels remain honestly zero-filled).
+
+**Decision/justification — measured honesty (critical, it IS the product ethos).** This is a **single-window**
+in-loop gate, NOT the authoritative pseudo-prospective back-analysis. The literature is unambiguous that
+single-window / retrospective wins do **not** generalise — that is precisely why no NPP has beaten ETAS
+prospectively, and why the reference repos' wins evaporate under rigorous testing. So this is **not** a
+claim that "we beat ETAS"; it is an **encouraging, calibrated signal that the geodetic context helps, which
+now needs pseudo-prospective validation** (running the context-neural as the primary across many issue
+dates) before it can be called a real prospective result. The blocker for that validation is that the
+neural re-trains per fit (~74 min) — a cadenced/reconditioned neural-training path is the engineering
+prerequisite (a new pending experiment). The strain enricher + provider + the rate_cal calibration are
+correct and reusable.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base

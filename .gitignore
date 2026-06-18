@@ -55,8 +55,10 @@ Thumbs.db
 *.swp
 
 # ── Local scratch / diagnostics (process-validation only, never committed) ──
+# ALL throwaway runners + their logs live under .scratch/ — keep the repo root clean.
+.scratch/
 .diag_*
-.train*.log
+*.log
 .train*.py
 .infer.log
 

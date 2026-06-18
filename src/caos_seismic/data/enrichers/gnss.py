@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 DATASET = "gnss"
 
-NGL_BASE = "http://geodesy.unr.edu"
+NGL_BASE = "https://geodesy.unr.edu"  # HTTPS: the plain-HTTP (port 80) endpoint times out from many networks
 MIDAS_URL = f"{NGL_BASE}/velocities/midas.IGS14.txt"
 
 FEATURE_NAMES = (
@@ -123,18 +123,22 @@ def load_midas(path: Path) -> pd.DataFrame:
         if not line or line.startswith("#") or line.startswith("*"):
             continue
         parts = line.split()
-        if len(parts) < 10:
+        if len(parts) < 12:
             continue
+        # NGL MIDAS combined columns (fixed layout): station label t_first t_last dt n_epochs n_good
+        # n_pairs  VE VN VU  sve svn svu  ... and the reference position (LAT LON HEIGHT) is the LAST
+        # three columns. East/north secular velocities are columns 8/9 (m/yr). Using fixed positions is
+        # robust; the earlier value-range heuristic mis-read the small VE/VN pair as lon/lat -> garbage.
         try:
-            # NGL MIDAS column order: label, ref_epoch, first_epoch, last_epoch, dur, n, ...,
-            # then E,N,U velocities. Longitude/latitude appear later; resolve by value range below.
-            nums = [float(p) for p in parts[1:] if _is_float(p)]
-        except ValueError:
+            ve = float(parts[8])
+            vn = float(parts[9])
+            lat = float(parts[-3])
+            lon = float(parts[-2])
+        except (ValueError, IndexError):
             continue
-        lon, lat = _find_lonlat(nums)
-        if lon is None or lat is None:
+        if not (-90.0 <= lat <= 90.0):
             continue
-        ve, vn = _find_en_velocity(nums)
+        lon = ((lon + 180.0) % 360.0) - 180.0  # normalize to [-180, 180)
         rows.append(
             {
                 "station": parts[0],

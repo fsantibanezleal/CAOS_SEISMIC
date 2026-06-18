@@ -1,7 +1,7 @@
 {
   "product": "CAOS_SEISMIC",
   "kind": "backanalysis_global",
-  "generated_at": "2026-06-18T00:09:04Z",
+  "generated_at": "2026-06-18T00:34:16Z",
   "period": {
     "start": "2026-03-17T00:00:00Z",
     "end": "2026-05-16T00:00:00Z"
@@ -1392,29 +1392,30 @@
           "CL",
           "JP",
           "US-CA",
-          "NZ"
+          "NZ",
+          "global"
         ],
         "by_horizon": {
           "1": {
-            "n_scored": 732,
-            "n_test_pass_rate": 0.97815,
-            "mean_igpe_vs_null_nats": 0.018394,
+            "n_scored": 915,
+            "n_test_pass_rate": 0.94974,
+            "mean_igpe_vs_null_nats": 0.031421,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.127549
+            "brier": 0.102743
           },
           "2": {
-            "n_scored": 732,
-            "n_test_pass_rate": 0.972675,
-            "mean_igpe_vs_null_nats": 0.021149,
+            "n_scored": 915,
+            "n_test_pass_rate": 0.93006,
+            "mean_igpe_vs_null_nats": 0.029036,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.177952
+            "brier": 0.142365
           },
           "7": {
-            "n_scored": 732,
-            "n_test_pass_rate": 0.928975,
-            "mean_igpe_vs_null_nats": 0.016201,
+            "n_scored": 915,
+            "n_test_pass_rate": 0.86668,
+            "mean_igpe_vs_null_nats": 0.018062,
             "mean_context_gain_vs_etas_nats": 0.0,
-            "brier": 0.212239
+            "brier": 0.169791
           }
         }
       },
@@ -1452,16 +1453,16 @@
     "gap": {
       "1": {
         "n_test_pass_rate": {
-          "high": 0.97815,
+          "high": 0.94974,
           "low": 1.0,
-          "gap_high_minus_low": -0.02185,
-          "high_better_by": -0.02185
+          "gap_high_minus_low": -0.05026,
+          "high_better_by": -0.05026
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.018394,
+          "high": 0.031421,
           "low": 0.0,
-          "gap_high_minus_low": 0.018394,
-          "high_better_by": 0.018394
+          "gap_high_minus_low": 0.031421,
+          "high_better_by": 0.031421
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1470,24 +1471,24 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.127549,
+          "high": 0.102743,
           "low": 1e-06,
-          "gap_high_minus_low": 0.127548,
-          "high_better_by": -0.127548
+          "gap_high_minus_low": 0.102742,
+          "high_better_by": -0.102742
         }
       },
       "2": {
         "n_test_pass_rate": {
-          "high": 0.972675,
+          "high": 0.93006,
           "low": 1.0,
-          "gap_high_minus_low": -0.027325,
-          "high_better_by": -0.027325
+          "gap_high_minus_low": -0.06994,
+          "high_better_by": -0.06994
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.021149,
+          "high": 0.029036,
           "low": 0.0,
-          "gap_high_minus_low": 0.021149,
-          "high_better_by": 0.021149
+          "gap_high_minus_low": 0.029036,
+          "high_better_by": 0.029036
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1496,24 +1497,24 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.177952,
+          "high": 0.142365,
           "low": 4e-06,
-          "gap_high_minus_low": 0.177948,
-          "high_better_by": -0.177948
+          "gap_high_minus_low": 0.142361,
+          "high_better_by": -0.142361
         }
       },
       "7": {
         "n_test_pass_rate": {
-          "high": 0.928975,
+          "high": 0.86668,
           "low": 1.0,
-          "gap_high_minus_low": -0.071025,
-          "high_better_by": -0.071025
+          "gap_high_minus_low": -0.13332,
+          "high_better_by": -0.13332
         },
         "mean_igpe_vs_null_nats": {
-          "high": 0.016201,
+          "high": 0.018062,
           "low": 0.0,
-          "gap_high_minus_low": 0.016201,
-          "high_better_by": 0.016201
+          "gap_high_minus_low": 0.018062,
+          "high_better_by": 0.018062
         },
         "mean_context_gain_vs_etas_nats": {
           "high": 0.0,
@@ -1522,10 +1523,10 @@
           "high_better_by": 0.0
         },
         "brier": {
-          "high": 0.212239,
+          "high": 0.169791,
           "low": 4.3e-05,
-          "gap_high_minus_low": 0.212196,
-          "high_better_by": -0.212196
+          "gap_high_minus_low": 0.169748,
+          "high_better_by": -0.169748
         }
       }
     }

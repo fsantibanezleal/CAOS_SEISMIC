@@ -1167,6 +1167,25 @@ def train(
         # Gate: positive IGPE over ETAS AND a passing N-test. (The CI/T-test lives in back-analysis.)
         result["gate_passed"] = bool(igpe > 0.0 and n_test_chal.passed) if n_obs > 0 else None
 
+        # SHAPE-only gate. The trained NLL fixes the intensity SHAPE but not its absolute LEVEL: the
+        # forecast-grid integration in expected_counts is mis-normalized vs the (Monte-Carlo) training
+        # compensator, so `igpe_vs_etas_nats` is dominated by the rate-normalization term, not skill.
+        # Renormalize the challenger field to the ETAS total before scoring — this isolates the
+        # spatial/temporal CONTEXT contribution (does the field place events BETTER than ETAS, given the
+        # same count?) from the separate, still-open absolute-rate calibration problem. THIS is the number
+        # that answers "does the (geodetic) context improve the forecast shape".
+        chal_sum = float(lam_chal.sum())
+        if chal_sum > 0.0:
+            lam_chal_shape = lam_chal * (float(lam_etas.sum()) / chal_sum)
+            igpe_shape, _ = csep.information_gain_per_earthquake(lam_chal_shape, lam_etas, omega)
+            result["igpe_vs_etas_shape_nats"] = round(float(igpe_shape), 6)
+            result["gate_passed_shape"] = bool(igpe_shape > 0.0) if n_obs > 0 else None
+            result["calibration_note"] = (
+                "igpe_vs_etas_nats reflects the open absolute-rate calibration bug (the neural "
+                "over-/under-integrates); igpe_vs_etas_shape_nats renormalizes the field to the ETAS "
+                "total and measures the context's spatial/temporal contribution net of that bug."
+            )
+
     return result
 
 

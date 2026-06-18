@@ -278,10 +278,31 @@ constrains mu only where events occur, leaving the `mu_head` free to inflate mu 
 forecast-grid integral in `expected_counts` over-estimates (~490×). The fix is a calibration that ties the
 absolute level to the training rate.
 
-**Decision/justification.** Because the SHAPE gain is positive, the calibration is now worth fixing (it
-makes the context-conditioned neural usable, and the +0.053 could become a real prospective result). Next:
-(a) a `rate_cal` constant set at fit time so the integrated forecast rate matches the training rate, then
-(b) pseudo-prospective validation of the shape gain. The strain enricher + provider are correct + reusable.
+**Calibration FIXED (2026-06-18) — the calibrated context-neural beats ETAS on the in-loop gate.** Added a
+fit-time `rate_cal` scalar (anchors the integrated 1-day forecast rate to the training rate ≥ Mc), computed
+on the **same multi-resolution grid the gate uses** (the first attempt over-corrected — 98,932 → 3.25 —
+because it was fit on a uniform 1° grid whose inferred per-cell area differs from the gate's grid). Result:
+
+| | neural | ETAS | observed |
+|---|---:|---:|---:|
+| forecast count | **218.9** | 173.7 | 248 |
+| N-test | **PASS** (q=0.028) | — | — |
+
+`igpe_vs_etas_nats = +0.0748` (calibrated, raw), `igpe_vs_etas_shape_nats = +0.026`, **`gate_passed = True`**.
+So the **GNSS-strain-conditioned neural TPP, once calibrated, beats ETAS by +0.075 nats/eq on the in-loop
+gate and passes the N-test** — a calibrated positive result, and the strain context is a real channel
+(`gnss_strain_rate` is active; the other geophysical channels remain honestly zero-filled).
+
+**Decision/justification — measured honesty (critical, it IS the product ethos).** This is a **single-window**
+in-loop gate, NOT the authoritative pseudo-prospective back-analysis. The literature is unambiguous that
+single-window / retrospective wins do **not** generalise — that is precisely why no NPP has beaten ETAS
+prospectively, and why the reference repos' wins evaporate under rigorous testing. So this is **not** a
+claim that "we beat ETAS"; it is an **encouraging, calibrated signal that the geodetic context helps, which
+now needs pseudo-prospective validation** (running the context-neural as the primary across many issue
+dates) before it can be called a real prospective result. The blocker for that validation is that the
+neural re-trains per fit (~74 min) — a cadenced/reconditioned neural-training path is the engineering
+prerequisite (a new pending experiment). The strain enricher + provider + the rate_cal calibration are
+correct and reusable.
 
 ---
 

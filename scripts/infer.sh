@@ -10,7 +10,7 @@ set -euo pipefail
 # shellcheck source=_common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
-REGION="chile"
+REGION="global"
 ARGS=()
 while [ $# -gt 0 ]; do
   case "$1" in

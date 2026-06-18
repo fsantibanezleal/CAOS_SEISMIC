@@ -1172,7 +1172,10 @@
       "days_other": "{{count}} days",
       "mstar": "M ≥ {{m}}",
       "viewMap": "Probability field",
-      "viewSummary": "No-map summary"
+      "viewSummary": "No-map summary",
+      "style": "Style",
+      "styleHexbins": "Hexbins",
+      "styleHeatmap": "Heatmap"
     },
     "bound": {
       "lo": {

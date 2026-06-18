@@ -17,6 +17,7 @@ from __future__ import annotations
 from caos_seismic.eval import views
 from caos_seismic.eval.backanalysis import BackAnalysisResult
 from caos_seismic.eval.global_backanalysis import (
+    DEFAULT_SCORING_CELL_DEG,
     GlobalBackAnalysisResult,
     ViewResult,
     _grid_cell_deg_resolver,
@@ -200,14 +201,19 @@ def test_pre_registered_views_partition_from_config():
     assert views.GLOBAL_VIEW.region.id == "global"
 
 
-def test_global_view_coarsens_fit_grid_but_country_views_do_not():
+def test_backanalysis_scoring_grid_coarsens_views_and_global_further():
     resolve = _grid_cell_deg_resolver()
-    # A bounded country view keeps the fine grid (None ⇒ configured fit.cell_deg).
+    # A bounded country view scores on the coarse back-analysis grid (DEFAULT_SCORING_CELL_DEG = 0.5°):
+    # coarser than the 0.1° production fit grid on purpose (M≥5 is spatially sparse — coarser cells give
+    # better-powered CSEP tests AND a ~25× cheaper per-day inference), but still spatially bounded.
     cl = views.view_by_id("CL")
-    assert resolve(cl.region) is None
-    # The whole-Earth GLOBAL window MUST coarsen (never the dense ~6.5M-cell 0.1° world grid).
+    cl_deg = resolve(cl.region)
+    assert cl_deg == DEFAULT_SCORING_CELL_DEG
+    # The whole-Earth GLOBAL window coarsens FURTHER (never the dense ~6.5M-cell 0.1° world grid).
     deg = resolve(views.GLOBAL_VIEW.region)
-    assert deg is not None and deg >= 1.0
+    assert deg >= 1.0 and deg > cl_deg
+    # A finer scoring grid is honoured for bounded views (denser study, higher per-day cost).
+    assert _grid_cell_deg_resolver(scoring_cell_deg=0.25)(cl.region) == 0.25
 
 
 def test_global_result_str_reports_scored_view_count():

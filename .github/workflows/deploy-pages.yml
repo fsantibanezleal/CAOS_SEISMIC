@@ -9,6 +9,7 @@ on:
     branches: [main]
     paths:
       - "app/**"
+      - "results/**"
       - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
@@ -37,6 +38,15 @@ jobs:
           cache-dependency-path: app/package-lock.json
       - run: npm ci
       - run: npm run build
+      # Overlay the committed production data (git-as-data) onto the built site. The daily job commits
+      # the fresh artifacts under results/ (forecast-*.json.gz + index.json); copy them into dist/data so
+      # Pages serves the LATEST forecast. Vite already copied app/public/data/* (the dev/sample fallback);
+      # this overwrites index.json + adds the real artifacts so the production site is always current.
+      - run: |
+          mkdir -p dist/data
+          cp -f ../results/index.json dist/data/ 2>/dev/null || true
+          cp -f ../results/forecast-*.json.gz dist/data/ 2>/dev/null || true
+          cp -f ../results/backanalysis-global-*.json dist/data/ 2>/dev/null || true
       # SPA deep-link fallback: Pages serves 404.html for unknown paths; making it
       # a copy of index.html lets client-side routing handle /problem, /monitoring, etc.
       - run: cp dist/index.html dist/404.html

@@ -10,7 +10,7 @@
 
 [CmdletBinding()]
 param(
-  [string]$Region = 'chile',
+  [string]$Region = 'global',
   [Parameter(Mandatory = $true)][string]$Start,
   [Parameter(Mandatory = $true)][string]$End
 )

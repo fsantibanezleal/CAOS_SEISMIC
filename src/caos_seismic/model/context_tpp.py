@@ -1113,10 +1113,14 @@ def train(
 
     # In-loop gate: challenger vs ETAS information gain on the held-out tail.
     from ..eval import csep
-    from ..inference.daily import build_fit_cells
+    from ..inference.daily import build_fit_cells, build_global_fit_cells
     from ..config import load
 
-    cells = build_fit_cells(reg, load("grid"))
+    # Score on the GLOBAL coarse multi-resolution grid for the whole-Earth window: the dense 0.1° world
+    # grid is ~6.5M cells (never materialized). A spatially-bounded region uses its fine grid.
+    grid_cfg = load("grid")
+    is_global = reg.id == "global"
+    cells = build_global_fit_cells(reg, grid_cfg, past) if is_global else build_fit_cells(reg, grid_cfg)
     if not cells:
         result["gate_note"] = "empty fit grid; gate skipped"
         return result
@@ -1124,11 +1128,20 @@ def train(
     m_star = float(min(load("forecast").get("magnitude_thresholds", [5.0])))
     horizon = float(holdout_days)
 
-    # ETAS reference (the floor to beat); if it cannot fit, the challenger has no honest baseline.
+    # ETAS reference (the floor to beat). At global scope use the regime-TILED ETAS — a single monolithic
+    # ETAS over the worldwide 10^5-event catalog is O(N^2) AND physically wrong (subduction != stable
+    # interior); a bounded region uses one ETAS. If it cannot fit, the challenger has no honest baseline.
     etas_ok = False
     lam_etas = None
     try:
-        etas = ETASForecaster(mc=challenger._mc, b_value=challenger._b_prior)
+        if is_global:
+            from .tiled import TiledForecaster
+
+            etas = TiledForecaster(
+                m0=challenger._mc, mc=challenger._mc, b_value=challenger._b_prior
+            )
+        else:
+            etas = ETASForecaster(mc=challenger._mc, b_value=challenger._b_prior)
         etas.fit(past, reg, cutoff)
         lam_etas = np.asarray(etas.expected_counts(reg, cells, horizon, m_star, cutoff), float)
         etas_ok = True

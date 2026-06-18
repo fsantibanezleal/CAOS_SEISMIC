@@ -194,6 +194,37 @@ class TiledForecaster(BaseForecaster):
         }
         return self
 
+    def recondition(
+        self, catalog: pd.DataFrame, region: Region, t_issue: pd.Timestamp
+    ) -> "TiledForecaster":
+        """Advance every tile's conditioning to a new ``t_issue`` WITHOUT re-running any per-tile MLE.
+
+        The tile partition is a fixed grid and each tile's fitted ETAS parameters + smoothed background
+        are physical and stable over a refit cadence (configs/publish.yaml ``train_cadence.full_refit``).
+        Day-to-day only the per-tile *triggering parents* move, so this refreshes just those (via
+        :meth:`ETASForecaster.recondition`) and holds the null-carrying tiles (long-term Poisson rates).
+        That turns each intermediate back-analysis / daily clock step into an O(N) reconditioning instead
+        of the full per-tile L-BFGS-B sweep. The cell→tile routing is geometric and unchanged, so the
+        memoized route cache stays valid. Requires a prior :meth:`fit`.
+        """
+        if not self._tiles:
+            raise RuntimeError("recondition() requires a prior fit()")
+        validate_catalog(catalog)
+        self._region = region
+        self._t_issue = pd.Timestamp(t_issue)
+        df = catalog.loc[catalog["time"] < self._t_issue].copy()
+        lat = df["latitude"].to_numpy(dtype=float) if not df.empty else np.empty(0, dtype=float)
+        lon = df["longitude"].to_numpy(dtype=float) if not df.empty else np.empty(0, dtype=float)
+        for tf in self._tiles:
+            if not tf.is_etas:
+                continue  # null tiles are long-term Poisson rates — held across the cadence
+            halo_df = self._slice_to_halo(df, lat, lon, tf.tile) if not df.empty else df
+            try:
+                tf.model.recondition(halo_df, self._t_issue)
+            except Exception as exc:  # a tile that loses all parents keeps its last conditioning
+                logger.debug("tile %s recondition skipped (%s); keeping prior conditioning", tf.tile.id, exc)
+        return self
+
     def _slice_to_halo(
         self, df: pd.DataFrame, lat: np.ndarray, lon: np.ndarray, tile: Tile
     ) -> pd.DataFrame:

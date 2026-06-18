@@ -43,14 +43,14 @@ if (-not $Time) {
   $py = $null
   try { $py = Get-VenvPython } catch { }
   if ($py) {
-    $code = @'
-import sys
-sys.path.insert(0, "src")
-from caos_seismic.config import load
-print((load("publish").get("schedule", {}) or {}).get("time_local", "03:00"))
-'@
+    # SINGLE-LINE python -c (a multi-line here-string is mangled when PowerShell passes it to a native
+    # exe -> SyntaxError). Any failure falls through to the 03:00 default below.
+    $oneLine = "import sys; sys.path.insert(0,'src'); from caos_seismic.config import load; print((load('publish').get('schedule',{}) or {}).get('time_local','03:00'))"
     Push-Location $repo
-    try { $Time = (& $py '-c' $code).Trim() } finally { Pop-Location }
+    try {
+      $val = & $py '-c' $oneLine 2>$null | Select-Object -First 1
+      if ($val) { $Time = "$val".Trim() }
+    } catch { $Time = $null } finally { Pop-Location }
   }
   if (-not $Time) { $Time = '03:00' }
 }

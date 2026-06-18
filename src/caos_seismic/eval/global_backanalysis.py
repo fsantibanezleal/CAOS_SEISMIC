@@ -397,6 +397,11 @@ def _reduce_high_low_bias(view_results: list[ViewResult], horizons: list[int]) -
     for vr in view_results:
         if vr.result is None:
             continue
+        # The whole-Earth GLOBAL view is the aggregate field, NOT a regional class member — it must not
+        # pollute the high-vs-low COUNTRY comparison (it carries the highest IGPE by construction and
+        # would inflate the "high" pool). Its own skill is reported in per_view / context_gain instead.
+        if vr.view_id == "global":
+            continue
         if vr.seismicity_class in classes:
             classes[vr.seismicity_class].append(vr)
 

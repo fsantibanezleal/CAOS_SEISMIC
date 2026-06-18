@@ -1,7 +1,7 @@
 {
   "product": "CAOS_SEISMIC",
   "kind": "backanalysis_global",
-  "generated_at": "2026-06-18T00:04:19Z",
+  "generated_at": "2026-06-18T00:09:04Z",
   "period": {
     "start": "2026-03-17T00:00:00Z",
     "end": "2026-05-16T00:00:00Z"
@@ -25,7 +25,8 @@
     "NZ",
     "US-CE",
     "EU-W",
-    "AU-E"
+    "AU-E",
+    "global"
   ],
   "per_view": [
     {
@@ -1027,6 +1028,146 @@
         ]
       ],
       "summary_path": "backanalysis-AU-E-2026-03-17_2026-05-16.json"
+    },
+    {
+      "view_id": "global",
+      "name_en": "Global (worldwide seismicity)",
+      "seismicity_class": "high",
+      "plate_setting": "whole Earth (all tectonic settings)",
+      "fit_cell_deg": 1.0,
+      "n_issue_days": 61,
+      "n_scored_days": 61,
+      "n_failed_days": 0,
+      "per_horizon": [
+        {
+          "horizon_days": 1,
+          "n_scored": 183,
+          "n_failed": 0,
+          "n_test_pass_rate": 0.8361,
+          "mean_igpe_vs_null_nats": 0.08353,
+          "skill_over_null_positive": true,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "context_gain_positive": false,
+          "context_channel_active": false,
+          "brier": 0.003516,
+          "n_reliability_pairs": 61,
+          "by_threshold": {
+            "5.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.5902,
+              "mean_igpe_vs_null_nats": 0.215536,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 458,
+              "n_forecast_total": 175.781
+            },
+            "6.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.9836,
+              "mean_igpe_vs_null_nats": 0.034451,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 21,
+              "n_forecast_total": 23.7852
+            },
+            "7.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.9344,
+              "mean_igpe_vs_null_nats": 0.000603,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 4,
+              "n_forecast_total": 1.0958
+            }
+          },
+          "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+        },
+        {
+          "horizon_days": 2,
+          "n_scored": 183,
+          "n_failed": 0,
+          "n_test_pass_rate": 0.7596,
+          "mean_igpe_vs_null_nats": 0.060586,
+          "skill_over_null_positive": true,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "context_gain_positive": false,
+          "context_channel_active": false,
+          "brier": 1.5e-05,
+          "n_reliability_pairs": 61,
+          "by_threshold": {
+            "5.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.2951,
+              "mean_igpe_vs_null_nats": 0.167333,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 912,
+              "n_forecast_total": 345.7902
+            },
+            "6.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.9836,
+              "mean_igpe_vs_null_nats": 0.013452,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 42,
+              "n_forecast_total": 46.7893
+            },
+            "7.0": {
+              "n": 61,
+              "n_test_pass_rate": 1.0,
+              "mean_igpe_vs_null_nats": 0.000972,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 8,
+              "n_forecast_total": 2.1556
+            }
+          },
+          "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+        },
+        {
+          "horizon_days": 7,
+          "n_scored": 183,
+          "n_failed": 0,
+          "n_test_pass_rate": 0.6175,
+          "mean_igpe_vs_null_nats": 0.025507,
+          "skill_over_null_positive": true,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "context_gain_positive": false,
+          "context_channel_active": false,
+          "brier": 0.0,
+          "n_reliability_pairs": 61,
+          "by_threshold": {
+            "5.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.0,
+              "mean_igpe_vs_null_nats": 0.101208,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 3146,
+              "n_forecast_total": 1175.8306
+            },
+            "6.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.9508,
+              "mean_igpe_vs_null_nats": -0.025969,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 139,
+              "n_forecast_total": 159.1024
+            },
+            "7.0": {
+              "n": 61,
+              "n_test_pass_rate": 0.9016,
+              "mean_igpe_vs_null_nats": 0.001283,
+              "mean_context_gain_vs_etas_nats": 0.0,
+              "n_observed_total": 28,
+              "n_forecast_total": 7.3297
+            }
+          },
+          "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+        }
+      ],
+      "reliability": [
+        [
+          1.0,
+          1.0,
+          61
+        ]
+      ],
+      "summary_path": "backanalysis-global-2026-03-17_2026-05-16.json"
     }
   ],
   "context_gain": {
@@ -1194,23 +1335,46 @@
             "n_scored": 183
           }
         }
+      },
+      "global": {
+        "seismicity_class": "high",
+        "by_horizon": {
+          "1": {
+            "mean_context_gain_vs_etas_nats": 0.0,
+            "context_channel_active": false,
+            "context_gain_positive": false,
+            "n_scored": 183
+          },
+          "2": {
+            "mean_context_gain_vs_etas_nats": 0.0,
+            "context_channel_active": false,
+            "context_gain_positive": false,
+            "n_scored": 183
+          },
+          "7": {
+            "mean_context_gain_vs_etas_nats": 0.0,
+            "context_channel_active": false,
+            "context_gain_positive": false,
+            "n_scored": 183
+          }
+        }
       }
     },
     "pooled": {
       "1": {
         "mean_context_gain_vs_etas_nats": 0.0,
         "context_gain_positive": false,
-        "n_scored_weight": 1281
+        "n_scored_weight": 1464
       },
       "2": {
         "mean_context_gain_vs_etas_nats": 0.0,
         "context_gain_positive": false,
-        "n_scored_weight": 1281
+        "n_scored_weight": 1464
       },
       "7": {
         "mean_context_gain_vs_etas_nats": 0.0,
         "context_gain_positive": false,
-        "n_scored_weight": 1281
+        "n_scored_weight": 1464
       }
     }
   },

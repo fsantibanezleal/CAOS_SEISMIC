@@ -1172,7 +1172,10 @@
       "days_other": "{{count}} días",
       "mstar": "M ≥ {{m}}",
       "viewMap": "Campo de probabilidad",
-      "viewSummary": "Resumen sin mapa"
+      "viewSummary": "Resumen sin mapa",
+      "style": "Estilo",
+      "styleHexbins": "Hexágonos",
+      "styleHeatmap": "Mapa de calor"
     },
     "bound": {
       "lo": {

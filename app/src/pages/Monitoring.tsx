@@ -55,6 +55,7 @@ export default function Monitoring() {
   const [threshold, setThreshold] = useState<number>(5.0);
   const [bound, setBound] = useState<Bound>("expected"); // default lands on Expected
   const [noMap, setNoMap] = useState<boolean>(false);
+  const [mapMode, setMapMode] = useState<"hexbins" | "heatmap">("hexbins");
   const [picked, setPicked] = useState<CellSelection | null>(null);
   const [showCsep, setShowCsep] = useState<boolean>(false);
 
@@ -177,6 +178,8 @@ export default function Monitoring() {
             onBound={setBound}
             noMap={noMap}
             onToggleNoMap={setNoMap}
+            mapMode={mapMode}
+            onMapMode={setMapMode}
           />
 
           {/* Persistent pessimistic-bound caption (only relevant on the P90 view, but always
@@ -201,6 +204,7 @@ export default function Monitoring() {
                   center={center}
                   zoom={4}
                   degraded={degraded}
+                  mode={mapMode}
                   onPick={setPicked}
                 />
               )}

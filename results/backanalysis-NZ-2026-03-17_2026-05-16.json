@@ -1,0 +1,160 @@
+{
+  "product": "CAOS_SEISMIC",
+  "kind": "backanalysis",
+  "generated_at": "2026-06-18T00:03:47Z",
+  "region": {
+    "id": "NZ",
+    "name_en": "New Zealand"
+  },
+  "period": {
+    "start": "2026-03-17T00:00:00Z",
+    "end": "2026-05-16T00:00:00Z"
+  },
+  "issue_cadence": "daily",
+  "n_issue_days": 61,
+  "n_scored_days": 61,
+  "n_failed_days": 0,
+  "horizons_days": [
+    1,
+    2,
+    7
+  ],
+  "magnitude_thresholds": [
+    5.0,
+    6.0,
+    7.0
+  ],
+  "reliability_threshold": 5.0,
+  "per_horizon": [
+    {
+      "horizon_days": 1,
+      "n_scored": 183,
+      "n_failed": 0,
+      "n_test_pass_rate": 0.9781,
+      "mean_igpe_vs_null_nats": -4.1e-05,
+      "skill_over_null_positive": false,
+      "mean_context_gain_vs_etas_nats": 0.0,
+      "context_gain_positive": false,
+      "context_channel_active": false,
+      "brier": 0.079141,
+      "n_reliability_pairs": 61,
+      "by_threshold": {
+        "5.0": {
+          "n": 61,
+          "n_test_pass_rate": 0.9344,
+          "mean_igpe_vs_null_nats": -0.000124,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 5,
+          "n_forecast_total": 1.2654
+        },
+        "6.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 0.2023
+        },
+        "7.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 0.0119
+        }
+      },
+      "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+    },
+    {
+      "horizon_days": 2,
+      "n_scored": 183,
+      "n_failed": 0,
+      "n_test_pass_rate": 1.0,
+      "mean_igpe_vs_null_nats": -0.000171,
+      "skill_over_null_positive": false,
+      "mean_context_gain_vs_etas_nats": 0.0,
+      "context_gain_positive": false,
+      "context_channel_active": false,
+      "brier": 0.152602,
+      "n_reliability_pairs": 61,
+      "by_threshold": {
+        "5.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": -0.000514,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 10,
+          "n_forecast_total": 2.4893
+        },
+        "6.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 0.3979
+        },
+        "7.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 0.0234
+        }
+      },
+      "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+    },
+    {
+      "horizon_days": 7,
+      "n_scored": 183,
+      "n_failed": 0,
+      "n_test_pass_rate": 0.9399,
+      "mean_igpe_vs_null_nats": -0.001122,
+      "skill_over_null_positive": false,
+      "mean_context_gain_vs_etas_nats": 0.0,
+      "context_gain_positive": false,
+      "context_channel_active": false,
+      "brier": 0.308067,
+      "n_reliability_pairs": 61,
+      "by_threshold": {
+        "5.0": {
+          "n": 61,
+          "n_test_pass_rate": 0.8197,
+          "mean_igpe_vs_null_nats": -0.003366,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 35,
+          "n_forecast_total": 8.4342
+        },
+        "6.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 1.3483
+        },
+        "7.0": {
+          "n": 61,
+          "n_test_pass_rate": 1.0,
+          "mean_igpe_vs_null_nats": 0.0,
+          "mean_context_gain_vs_etas_nats": 0.0,
+          "n_observed_total": 0,
+          "n_forecast_total": 0.0793
+        }
+      },
+      "note": "Poisson grid tests over-reject during aftershock sequences; pair with the catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline thesis measurement — when context_channel_active is false the context stack has not yet landed and the gain is ~0 by construction (not a measured null)."
+    }
+  ],
+  "reliability": [
+    [
+      0.129055,
+      0.393443,
+      61
+    ]
+  ],
+  "pycsep_used": true,
+  "config_hash": "cd33a630c10d",
+  "framing": "Pseudo-prospective, leakage-free (forecast clock). Every region×horizon cell is reported including failures (no post-hoc selection). Consistency tests calibrate one model; skill is established only by the comparison test (information gain vs ETAS). The headline thesis measurement is the information gain of the context-conditioned model over catalog-only ETAS (mean_context_gain_vs_etas_nats), in nats — it quantifies how much global context adds beyond the self-exciting catalog model. This complements official OEF systems; it is not a civil-protection alarm."
+}

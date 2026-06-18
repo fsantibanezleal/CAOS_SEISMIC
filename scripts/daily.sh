@@ -27,7 +27,7 @@ set -euo pipefail
 # shellcheck source=_common.sh
 . "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
-REGION="chile"
+REGION="global"
 NO_PUBLISH=0
 CATCH_UP=1
 while [ $# -gt 0 ]; do

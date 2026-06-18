@@ -32,6 +32,10 @@ export interface MonitoringControlsProps {
   /** Whether the no-map summary (SVG) is shown instead of the WebGL field. */
   noMap: boolean;
   onToggleNoMap: (v: boolean) => void;
+
+  /** Field rendering style (only meaningful when the map view is shown). Visual only. */
+  mapMode: "hexbins" | "heatmap";
+  onMapMode: (m: "hexbins" | "heatmap") => void;
 }
 
 const BOUNDS: Bound[] = ["lo", "expected", "hi"];
@@ -118,6 +122,32 @@ export function MonitoringControls(props: MonitoringControlsProps) {
           </button>
         </div>
       </fieldset>
+
+      {/* Field STYLE: discrete hexbins vs continuous heatmap (visual only; same data). Only relevant
+          while the WebGL map is shown. */}
+      {!props.noMap ? (
+        <fieldset className="ctl-group">
+          <legend>{t("monitoring.ctl.style")}</legend>
+          <div className="segmented" role="group" aria-label={t("monitoring.ctl.style")}>
+            <button
+              type="button"
+              className={props.mapMode === "hexbins" ? "seg active" : "seg"}
+              aria-pressed={props.mapMode === "hexbins"}
+              onClick={() => props.onMapMode("hexbins")}
+            >
+              {t("monitoring.ctl.styleHexbins")}
+            </button>
+            <button
+              type="button"
+              className={props.mapMode === "heatmap" ? "seg active" : "seg"}
+              aria-pressed={props.mapMode === "heatmap"}
+              onClick={() => props.onMapMode("heatmap")}
+            >
+              {t("monitoring.ctl.styleHeatmap")}
+            </button>
+          </div>
+        </fieldset>
+      ) : null}
     </div>
   );
 }

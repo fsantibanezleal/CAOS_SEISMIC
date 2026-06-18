@@ -24,7 +24,7 @@
 
 [CmdletBinding()]
 param(
-  [string]$Region = 'chile',
+  [string]$Region = 'global',
   [switch]$NoPublish,
   [switch]$NoCatchUp
 )

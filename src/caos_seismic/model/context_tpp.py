@@ -604,7 +604,7 @@ class ContextTPPForecaster(BaseForecaster):
         # uniform scale preserves the conditional SHAPE the NLL fitted.
         self._rate_cal = 1.0
         try:
-            self._rate_cal = self._fit_rate_calibration(region, train_days)
+            self._rate_cal = self._fit_rate_calibration(region, train_days, complete)
         except Exception:  # pragma: no cover - calibration is best-effort; falls back to 1.0
             self._rate_cal = 1.0
 
@@ -789,21 +789,26 @@ class ContextTPPForecaster(BaseForecaster):
         trig_mass = torch.sum(kappa * (g_cdf / gz))
         return bg_mass + trig_mass
 
-    def _fit_rate_calibration(self, region: Region, train_days: float) -> float:
+    def _fit_rate_calibration(
+        self, region: Region, train_days: float, conditioning_catalog: pd.DataFrame
+    ) -> float:
         """Single multiplicative constant that ties the integrated forecast rate to the training rate.
 
-        Forecast a one-day window at ``Mc`` with the RAW (``rate_cal = 1``) integration over a coarse grid,
-        sum it, and return ``(training events ≥ Mc per day) / (raw daily forecast)``. This anchors the
-        absolute level the NLL left unconstrained while preserving the conditional shape; it uses only
-        training data (leakage-free). Returns ``1.0`` if the grid or the raw forecast is degenerate.
+        Forecast a one-day window at ``Mc`` with the RAW (``rate_cal = 1``) integration over the SAME grid
+        the forecast / gate uses (multi-resolution ``build_global_fit_cells`` globally; the fine grid for a
+        bounded region — so the inferred per-cell area is identical and the constant transfers), sum it,
+        and return ``(training events ≥ Mc per day) / (raw daily forecast)``. Anchors the absolute level
+        the NLL left unconstrained while preserving the conditional shape; uses only training data
+        (leakage-free). Returns ``1.0`` if the grid or the raw forecast is degenerate.
         """
         from ..config import load
-        from ..inference.daily import build_fit_cells
+        from ..inference.daily import build_fit_cells, build_global_fit_cells
 
         grid_cfg = load("grid")
-        deg = 1.0 if region.id == "global" else float(grid_cfg.get("fit", {}).get("cell_deg", 0.1))
-        cal_grid = {**grid_cfg, "fit": {**grid_cfg.get("fit", {}), "cell_deg": deg}}
-        cells = build_fit_cells(region, cal_grid)
+        if region.id == "global":
+            cells = build_global_fit_cells(region, grid_cfg, conditioning_catalog)
+        else:
+            cells = build_fit_cells(region, grid_cfg)
         if not cells:
             return 1.0
         self._rate_cal = 1.0  # the call below must be RAW

@@ -1,0 +1,202 @@
+{
+  "product": "CAOS_SEISMIC",
+  "kind": "model_benchmark",
+  "horizon_days": 30.0,
+  "m_threshold": 5.0,
+  "method": "single-window leakage-free IGPE vs the Poisson null (30-day holdout tail per view)",
+  "framing": "Per-model information gain over the stationary Poisson null on a leakage-free 30-day holdout. A snapshot complement to the full pseudo-prospective back-analysis; IGPE in nats.",
+  "per_view": [
+    {
+      "view": "global",
+      "seismicity_class": "high",
+      "n_cells": 119717,
+      "n_observed": 248,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": 3.71202,
+          "n_forecast": 64.1877,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": 2.79525,
+          "n_forecast": 25.8221,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": -0.02524,
+          "n_forecast": 13.2242,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 1.1722,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0
+        }
+      }
+    },
+    {
+      "view": "CL",
+      "seismicity_class": "high",
+      "n_cells": 1560,
+      "n_observed": 11,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": 0.03559,
+          "n_forecast": 2.5167,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0001
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": -0.06053,
+          "n_forecast": 3.0354,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0003
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": -0.18212,
+          "n_forecast": 4.3729,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0054
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 2.3695,
+          "n_test_passed": false,
+          "n_test_quantile": 0.0
+        }
+      }
+    },
+    {
+      "view": "JP",
+      "seismicity_class": "high",
+      "n_cells": 2288,
+      "n_observed": 5,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": -0.08132,
+          "n_forecast": 5.3117,
+          "n_test_passed": true,
+          "n_test_quantile": 0.5614
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": -0.01328,
+          "n_forecast": 6.4776,
+          "n_test_passed": true,
+          "n_test_quantile": 0.3723
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": -0.43825,
+          "n_forecast": 9.5748,
+          "n_test_passed": true,
+          "n_test_quantile": 0.085
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 4.9051,
+          "n_test_passed": true,
+          "n_test_quantile": 0.5427
+        }
+      }
+    },
+    {
+      "view": "US-CA",
+      "seismicity_class": "high",
+      "n_cells": 440,
+      "n_observed": 1,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.1181,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1114
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.1181,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1114
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.1181,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1114
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.1181,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1114
+        }
+      }
+    },
+    {
+      "view": "NZ",
+      "seismicity_class": "high",
+      "n_cells": 812,
+      "n_observed": 2,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": -0.00726,
+          "n_forecast": 0.5747,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1136
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": -0.01212,
+          "n_forecast": 0.5844,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1168
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": -0.03764,
+          "n_forecast": 0.6354,
+          "n_test_passed": true,
+          "n_test_quantile": 0.1337
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.5601,
+          "n_test_passed": true,
+          "n_test_quantile": 0.109
+        }
+      }
+    },
+    {
+      "view": "EU-W",
+      "seismicity_class": "low",
+      "n_cells": 840,
+      "n_observed": 0,
+      "models": {
+        "etas": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.05,
+          "n_test_passed": true,
+          "n_test_quantile": 0.9513
+        },
+        "ensemble": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.0533,
+          "n_test_passed": true,
+          "n_test_quantile": 0.9481
+        },
+        "reasenberg_jones": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.0615,
+          "n_test_passed": true,
+          "n_test_quantile": 0.9403
+        },
+        "smoothed_null": {
+          "igpe_vs_null_nats": 0.0,
+          "n_forecast": 0.05,
+          "n_test_passed": true,
+          "n_test_quantile": 0.9513
+        }
+      }
+    }
+  ]
+}

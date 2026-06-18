@@ -3,6 +3,7 @@ import { Trans, useTranslation } from "react-i18next";
 
 import { Callout } from "@/components/content/Callout";
 import { Cite, ReferenceList } from "@/components/content/Cite";
+import { GlobalResults } from "@/components/backanalysis/GlobalResults";
 import { ExpectedVsObserved } from "@/components/charts/ExpectedVsObserved";
 import { ReliabilityDiagram } from "@/components/charts/ReliabilityDiagram";
 import {
@@ -83,6 +84,10 @@ export default function BackAnalysis() {
       <Callout tone="honest">
         <Trans i18nKey="ba.honesty" components={{ b: <strong /> }} />
       </Callout>
+
+      {/* REAL global multi-country results + the multi-model benchmark (the regional CSEP detail below
+          is illustrative sample data until the per-region pyCSEP battery lands). */}
+      <GlobalResults lang={lang} />
 
       {/* Ridgecrest worked example */}
       <Callout tone="note" title={t("ba.ridgecrest.title")}>

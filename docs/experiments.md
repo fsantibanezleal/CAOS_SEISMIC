@@ -202,6 +202,38 @@ back-analysis, never by assertion.
 
 ---
 
+## E9 — Multi-model benchmark: the naive ensemble underperforms ETAS (2026-06-17)
+
+**Motivation.** Score every model (ETAS, the ensemble, Reasenberg–Jones, the null) head-to-head — the
+"benchmark all models" deliverable — and test whether the E8 ensemble actually beats ETAS.
+
+**Change.** A single-window, leakage-free **IGPE-vs-the-Poisson-null** benchmark over 8 views (countries +
+global): fit the model family at a 30-day-back cutoff, score each model on the held-out tail
+(`results/benchmark.json`).
+
+**Result (IGPE vs null, nats; the held-out window).**
+
+| View | n_obs | ETAS | ensemble | R-J |
+|---|---:|---:|---:|---:|
+| global | 248 | **+3.712** | +2.795 | −0.025 |
+| CL | 11 | **+0.036** | −0.061 | −0.182 |
+| JP | 5 | −0.081 | −0.013 | −0.438 |
+| NZ | 2 | −0.007 | −0.012 | −0.038 |
+
+(Absolute values are window-specific — a 30-day-horizon single window, distinct from the daily-averaged
+back-analysis E5; the RELATIVE ranking is the finding.) ETAS beats the null where there is signal; the
+**equal-weight ensemble (ETAS + null + R-J) is consistently WORSE than ETAS alone** (global +2.80 < +3.71;
+CL −0.06 < +0.036); R-J ≈ the null or worse.
+
+**Decision/justification.** The naive ensemble is **not** an improvement — averaging in the null and the
+weak R-J **dilutes** the ETAS triggering signal that *is* the skill. This exactly confirms the cited
+evidence ([improvement-evidence](improvement-evidence.md) F1: ensembles help only when **score-weighted**
+with **strong** members). So we do **not** ship the equal-weight ensemble; the real lever is score-weighted
+stacking of ETAS *variants* (next). Recording the negative result is the point — it is honest evidence,
+and it redirects effort away from a dead end.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base
@@ -210,9 +242,10 @@ ETAS-family ensembles are the only proven prospective lever (and only by a *smal
 NO neural / foundation TPP beats ETAS prospectively; geodetic covariates help globally but can *hurt*
 regionally. Each item gets its own E-entry with measured results when executed.
 
-1. **Ensemble** (highest expected gain) — **IMPLEMENTED (E8)**; next step is to SCORE it in the
-   back-analysis (a component alongside ETAS + null) to get a prospective IGPE, then add score-weighted
-   stacking (weights from the rolling log-score) and EEPAS/STEP components.
+1. **Ensemble** — **IMPLEMENTED (E8) and BENCHMARKED (E9): the naive equal-weight version UNDERPERFORMS
+   ETAS** (it dilutes the triggering signal). The remaining lever is **score-weighted stacking of ETAS
+   *variants*** (weights from the rolling prospective log-score; drop the null/R-J as equal members),
+   which the evidence (F1) says yields a *small* gain — to be implemented + benchmarked next.
 2. **GCMT data-driven Mw conversion** — replace the Scordilis literature default with fitted station-pair
    regressions; expected to correct the inflated b and sharpen the magnitude tail (→ closes E1's caveat).
 3. **Anisotropic / finite-fault aftershock kernel** — replace the isotropic spatial kernel for large

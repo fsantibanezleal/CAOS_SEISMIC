@@ -178,8 +178,10 @@ export interface GlobalBackAnalysis {
 // Loader (static-first, read-only — same contract as the forecast client)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Default location of the committed global back-analysis summary under the static data host. */
-const DEFAULT_FILE = 'backanalysis-global-sample.json';
+/** Default location of the committed global back-analysis summary under the static data host. Points at
+ * the REAL multi-country pseudo-prospective result (`eval/global_backanalysis`), refreshed by the
+ * publish job; the `-sample.json` placeholder is retained only as an offline dev fallback. */
+const DEFAULT_FILE = 'backanalysis-global.json';
 
 export interface LoadGlobalBackAnalysisOptions {
   /** Base URL; defaults to the Vite deploy base. */

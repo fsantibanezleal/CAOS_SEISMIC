@@ -1263,7 +1263,8 @@ kbd {
 .csep-table,
 .cmp-table,
 .consistency-table,
-.summary-table {
+.summary-table,
+.bench-table {
   border-collapse: collapse;
   width: 100%;
 }
@@ -1274,10 +1275,63 @@ kbd {
 .consistency-table th,
 .consistency-table td,
 .summary-table th,
-.summary-table td {
+.summary-table td,
+.bench-table th,
+.bench-table td {
   padding: 0.35rem 0.55rem;
   text-align: left;
   border-bottom: 1px solid var(--color-border);
+}
+
+/* Real global results + benchmark (BackAnalysis page) */
+.global-results {
+  margin: 1.5rem 0 2.5rem;
+}
+.result-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem;
+  margin: 1rem 0 1.5rem;
+}
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  background: var(--color-surface, rgba(127, 127, 127, 0.04));
+}
+.result-card .result-value {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-accent, #4aa3df);
+}
+.result-card .result-value.muted {
+  color: var(--color-text-muted, #888);
+}
+.result-card .result-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.result-card .result-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #888);
+}
+.bench-table td.pos,
+.bench-table .pos {
+  color: #2e9e5b;
+}
+.bench-table td.neg,
+.bench-table .neg {
+  color: #c2563b;
+}
+.bench-table td.best {
+  font-weight: 700;
+}
+.bench-table tr.row-global {
+  border-top: 2px solid var(--color-border);
+  font-weight: 600;
 }
 .mono {
   font-family: var(--font-mono);

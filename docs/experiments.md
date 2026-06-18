@@ -262,14 +262,26 @@ softplus `mu_head` (background) is ~490× too high; the training compensator (Mo
 `integrated_intensity`) does not constrain the forecast-grid integral to the true rate, so the NLL never
 penalises the over-prediction enough.
 
-**Decision/justification.** Two honest conclusions: (1) the **geodetic-context question is unanswered** —
-the neural's broken forecast normalization masks any shape skill the strain channel might add; (2) this is
-strong, on-our-own-data confirmation of the framing and the cited evidence: **the neural challenger is R&D,
-not production-ready; ETAS is the calibrated reference**. Next steps to actually answer the geodetic
-question: (a) fix the neural absolute-rate calibration (align the training compensator with the
-forecast-grid integral, or add a rate-matching penalty), and/or (b) a shape-only gate that renormalises the
-neural field to the reference total before computing IGPE — isolating the context's spatial contribution
-from the calibration. The strain enricher + provider (E10) are correct and reusable for both.
+**Update (shape-only gate added) — the geodetic context IS a positive contribution.** A SHAPE-only gate
+(renormalize the challenger field to the ETAS total before scoring, isolating the spatial/temporal skill
+from the absolute-rate bug) gives **`igpe_vs_etas_shape_nats = +0.0533`** (raw, calibration-dominated:
+−391.8; neural forecasts 98,932 vs 248 observed; ETAS 173.7). So **net of the calibration bug, the
+strain-conditioned neural places M≥5 events BETTER than ETAS by +0.053 nats/eq** — the same order as the
+global-vs-null IGPE (0.0835) and Japan (0.072). This is the thesis's positive signal: **the global
+geodetic context improves the forecast SHAPE**. Honest caveats: single-window measurement, the neural's
+absolute calibration is still broken (N-test fails) so it is not production-usable as-is, and the literature
+sets the prior at a *modest* global gain (consistent with +0.053).
+
+**Root cause of the calibration bug (diagnosed).** The training compensator (`_compensator_term`)
+approximates the background spatial integral `∫mu dA` by `mu.mean()` at **event locations** — that
+constrains mu only where events occur, leaving the `mu_head` free to inflate mu in event-free cells, so the
+forecast-grid integral in `expected_counts` over-estimates (~490×). The fix is a calibration that ties the
+absolute level to the training rate.
+
+**Decision/justification.** Because the SHAPE gain is positive, the calibration is now worth fixing (it
+makes the context-conditioned neural usable, and the +0.053 could become a real prospective result). Next:
+(a) a `rate_cal` constant set at fit time so the integrated forecast rate matches the training rate, then
+(b) pseudo-prospective validation of the shape gain. The strain enricher + provider are correct + reusable.
 
 ---
 

@@ -1,47 +1,20 @@
 {
   "code_git_sha": null,
-  "config_hash": "e5e52f559584",
-  "created_at": "2026-06-17T11:47:03.412686+00:00",
+  "config_hash": "bbd2082eb91f",
+  "created_at": "2026-06-18T07:00:02.013547+00:00",
   "inputs": {
     "bbox": {
-      "lat_max": 90.0,
-      "lat_min": -90.0,
+      "lat_max": 85.0,
+      "lat_min": -85.0,
       "lon_max": 180.0,
       "lon_min": -180.0
     },
-    "endtime": "2026-06-17T11:47:03",
+    "endtime": "2026-06-18T07:00:02",
     "fdsn_base": "https://earthquake.usgs.gov/fdsnws/event/1/",
     "incremental": false,
-    "lat_bands": [
-      [
-        -90.0,
-        -60.0
-      ],
-      [
-        -60.0,
-        -30.0
-      ],
-      [
-        -30.0,
-        0.0
-      ],
-      [
-        0.0,
-        30.0
-      ],
-      [
-        30.0,
-        60.0
-      ],
-      [
-        60.0,
-        90.0
-      ]
-    ],
-    "minmagnitude": 4.5,
-    "scope": "global",
+    "minmagnitude": 3.5,
     "source": "usgs_comcat",
-    "starttime": "1990-01-01",
+    "starttime": "2010-01-01",
     "updatedafter": null
   },
   "outputs": {
@@ -51,41 +24,34 @@
   "region_id": "global",
   "stage": "fetch",
   "stats": {
-    "lat_band_counts": {
-      "[-30,0)": 88318,
-      "[-60,-30)": 26963,
-      "[-90,-60)": 2192,
-      "[0,30)": 60149,
-      "[30,60)": 47520,
-      "[60,90)": 2866
-    },
     "mag_types": {
-      "Mb": 4,
-      "Md": 6,
-      "Ml": 6,
-      "m": 298,
-      "mb": 178108,
-      "mb_lg": 1,
-      "mblg": 18,
-      "mc": 4,
-      "md": 642,
-      "mh": 12,
-      "ml": 1404,
-      "ml(texnet)": 1,
-      "mlg": 3,
-      "mlr": 14,
-      "ms": 1204,
-      "ms_20": 3,
-      "ms_vx": 1,
-      "mw": 5491,
-      "mwb": 3174,
-      "mwc": 20365,
-      "mwp": 8,
-      "mwr": 3471,
-      "mww": 13770
+      "Mb": 10,
+      "Md": 457,
+      "Ml": 19,
+      "m": 344,
+      "mb": 219888,
+      "mb_lg": 93,
+      "mblg": 90,
+      "mc": 12,
+      "md": 5106,
+      "mh": 13,
+      "ml": 12307,
+      "ml(texnet)": 14,
+      "mlg": 10,
+      "mlr": 217,
+      "mlv": 2,
+      "ms": 9,
+      "ms_20": 4,
+      "ms_vx": 2,
+      "mw": 2091,
+      "mwb": 1039,
+      "mwc": 3612,
+      "mwp": 9,
+      "mwr": 7544,
+      "mww": 13760
     },
-    "n_events": 228008,
-    "time_max": "2026-06-17T08:03:29.167000+00:00",
-    "time_min": "1990-01-01T07:49:35.570000+00:00"
+    "n_events": 266652,
+    "time_max": "2026-06-18T04:37:22.791000+00:00",
+    "time_min": "2010-01-01T02:08:21.900000+00:00"
   }
 }

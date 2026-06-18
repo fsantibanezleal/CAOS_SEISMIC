@@ -1,0 +1,71 @@
+{
+  "code_git_sha": "0e3b1ba7240ff44247a7e7f8dd85f52224ed3678",
+  "config_hash": "e27cafeeb03a",
+  "created_at": "2026-06-17T11:59:09Z",
+  "inputs": {
+    "catalog_snapshot_id": "cat-87a12087403770e6",
+    "clean_stats": {
+      "conversion_families": [
+        "mb",
+        "md",
+        "ml",
+        "ms"
+      ],
+      "default_families": [
+        "mb",
+        "md",
+        "ml",
+        "ms"
+      ],
+      "n_after_dedupe": 227740,
+      "n_duplicates_removed": 268,
+      "n_in": 228008,
+      "n_unconverted": 10,
+      "n_with_mw": 227730,
+      "native_type_counts": {
+        "mb": 177886,
+        "md": 652,
+        "ml": 1716,
+        "ms": 1208,
+        "mw": 46268,
+        "unknown": 10
+      }
+    },
+    "declustering": "gardner_knopoff",
+    "mc_grid_version": "maxc+0.2/maxc",
+    "n_after_clean": 227740,
+    "n_raw": 228008,
+    "t_issue": "2026-06-17T11:59:09Z"
+  },
+  "outputs": {
+    "b_uncertainty": 0.005196059899496709,
+    "b_value": 1.586122517544729,
+    "clean_store": "D:\\_Repos\\_Web_Projects\\CAOS_SEISMIC\\data\\clean\\global.parquet",
+    "mc": 5.050000000000001,
+    "model": {
+      "name": "catalog_hygiene",
+      "params": {
+        "b_value": 1.586122517544729,
+        "delta_m": 0.1,
+        "mc": 5.050000000000001
+      },
+      "version": "0.1.0"
+    },
+    "n_background": 34619,
+    "n_complete": 97230,
+    "n_conditional": 97230
+  },
+  "region_id": "global",
+  "stage": "mc_decluster",
+  "stats": {
+    "decluster": {
+      "gardner_knopoff": {
+        "background_fraction": 0.3560526586444513,
+        "n_background": 34619,
+        "n_clusters": 11755,
+        "n_dependent": 62611,
+        "n_events": 97230
+      }
+    }
+  }
+}

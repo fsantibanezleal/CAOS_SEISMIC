@@ -514,6 +514,7 @@ class ContextTPPForecaster(BaseForecaster):
     _region: Region | None = field(default=None, repr=False)
     _mc: float = field(default=0.0, repr=False)
     _b_prior: float = field(default=1.0, repr=False)
+    _rate_cal: float = field(default=1.0, repr=False)  # absolute-rate calibration constant (fit-time)
     _ev_t: np.ndarray | None = field(default=None, repr=False)   # parent ages (days before t_issue, >=0)
     _ev_lat: np.ndarray | None = field(default=None, repr=False)
     _ev_lon: np.ndarray | None = field(default=None, repr=False)
@@ -594,6 +595,18 @@ class ContextTPPForecaster(BaseForecaster):
         self._device = self._resolve_device()
         self._net = _build_network(cfg, self._field.n_channels).to(self._device)
         self._history = self._train_loop(train_days)
+
+        # 4b) Absolute-rate calibration. The training compensator constrains the background only at event
+        # locations (it approximates ∫mu dA by the event-mean), so the forecast-grid integral in
+        # expected_counts is unconstrained in event-free cells and mis-normalizes (~hundreds×). Anchor the
+        # absolute level post-hoc with a single multiplicative constant that matches the integrated daily
+        # forecast rate to the training rate (events ≥ Mc per day). Leakage-free (training data only); a
+        # uniform scale preserves the conditional SHAPE the NLL fitted.
+        self._rate_cal = 1.0
+        try:
+            self._rate_cal = self._fit_rate_calibration(region, train_days, complete)
+        except Exception:  # pragma: no cover - calibration is best-effort; falls back to 1.0
+            self._rate_cal = 1.0
 
         # 5) Checkpoint outside git.
         ckpt = self._save_checkpoint(region)
@@ -776,6 +789,36 @@ class ContextTPPForecaster(BaseForecaster):
         trig_mass = torch.sum(kappa * (g_cdf / gz))
         return bg_mass + trig_mass
 
+    def _fit_rate_calibration(
+        self, region: Region, train_days: float, conditioning_catalog: pd.DataFrame
+    ) -> float:
+        """Single multiplicative constant that ties the integrated forecast rate to the training rate.
+
+        Forecast a one-day window at ``Mc`` with the RAW (``rate_cal = 1``) integration over the SAME grid
+        the forecast / gate uses (multi-resolution ``build_global_fit_cells`` globally; the fine grid for a
+        bounded region — so the inferred per-cell area is identical and the constant transfers), sum it,
+        and return ``(training events ≥ Mc per day) / (raw daily forecast)``. Anchors the absolute level
+        the NLL left unconstrained while preserving the conditional shape; uses only training data
+        (leakage-free). Returns ``1.0`` if the grid or the raw forecast is degenerate.
+        """
+        from ..config import load
+        from ..inference.daily import build_fit_cells, build_global_fit_cells
+
+        grid_cfg = load("grid")
+        if region.id == "global":
+            cells = build_global_fit_cells(region, grid_cfg, conditioning_catalog)
+        else:
+            cells = build_fit_cells(region, grid_cfg)
+        if not cells:
+            return 1.0
+        self._rate_cal = 1.0  # the call below must be RAW
+        raw_daily = float(np.sum(self.expected_counts(region, cells, 1.0, self._mc, self._t_issue)))
+        if not np.isfinite(raw_daily) or raw_daily <= 0.0:
+            return 1.0
+        target_daily = float(self._ev_t.size) / max(float(train_days), 1.0)  # training events≥Mc per day
+        cal = target_daily / raw_daily
+        return float(cal) if np.isfinite(cal) and cal > 0.0 else 1.0
+
     # ── Forecaster.expected_counts ────────────────────────────────────────────
     def expected_counts(
         self,
@@ -829,7 +872,8 @@ class ContextTPPForecaster(BaseForecaster):
                 mag_frac = gr_exceedance_fraction(m_threshold, b_eff, self._mc, region.m_max)
                 n_exp = max(lam_integral * cell_area_deg2 * mag_frac, 0.0)
                 out.append(n_exp)
-        return out
+        rate_cal = float(getattr(self, "_rate_cal", 1.0) or 1.0)
+        return [v * rate_cal for v in out] if rate_cal != 1.0 else out
 
     def forecast_probabilities(
         self,
@@ -1166,6 +1210,25 @@ def train(
         result["n_forecast_etas"] = round(float(lam_etas.sum()), 6)
         # Gate: positive IGPE over ETAS AND a passing N-test. (The CI/T-test lives in back-analysis.)
         result["gate_passed"] = bool(igpe > 0.0 and n_test_chal.passed) if n_obs > 0 else None
+
+        # SHAPE-only gate. The trained NLL fixes the intensity SHAPE but not its absolute LEVEL: the
+        # forecast-grid integration in expected_counts is mis-normalized vs the (Monte-Carlo) training
+        # compensator, so `igpe_vs_etas_nats` is dominated by the rate-normalization term, not skill.
+        # Renormalize the challenger field to the ETAS total before scoring — this isolates the
+        # spatial/temporal CONTEXT contribution (does the field place events BETTER than ETAS, given the
+        # same count?) from the separate, still-open absolute-rate calibration problem. THIS is the number
+        # that answers "does the (geodetic) context improve the forecast shape".
+        chal_sum = float(lam_chal.sum())
+        if chal_sum > 0.0:
+            lam_chal_shape = lam_chal * (float(lam_etas.sum()) / chal_sum)
+            igpe_shape, _ = csep.information_gain_per_earthquake(lam_chal_shape, lam_etas, omega)
+            result["igpe_vs_etas_shape_nats"] = round(float(igpe_shape), 6)
+            result["gate_passed_shape"] = bool(igpe_shape > 0.0) if n_obs > 0 else None
+            result["calibration_note"] = (
+                "igpe_vs_etas_nats reflects the open absolute-rate calibration bug (the neural "
+                "over-/under-integrates); igpe_vs_etas_shape_nats renormalizes the field to the ETAS "
+                "total and measures the context's spatial/temporal contribution net of that bug."
+            )
 
     return result
 

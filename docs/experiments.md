@@ -252,13 +252,24 @@ channel ON with the real covariate and measure the prospective gain.
 - Retraining `context_tpp` with the channel **active** and gating its IGPE vs ETAS (the gate itself was
   fixed in E6-followup to use the coarse grid + tiled-ETAS reference, so it is now tractable).
 
-**Result.** PENDING — the retrain + gate is running; the gate number lands in
-`results/neural_gate_strain.json`.
+**Result (2026-06-18) — INCONCLUSIVE on the geodetic question, due to a neural calibration bug.**
+The strain channel was filled and the neural retrained (NLL 243), but the gate is catastrophically
+negative: `igpe_vs_etas_nats = -485`. The cause is NOT the covariate — it is the neural's **absolute-rate
+calibration**: its `expected_counts` forecasts **122,148** events over the 30-day global holdout when
+**248** occurred (ETAS forecasts **173.7**, ≈ correct). So the neural over-predicts the rate ~**490×**, and
+the IGPE's rate-normalization term `(N̂_chal − N̂_etas)/N ≈ +492` dominates the score. Diagnosed: the
+softplus `mu_head` (background) is ~490× too high; the training compensator (Monte-Carlo
+`integrated_intensity`) does not constrain the forecast-grid integral to the true rate, so the NLL never
+penalises the over-prediction enough.
 
-**Decision/justification.** This is the experiment that actually **measures the context contribution**.
-The honest expectation, set by the evidence before seeing the number: a *small* global gain at most, and
-quite possibly ≈ 0 / negative — no neural-plus-covariate model has robustly beaten ETAS prospectively. The
-value is the honest measurement on our own data, not a hoped-for win.
+**Decision/justification.** Two honest conclusions: (1) the **geodetic-context question is unanswered** —
+the neural's broken forecast normalization masks any shape skill the strain channel might add; (2) this is
+strong, on-our-own-data confirmation of the framing and the cited evidence: **the neural challenger is R&D,
+not production-ready; ETAS is the calibrated reference**. Next steps to actually answer the geodetic
+question: (a) fix the neural absolute-rate calibration (align the training compensator with the
+forecast-grid integral, or add a rate-matching penalty), and/or (b) a shape-only gate that renormalises the
+neural field to the reference total before computing IGPE — isolating the context's spatial contribution
+from the calibration. The strain enricher + provider (E10) are correct and reusable for both.
 
 ---
 

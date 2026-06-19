@@ -404,6 +404,18 @@ active margins** — at the regional level (few M≥5 events) it washes out. Rec
 E9 was: "no robust prospective generalisation across regions." The reusable machinery (the stacking solver,
 the `igpe_vs_base` channel, the negative-control + multi-region gate harness) is the lasting value.
 
+**E12-adaptive (temporal time-decay of the holdout) — also NO-SHIP, and a lesson in scepticism.** Extended
+the solver with per-window weights (`window_weights`) and re-ran with an exponential decay (τ=3 windows) so
+the weights track the current sequence regime (the OEF-Italy lever). A *naive* gate reads "SHIP" (3/4
+regions now have a positive mean), but scrutiny refutes it: (1) adaptive **reduces** the global gain
+(+0.0048 vs +0.0111 static), failing the pre-registered "must beat base **and** static-E12" criterion; and
+(2) the regional "improvements" are **noise** — CL +1e-5, JP +6e-4, California +3e-3 on **3 events**, NZ
+still negative; with 3-54 events over 14 windows the IGPE noise floor is ~±0.05 and **no regional CI
+excludes zero**. The 3/4-positive is a multiple-comparison artifact of sign-flipping noise. **Meta-finding:
+the regional 7-day M≥5 gate is underpowered** — regional generalisation cannot be established either way at
+this event density; the global view (751 events) is the only adequately-powered test, and there the static
+stack already gave the honest answer. Temporal adaptivity does not rescue it.
+
 ---
 
 ## Research-2 — Frontier paths, adversarially validated: the honest 7-day ceiling (2026-06-18)

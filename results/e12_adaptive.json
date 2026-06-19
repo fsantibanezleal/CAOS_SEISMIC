@@ -1,0 +1,157 @@
+{
+  "kind": "e12_adaptive_gate",
+  "horizon_days": 7.0,
+  "n_windows": 14,
+  "tau_windows": 3.0,
+  "static_by_view": {
+    "global": {
+      "mean": 0.01105,
+      "pos": "13/14",
+      "n_eq": 751,
+      "t_ci_low": 0.009454088507722207,
+      "ci_excl_zero": true
+    },
+    "CL": {
+      "mean": -0.0001,
+      "pos": "3/10",
+      "n_eq": 19,
+      "t_ci_low": -0.0010214991375472487,
+      "ci_excl_zero": false
+    },
+    "JP": {
+      "mean": -0.00084,
+      "pos": "8/13",
+      "n_eq": 54,
+      "t_ci_low": -0.0002549227558870425,
+      "ci_excl_zero": false
+    },
+    "US-CA": {
+      "mean": 0.0077,
+      "pos": "3/3",
+      "n_eq": 3,
+      "t_ci_low": -0.005844284162554979,
+      "ci_excl_zero": false
+    },
+    "NZ": {
+      "mean": -0.00081,
+      "pos": "0/3",
+      "n_eq": 5,
+      "t_ci_low": -0.0012941341825321918,
+      "ci_excl_zero": true
+    }
+  },
+  "adaptive_by_view": {
+    "global": {
+      "mean": 0.00482,
+      "pos": "13/14",
+      "n_eq": 751,
+      "t_ci_low": 0.0038380640930078497,
+      "ci_excl_zero": true
+    },
+    "CL": {
+      "mean": 1e-05,
+      "pos": "3/10",
+      "n_eq": 19,
+      "t_ci_low": -0.00028413769585852494,
+      "ci_excl_zero": false
+    },
+    "JP": {
+      "mean": 0.00064,
+      "pos": "8/13",
+      "n_eq": 54,
+      "t_ci_low": -0.0004177631373257981,
+      "ci_excl_zero": false
+    },
+    "US-CA": {
+      "mean": 0.00319,
+      "pos": "3/3",
+      "n_eq": 3,
+      "t_ci_low": -0.0050816115414026065,
+      "ci_excl_zero": false
+    },
+    "NZ": {
+      "mean": -0.00042,
+      "pos": "0/3",
+      "n_eq": 5,
+      "t_ci_low": -0.0006204288280396571,
+      "ci_excl_zero": true
+    }
+  },
+  "adaptive_weight_trajectory": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.9833,
+      0.0,
+      0.0167
+    ],
+    [
+      0.9525,
+      0.0,
+      0.0475
+    ],
+    [
+      0.9452,
+      0.0,
+      0.0548
+    ],
+    [
+      0.9292,
+      0.0321,
+      0.0387
+    ],
+    [
+      0.9365,
+      0.0199,
+      0.0436
+    ],
+    [
+      0.9102,
+      0.0,
+      0.0898
+    ],
+    [
+      0.913,
+      0.0,
+      0.087
+    ],
+    [
+      0.9134,
+      0.0,
+      0.0866
+    ],
+    [
+      0.9303,
+      0.0,
+      0.0697
+    ],
+    [
+      0.9305,
+      0.0,
+      0.0695
+    ],
+    [
+      0.939,
+      0.0,
+      0.061
+    ],
+    [
+      0.9472,
+      0.0,
+      0.0528
+    ],
+    [
+      0.9174,
+      0.0,
+      0.0826
+    ]
+  ],
+  "adaptive_high_seis_views_positive": 3,
+  "n_high_seis_views": 4,
+  "adaptive_beats_static_in_n_regions": 3,
+  "ships_pre_registered_rule": true,
+  "decision": "SHIP \u2014 adaptivity rescues regional generalization"
+}

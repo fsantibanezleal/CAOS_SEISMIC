@@ -629,6 +629,36 @@ class ContextTPPForecaster(BaseForecaster):
         }
         return self
 
+    def recondition(self, catalog: pd.DataFrame, t_issue: pd.Timestamp) -> "ContextTPPForecaster":
+        """Advance the conditioning to a new ``t_issue`` WITHOUT re-training (the cadenced path).
+
+        Keeps the trained net weights, the covariate field (the geophysical context is time-independent
+        over a refit cadence), the Mc/b prior, and the ``rate_cal`` calibration; refreshes only the
+        triggering CONDITIONING — which events are parents and their ages. Mirrors
+        :meth:`ETASForecaster.recondition`, so a pseudo-prospective back-analysis can advance the neural
+        day-to-day (fit weekly, recondition daily) instead of paying the ~74-min retrain at every issue.
+        Leakage-safe: only events strictly before ``t_issue`` are admitted. Requires a prior :meth:`fit`.
+        """
+        if self._net is None:
+            raise RuntimeError("recondition() requires a prior fit()")
+        validate_catalog(catalog)
+        self._t_issue = pd.Timestamp(t_issue)
+        df = catalog.loc[catalog["time"] < self._t_issue]
+        complete = df.loc[df["mw"] >= self._mc - 1e-9].sort_values("time")
+        if complete.empty:
+            self._ev_t = np.empty(0, dtype=float)
+            self._ev_lat = np.empty(0, dtype=float)
+            self._ev_lon = np.empty(0, dtype=float)
+            self._ev_m = np.empty(0, dtype=float)
+        else:
+            t_days = (self._t_issue - complete["time"]).dt.total_seconds().to_numpy() / 86400.0
+            self._ev_t = np.clip(t_days, 0.0, None)
+            self._ev_lat = complete["latitude"].to_numpy(dtype=float)
+            self._ev_lon = complete["longitude"].to_numpy(dtype=float)
+            self._ev_m = complete["mw"].to_numpy(dtype=float)
+        self._ctx_parents_cache = None  # parents changed → recompute their context embeddings lazily
+        return self
+
     def config_grid_deg(self) -> float:
         """Covariate-grid pitch (deg). Coarser than the 0.1° fit grid keeps the CNN patch cheap.
 

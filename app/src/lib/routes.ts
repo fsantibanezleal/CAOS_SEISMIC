@@ -21,6 +21,7 @@ export const ROUTES: readonly RouteDef[] = [
   { id: "problem", path: "/problem", labelKey: "nav.problem" },
   { id: "methodology", path: "/methodology", labelKey: "nav.methodology" },
   { id: "implementation", path: "/implementation", labelKey: "nav.implementation" },
+  { id: "experiments", path: "/experiments", labelKey: "nav.experiments" },
   { id: "back-analysis", path: "/back-analysis", labelKey: "nav.backAnalysis" },
   { id: "monitoring", path: "/monitoring", labelKey: "nav.monitoring" },
 ] as const;

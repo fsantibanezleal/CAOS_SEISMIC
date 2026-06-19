@@ -240,6 +240,58 @@ def n_test_poisson(
     )
 
 
+def n_test_negbinom(
+    forecast_total: float, observed_total: int, dispersion: float = 4.0, alpha: float = 0.05
+) -> ConsistencyResult:
+    r"""CSEP **N-test** with a **negative-binomial** (over-dispersion-honest) count distribution.
+
+    The Poisson N-test (:func:`n_test_poisson`) assumes :math:`\operatorname{Var}[N] = \mathbb{E}[N]`.
+    Clustered (ETAS branching) seismicity violates that badly: during an aftershock sequence the realized
+    count is **over-dispersed**, so the Poisson test over-rejects (it reads a vigorous-but-plausible
+    sequence as a gross miscalibration). This is the documented reason gridded-Poisson N-tests fail at
+    quantile 0 during sequences — Werner & Sornette (2008), Werner (2010), Kagan (2017 GJI), Savran et al.
+    (2020 BSSA). The fix is to score the total against an over-dispersed null.
+
+    We model :math:`N \sim \text{NegBinom}` with mean :math:`N_{\text{fore}}` and variance
+    :math:`N_{\text{fore}}(1 + N_{\text{fore}}/r)`, where ``dispersion`` :math:`r` is the same
+    Gamma-mixture parameter the forecast product already uses for its over-dispersed bounds
+    (``nb_r`` in :mod:`inference.daily`); :math:`r \to \infty` recovers the Poisson test exactly. In
+    scipy's ``nbinom(n, p)`` parameterization that is ``n = r``, ``p = r / (r + N_fore)``. The two
+    tails keep the same meaning as the Poisson test (``delta1`` small ⇒ forecast too few; ``delta2``
+    small ⇒ too many), rejected two-sided at ``alpha``.
+
+    This corrects the *evaluation*, not the rate field — IGPE is unchanged; only the count-consistency
+    verdict becomes honest. A *rate* under-forecast far beyond what ``r`` can absorb (e.g. a mainshock
+    sequence the productivity badly under-predicts) still fails, and *should* — that is a real rate
+    miscalibration, not a dispersion artifact, and the heavy-tailed catalog-based test is the next layer.
+    """
+    n_fore = float(forecast_total)
+    n_obs = int(observed_total)
+    if n_fore <= 0:
+        n_fore = np.finfo(float).tiny
+    r = float(dispersion)
+    if not np.isfinite(r) or r <= 0:
+        # degenerate dispersion → fall back to the Poisson test (the r→∞ limit).
+        return n_test_poisson(n_fore, n_obs, alpha=alpha)
+    p = r / (r + n_fore)
+    delta1 = float(1.0 - stats.nbinom.cdf(n_obs - 1, r, p))
+    delta2 = float(stats.nbinom.cdf(n_obs, r, p))
+    quantile = float(min(delta1, delta2))
+    passed = quantile >= alpha / 2.0
+    return ConsistencyResult(
+        test="N",
+        quantile=quantile,
+        passed=passed,
+        alpha=alpha,
+        delta1=delta1,
+        delta2=delta2,
+        n_obs=n_obs,
+        n_forecast=n_fore,
+        pycsep_used=False,
+        note=f"negative-binomial N-test (over-dispersion r={r:g}; Poisson as r→∞)",
+    )
+
+
 def information_gain_per_earthquake(
     rates_a: np.ndarray,
     rates_b: np.ndarray,

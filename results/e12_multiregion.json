@@ -1,0 +1,132 @@
+{
+  "kind": "e12_multiregion_gate",
+  "horizon_days": 7.0,
+  "m_star": 5.0,
+  "n_windows": 14,
+  "rho": 100.0,
+  "cutoff0": "2026-03-11",
+  "members": [
+    "etas_tiled_base",
+    "v1_short_memory",
+    "v2_long_memory"
+  ],
+  "weight_trajectory": [
+    [
+      1.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.9833,
+      0.0,
+      0.0167
+    ],
+    [
+      0.9481,
+      0.0,
+      0.0519
+    ],
+    [
+      0.9281,
+      0.0,
+      0.0719
+    ],
+    [
+      0.9047,
+      0.0183,
+      0.0771
+    ],
+    [
+      0.8941,
+      0.0134,
+      0.0925
+    ],
+    [
+      0.8517,
+      0.0029,
+      0.1455
+    ],
+    [
+      0.8342,
+      0.0,
+      0.1658
+    ],
+    [
+      0.8144,
+      0.0,
+      0.1856
+    ],
+    [
+      0.8098,
+      0.0,
+      0.1902
+    ],
+    [
+      0.7941,
+      0.0,
+      0.2059
+    ],
+    [
+      0.7856,
+      0.0,
+      0.2144
+    ],
+    [
+      0.7791,
+      0.0,
+      0.2209
+    ],
+    [
+      0.743,
+      0.0,
+      0.257
+    ]
+  ],
+  "by_view": {
+    "global": {
+      "n_windows_scored": 14,
+      "mean_igpe_vs_base_nats": 0.01105,
+      "n_windows_positive": 13,
+      "n_target_events": 751,
+      "t_ci_low": 0.009454088507722207,
+      "t_ci_excludes_zero": true
+    },
+    "CL": {
+      "n_windows_scored": 10,
+      "mean_igpe_vs_base_nats": -0.0001,
+      "n_windows_positive": 3,
+      "n_target_events": 19,
+      "t_ci_low": -0.0010214991375472487,
+      "t_ci_excludes_zero": false
+    },
+    "JP": {
+      "n_windows_scored": 13,
+      "mean_igpe_vs_base_nats": -0.00084,
+      "n_windows_positive": 8,
+      "n_target_events": 54,
+      "t_ci_low": -0.0002549227558870425,
+      "t_ci_excludes_zero": false
+    },
+    "US-CA": {
+      "n_windows_scored": 3,
+      "mean_igpe_vs_base_nats": 0.0077,
+      "n_windows_positive": 3,
+      "n_target_events": 3,
+      "t_ci_low": -0.005844284162554979,
+      "t_ci_excludes_zero": false
+    },
+    "NZ": {
+      "n_windows_scored": 3,
+      "mean_igpe_vs_base_nats": -0.00081,
+      "n_windows_positive": 0,
+      "n_target_events": 5,
+      "t_ci_low": -0.0012941341825321918,
+      "t_ci_excludes_zero": true
+    }
+  },
+  "high_seis_views_positive": 1,
+  "n_high_seis_views": 4,
+  "global_ci_excludes_zero": true,
+  "ships_pre_registered_rule": false,
+  "decision": "NO-SHIP (recorded dead-end / honest null) \u2014 the small global gain does not robustly generalise across regions"
+}

@@ -9,8 +9,15 @@
     "problem": "The problem",
     "methodology": "Methodology",
     "implementation": "Implementation",
+    "experiments": "Experiments",
     "backAnalysis": "Back-analysis",
     "monitoring": "Monitoring"
+  },
+  "exp": {
+    "title": "Experiments & the route taken",
+    "lede": "An honest, append-only journey of what we tried — including the dead ends and the negative results. A change counts as an improvement only if it shows prospective skill.",
+    "error": "Could not load the experiment journey: {{message}}",
+    "footer": "Full technical detail, with motivation → change → measured result → justification, is in the repository experiment register (docs/experiments.md) and the public wiki."
   },
   "header": {
     "github": "Source on GitHub",

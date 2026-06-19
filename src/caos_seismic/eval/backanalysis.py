@@ -138,6 +138,11 @@ class ScoredForecast:
     n_observed: int            # observed target events >= M* in [t, t+H)
     n_test_quantile: float | None = None
     n_test_passed: bool | None = None
+    # Over-dispersion-honest N-test (E13): the Poisson N-test assumes Var[N]=E[N] and over-rejects
+    # clustered sequence counts; the negative-binomial test scores the total against the same
+    # over-dispersion the forecast product emits. Reported ALONGSIDE the Poisson test, never replacing it.
+    n_test_nb_quantile: float | None = None
+    n_test_nb_passed: bool | None = None
     igpe_vs_null_nats: float | None = None
     n_forecast_etas: float | None = None  # region-total expected count from catalog-only ETAS
     igpe_vs_etas_nats: float | None = None  # THESIS: context gain over catalog-only ETAS
@@ -336,6 +341,7 @@ def run_back_analysis(
                 n_obs = int(len(obs))
 
                 n_test = csep.n_test_poisson(float(lam_primary.sum()), n_obs)
+                n_test_nb = csep.n_test_negbinom(float(lam_primary.sum()), n_obs)
                 omega = _bin_counts_to_cells(obs, cells)
                 igpe_null, _ = csep.information_gain_per_earthquake(lam_primary, lam_null, omega)
                 igpe_etas, _ = csep.information_gain_per_earthquake(lam_primary, lam_etas, omega)
@@ -349,6 +355,8 @@ def run_back_analysis(
                     n_observed=n_obs,
                     n_test_quantile=n_test.quantile,
                     n_test_passed=bool(n_test.passed),
+                    n_test_nb_quantile=n_test_nb.quantile,
+                    n_test_nb_passed=bool(n_test_nb.passed),
                     igpe_vs_null_nats=round(float(igpe_null), 6),
                     n_forecast_etas=round(float(lam_etas.sum()), 6),
                     igpe_vs_etas_nats=round(float(igpe_etas), 6),
@@ -437,6 +445,7 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
         ok_rows = [s for s in rows if s.ok]
         failed = [s for s in rows if not s.ok]
         n_pass = sum(1 for s in ok_rows if s.n_test_passed)
+        n_pass_nb = sum(1 for s in ok_rows if s.n_test_nb_passed)
         igpes = [s.igpe_vs_null_nats for s in ok_rows if s.igpe_vs_null_nats is not None]
         ctx_gains = [s.igpe_vs_etas_nats for s in ok_rows if s.igpe_vs_etas_nats is not None]
         brier_terms = [s.brier_term for s in ok_rows if s.brier_term is not None]
@@ -445,11 +454,13 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
         for m_star in sorted({s.m_threshold for s in ok_rows}):
             sub = [s for s in ok_rows if abs(s.m_threshold - m_star) < 1e-9]
             sub_pass = sum(1 for s in sub if s.n_test_passed)
+            sub_pass_nb = sum(1 for s in sub if s.n_test_nb_passed)
             sub_igpe = [s.igpe_vs_null_nats for s in sub if s.igpe_vs_null_nats is not None]
             sub_ctx = [s.igpe_vs_etas_nats for s in sub if s.igpe_vs_etas_nats is not None]
             by_threshold[f"{m_star:.1f}"] = {
                 "n": len(sub),
                 "n_test_pass_rate": round(sub_pass / len(sub), 4) if sub else None,
+                "n_test_nb_pass_rate": round(sub_pass_nb / len(sub), 4) if sub else None,
                 "mean_igpe_vs_null_nats": round(float(np.mean(sub_igpe)), 6) if sub_igpe else None,
                 "mean_context_gain_vs_etas_nats": (
                     round(float(np.mean(sub_ctx)), 6) if sub_ctx else None
@@ -464,6 +475,7 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
                 "n_scored": len(ok_rows),
                 "n_failed": len(failed),
                 "n_test_pass_rate": round(n_pass / len(ok_rows), 4) if ok_rows else None,
+                "n_test_nb_pass_rate": round(n_pass_nb / len(ok_rows), 4) if ok_rows else None,
                 "mean_igpe_vs_null_nats": round(float(np.mean(igpes)), 6) if igpes else None,
                 "skill_over_null_positive": bool(igpes and float(np.mean(igpes)) > 0.0),
                 # THESIS headline: how much the global context adds over catalog-only ETAS (nats).
@@ -474,11 +486,12 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
                 "n_reliability_pairs": len(brier_terms),
                 "by_threshold": by_threshold,
                 "note": (
-                    "Poisson grid tests over-reject during aftershock sequences; pair with the "
-                    "catalog-based result. Skill is the comparison-test win vs ETAS (eval.csep), "
-                    "not the consistency pass rate. context_gain_vs_etas is the headline thesis "
-                    "measurement — when context_channel_active is false the context stack has not "
-                    "yet landed and the gain is ~0 by construction (not a measured null)."
+                    "Poisson grid tests over-reject during aftershock sequences (n_test_pass_rate); "
+                    "n_test_nb_pass_rate is the over-dispersion-honest negative-binomial N-test (E13) "
+                    "reported alongside, never replacing it. Skill is the comparison-test win vs ETAS "
+                    "(eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline "
+                    "thesis measurement — when context_channel_active is false the context stack has "
+                    "not yet landed and the gain is ~0 by construction (not a measured null)."
                 ),
             }
         )

@@ -30,13 +30,14 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
 
 from ..contracts import BaseForecaster, Cell, Region, validate_catalog
 from ._common import poisson_p_at_least_one
-from .etas import ETASForecaster, ETASStabilityError
+from .etas import DEFAULT_BOUNDS, ETASForecaster, ETASStabilityError
 from .regime import (
     Tile,
     TectonicRegime,
@@ -113,6 +114,15 @@ class TiledForecaster(BaseForecaster):
     min_events_for_etas: int = 30
     use_regime_priors: bool = True
     root: Path | None = None
+
+    # Per-tile ETAS kernel overrides — forwarded to every tile's ETASForecaster (None => ETAS defaults).
+    # These exist so the score-weighted ensemble (model/ensemble.py) can build ETAS-family VARIANTS that
+    # differ only in triggering memory / reach / Omori bounds: a short-memory member (fast aftershock
+    # decay) and a long-memory member (late-aftershock tail) that fail in different time regimes than the
+    # base, which is the orthogonality the stacking pool needs. The base forecaster leaves them None.
+    etas_max_parent_days: float | None = None
+    etas_max_parent_dist_km: float | None = None
+    etas_bounds: dict[str, tuple[float, float]] | None = None
 
     # ── Fitted state ─────────────────────────────────────────────────────────
     _tiles: list[TileFit] = field(default_factory=list, repr=False)
@@ -291,6 +301,18 @@ class TiledForecaster(BaseForecaster):
                 rejection=f"thin tile ({n_events} < {self.min_events_for_etas}); null carries it",
             )
 
+        # Forward the optional kernel overrides only when set, so an unset field keeps the ETAS default.
+        etas_overrides: dict[str, Any] = {}
+        if self.etas_max_parent_days is not None:
+            etas_overrides["max_parent_days"] = float(self.etas_max_parent_days)
+        if self.etas_max_parent_dist_km is not None:
+            etas_overrides["max_parent_dist_km"] = float(self.etas_max_parent_dist_km)
+        if self.etas_bounds is not None:
+            # Override only the named bounds; keep ETAS's defaults for the rest.
+            merged = dict(DEFAULT_BOUNDS)
+            merged.update({k: tuple(v) for k, v in self.etas_bounds.items()})
+            etas_overrides["bounds"] = merged
+
         etas = ETASForecaster(
             m0=self.m0,
             mc=self.mc,
@@ -305,6 +327,7 @@ class TiledForecaster(BaseForecaster):
             # Cheapest per-tile MLE: a single regime-prior-seeded start (the prior is informative, and
             # there are hundreds of tiles). The neighbour cutoffs (etas.max_parent_*) keep each fit O(N·k).
             n_restarts=0,
+            **etas_overrides,
         )
         try:
             etas.fit(halo_df, tile_region, self._t_issue)

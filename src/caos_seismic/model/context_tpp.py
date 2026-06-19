@@ -92,6 +92,29 @@ if TYPE_CHECKING:  # pragma: no cover - typing only; never imported at runtime t
 
 logger = logging.getLogger(__name__)
 
+
+def _gr_exceedance_fraction_vec(
+    m_threshold: float, b: np.ndarray, mc: float, m_max: float | None
+) -> np.ndarray:
+    """Vectorized bounded Gutenberg-Richter tail fraction Φ(M*) over an array of per-cell ``b`` values.
+
+    Element-for-element identical to :func:`_common.gr_exceedance_fraction` (scalar ``m_threshold``,
+    ``mc``, ``m_max``; ``b`` an array) — only the per-cell Python call is lifted into numpy so the
+    magnitude term can be applied to the whole forecast field at once.
+    """
+    b = np.asarray(b, dtype=np.float64)
+    if m_threshold <= mc:
+        return np.ones_like(b)
+    unbounded = np.power(10.0, -b * (m_threshold - mc))
+    if m_max is None:
+        return np.clip(unbounded, 0.0, 1.0)
+    if m_threshold >= m_max:
+        return np.zeros_like(b)
+    tail_max = np.power(10.0, -b * (m_max - mc))
+    frac = (unbounded - tail_max) / (1.0 - tail_max)
+    return np.clip(frac, 0.0, 1.0)
+
+
 #: Default checkpoint directory — OUTSIDE git (the repo .gitignore excludes data/ and weights). Neural
 #: weights are never versioned; they are rebuildable from configs + the global catalog + this code.
 DEFAULT_CHECKPOINT_DIR = "data/weights"
@@ -884,26 +907,28 @@ class ContextTPPForecaster(BaseForecaster):
             mu_cells = net.background(ctx_cells, slr_t).cpu().numpy()         # events/day/deg^2
             b_cells = net.b_value(ctx_cells).cpu().numpy()                    # conditional b per cell
 
-            # Time quadrature of the triggering term over the horizon (midpoint rule).
+            # Horizon-integrated neural triggering at EVERY cell, vectorized. Exact reformulation of
+            # the old per-cell midpoint quadrature: the productivity (kappa) and spatial scale (zeta)
+            # depend only on the parent events, and the temporal kernel g only on the step — so all
+            # three are computed once over the parents and the 119k-cell × 12-step Python loop (~1.4M
+            # net calls, ~50 min) collapses to a chunked distance matrix (seconds). See _triggering_field.
             steps = 12
             edges = np.linspace(0.0, float(horizon_days), steps + 1)
             mids = 0.5 * (edges[:-1] + edges[1:])
             dts = np.diff(edges)
+            trig_cells = self._triggering_field(net, lats, lons, mids, dts)   # (n_cells,)
 
-            out: list[float] = []
-            for ci in range(len(cells)):
-                lam_integral = float(mu_cells[ci]) * float(horizon_days)     # background (time-flat)
-                trig = 0.0
-                for s, w in zip(mids, dts):
-                    trig += self._triggering_intensity(net, float(lats[ci]), float(lons[ci]), float(s)) * float(w)
-                lam_integral += trig
-                # bounded-GR tail with the cell's CONDITIONAL b (b_cells is beta=b ln10 scale -> /LN10).
-                b_eff = float(b_cells[ci]) / LN10
-                mag_frac = gr_exceedance_fraction(m_threshold, b_eff, self._mc, region.m_max)
-                n_exp = max(lam_integral * cell_area_deg2 * mag_frac, 0.0)
-                out.append(n_exp)
+        # Conditional intensity integral per cell: time-flat background + the triggering integral.
+        lam_integral = np.asarray(mu_cells, dtype=np.float64).reshape(-1) * float(horizon_days)
+        lam_integral = lam_integral + trig_cells
+        # bounded-GR tail with each cell's CONDITIONAL b (b_cells is beta = b·ln10 scale -> /LN10).
+        b_eff = np.asarray(b_cells, dtype=np.float64).reshape(-1) / LN10
+        mag_frac = _gr_exceedance_fraction_vec(m_threshold, b_eff, float(self._mc), region.m_max)
+        n_exp = np.maximum(lam_integral * float(cell_area_deg2) * mag_frac, 0.0)
         rate_cal = float(getattr(self, "_rate_cal", 1.0) or 1.0)
-        return [v * rate_cal for v in out] if rate_cal != 1.0 else out
+        if rate_cal != 1.0:
+            n_exp = n_exp * rate_cal
+        return n_exp.tolist()
 
     def forecast_probabilities(
         self,
@@ -941,6 +966,50 @@ class ContextTPPForecaster(BaseForecaster):
         r_deg = torch.as_tensor(r_km / DEG2KM, dtype=torch.float32, device=self._device)
         f = (0.5 / (np.pi * zeta * zeta)) * torch.pow(1.0 + (r_deg * r_deg) / (zeta * zeta), -1.5)
         return float(torch.sum(kappa * g * f).cpu())
+
+    def _triggering_field(
+        self, net, lats: np.ndarray, lons: np.ndarray, mids: np.ndarray, dts: np.ndarray
+    ) -> np.ndarray:
+        """Horizon-integrated neural triggering at every cell — the vectorized form of looping
+        :meth:`_triggering_intensity` over cells × time steps. **Numerically identical**, ~10³× faster.
+
+        The per-cell quadrature is ``Σ_k dt_k · Σ_p κ_p · g(age_p + s_k) · f(r_{cell,p}, ζ_p)``. The
+        productivity ``κ_p`` and spatial scale ``ζ_p`` depend only on the parent event (not the target
+        cell or the step), and the temporal kernel ``g`` depends only on the step — so we evaluate the
+        net ONCE over the parents, integrate the temporal kernel per parent
+        (``G_p = Σ_k dt_k · g(age_p + s_k)``), and the cell loop collapses to ``f @ (κ·G)`` over a
+        chunked great-circle distance matrix. Swapping the two sums is exact because ``f`` and ``κ`` do
+        not depend on the step. Returns ``(n_cells,)`` events/day/deg² · day (the time-integrated rate).
+        """
+        torch = _import_torch()
+        n_cells = len(lats)
+        if self._ev_t is None or self._ev_t.size == 0:
+            return np.zeros(n_cells, dtype=np.float64)
+        ctx_parents = self._parent_context(net)
+        mags_t = torch.as_tensor(self._ev_m, dtype=torch.float32, device=self._device)
+        with torch.no_grad():
+            kappa = net.productivity(mags_t, ctx_parents).cpu().numpy().astype(np.float64)  # (P,)
+            zeta = net.spatial_scale(mags_t, ctx_parents).cpu().numpy().astype(np.float64)  # (P,)
+            # Time-integrate the temporal kernel per parent: G_p = Σ_k dt_k · g(age_p + s_k).
+            g_int = np.zeros(self._ev_t.size, dtype=np.float64)
+            for s, w in zip(mids, dts):
+                dt = torch.as_tensor(self._ev_t + float(s), dtype=torch.float32, device=self._device)
+                g_int += float(w) * net.temporal_density(dt).cpu().numpy().astype(np.float64)
+        amp = kappa * g_int                                  # (P,) per-parent amplitude κ_p·G_p
+        inv_zeta2 = 1.0 / (zeta * zeta)                      # (P,)
+        norm = 0.5 / (np.pi * zeta * zeta)                   # (P,) 2-D Cauchy-like normaliser
+        ev_lat = np.asarray(self._ev_lat, dtype=np.float64)
+        ev_lon = np.asarray(self._ev_lon, dtype=np.float64)
+        out = np.zeros(n_cells, dtype=np.float64)
+        chunk = 1024  # bound the (chunk × P) distance matrix to a few tens of MB
+        for a in range(0, n_cells, chunk):
+            cl = np.asarray(lats[a : a + chunk], dtype=np.float64)[:, None]   # (c,1)
+            clo = np.asarray(lons[a : a + chunk], dtype=np.float64)[:, None]  # (c,1)
+            r_km = haversine_km(cl, clo, ev_lat, ev_lon)                      # (c, P)
+            r2_deg = (r_km / DEG2KM) ** 2
+            f = norm[None, :] * np.power(1.0 + r2_deg * inv_zeta2[None, :], -1.5)  # (c, P)
+            out[a : a + chunk] = f @ amp
+        return out
 
     # ── context / patch helpers ───────────────────────────────────────────────
     def _parent_context(self, net):

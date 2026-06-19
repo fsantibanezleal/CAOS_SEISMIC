@@ -53,12 +53,24 @@ def test_registry_contract_and_unique_feature_names():
 
 
 def test_no_heavy_deps_imported_at_module_load():
-    import caos_seismic.catalog.features  # noqa: F401
-    import caos_seismic.data.enrichers  # noqa: F401
+    # Run in a CLEAN subprocess: the package's lazy-import discipline is a property of importing the
+    # package, not of the current pytest session's sys.modules — which an earlier test that fits a
+    # neural model (importing torch) would otherwise pollute, making this guard order-dependent.
+    import subprocess
+    import sys as _sys
 
     heavy = ["geopandas", "shapely", "xarray", "netCDF4", "pygtide", "obspy", "torch"]
-    leaked = [m for m in heavy if m in sys.modules]
-    assert not leaked, f"heavy deps imported at module top level: {leaked}"
+    code = (
+        "import sys\n"
+        "import caos_seismic.catalog.features\n"
+        "import caos_seismic.data.enrichers\n"
+        f"heavy = {heavy!r}\n"
+        "leaked = [m for m in heavy if m in sys.modules]\n"
+        "print(','.join(leaked))\n"
+        "sys.exit(1 if leaked else 0)\n"
+    )
+    proc = subprocess.run([_sys.executable, "-c", code], capture_output=True, text=True)
+    assert proc.returncode == 0, f"heavy deps imported at module top level: {proc.stdout.strip()}"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

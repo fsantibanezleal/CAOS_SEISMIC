@@ -110,15 +110,20 @@ def simulate_window_counts(
     kt = np.clip(kt, 0.0, None)
     forecast_first_gen = float(bg_expected + kt.sum())
 
-    # draw first-gen offspring counts for every (sim, parent), then expand to an event list
-    par_draws = rng.poisson(np.tile(kt, (n_sims, 1)))  # (n_sims, n_parents)
+    # Only parents with non-negligible expected offspring can seed the draw (old parents have kt≈0 and
+    # would just be Poisson(0)=0): mask them out so the (n_sims × n_parents) draw stays small at scale.
+    active = kt > 1e-9
+    act_ages = ages[active]
+    act_kt = kt[active]
+    # draw first-gen offspring counts for every (sim, active parent), then expand to an event list
+    par_draws = rng.poisson(np.tile(act_kt, (n_sims, 1))) if act_kt.size else np.zeros((n_sims, 0), int)
     nz_sim, nz_par = np.nonzero(par_draws)
     reps = par_draws[nz_sim, nz_par]
     fg_sim = np.repeat(nz_sim, reps)
     fg_parent = np.repeat(nz_par, reps)
     # offspring elapsed time τ ∈ [age, age+H); birth in window = τ − age
     if fg_parent.size:
-        a = ages[fg_parent]
+        a = act_ages[fg_parent]
         tau = _sample_omori_elapsed(a, a + H, c, p, rng)
         fg_birth = np.clip(tau - a, 0.0, H - 1e-9)
     else:

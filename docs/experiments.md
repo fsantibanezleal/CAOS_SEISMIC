@@ -382,10 +382,27 @@ flip on the most-recent quintile; (e) E12 loses in no low-seismicity view by mor
 dead-end** with the measured IGPE — "no demonstrated prospective gain over single tiled ETAS" is itself a
 valid result, exactly as E9 was recorded.
 
-**Status.** Core IMPLEMENTED + unit-tested (TiledForecaster kernel-override plumbing;
-`EnsembleForecaster.fit_weights_from_history` convex stacking solver with anchor shrinkage + cold-start
-fallback; `build_etas_stack_ensemble` structural guard; 8 tests). The leakage-free multi-region
-multi-horizon back-analysis with the `igpe_vs_base_tiled` channel is the next run.
+**Status.** Core IMPLEMENTED + unit-tested (8 tests). Single-window global gate gave +0.0087 (10/12
+windows), beating the shuffled-label negative-control's max.
+
+**Multi-region gate (the pre-registered decision) — NO-SHIP.** The leakage-free 14-window 7-day
+back-analysis scored the single global weight vector on the GLOBAL view AND each high-seismicity view:
+
+| view | mean IGPE vs base | windows + | n events | Rhoades-T CI |
+|---|---|---|---|---|
+| **GLOBAL** | **+0.0111** | 13/14 | 751 | **excludes zero (+)** |
+| Chile | −0.0001 | 3/10 | 19 | crosses zero |
+| Japan | −0.0008 | 8/13 | 54 | crosses zero |
+| California | +0.0077 | 3/3 | **3 (noise)** | crosses zero |
+| New Zealand | −0.0008 | 0/3 | 5 | crosses zero |
+
+The pre-registered rule requires GLOBAL **and ≥2** high-seismicity views positive; only **1/4** is
+(California, on 3 events — noise). **E12 does NOT ship.** The honest reading: the global gain is *real and
+significant* (the long-memory variant V2 captures late-aftershock structure the base 730-day cutoff
+misses, earning ~+0.011 pooled over 751 events) but it lives in the **diffuse global field, not the canonical
+active margins** — at the regional level (few M≥5 events) it washes out. Recorded as a dead-end, exactly as
+E9 was: "no robust prospective generalisation across regions." The reusable machinery (the stacking solver,
+the `igpe_vs_base` channel, the negative-control + multi-region gate harness) is the lasting value.
 
 ---
 

@@ -329,13 +329,21 @@ chunked great-circle distance matrix. Pinned numerically identical to the old qu
 `tests/test_context_tpp_vectorization.py` (max relative error 6.7e-8, float32 round-off). Per window
 dropped from ~51 min to seconds.
 
-**Result.** RUNNING (re-fit ~30 min, then fast windows). Early signal from the prior run: the **7-day
-first window is NEGATIVE (−0.16)** while the gate win was at 30 days — consistent with the horizon-
-dependence hypothesis and with the field (no NPP beats ETAS at the operational short horizon). The honest
-per-horizon mean over all windows decides; the 7-day mean is the product-relevant number. **A negative or
-non-significant 7-day result is the expected, valid outcome and is recorded as such** — it does not retract
-E10's calibrated single-window signal, it bounds where that signal is real (longer horizons / background-
-dominated regimes), not at the 1–7 day product horizon.
+**Result (DECISIVE, horizon-dependent).**
+- **7-day product horizon:** mean IGPE vs ETAS = **−0.053** over 8 windows, only **4/8 positive**, very
+  noisy (per-window {−0.16, −0.08, +0.14, +0.09, −0.09, +0.23, +0.23, **−0.80**}; the last is a sequence
+  window the neural badly missed). **The neural does NOT beat ETAS at the operational horizon.**
+- **30-day horizon:** mean IGPE vs ETAS = **+0.078** over 4 windows, **4/4 positive** ({+0.052, +0.019,
+  +0.103, +0.137}). **E10's single-window +0.075 gate win GENERALISES at 30 days.**
+
+**Interpretation (the key finding).** The geodetic context is a **real lever, but only at the longer,
+background-dominated horizon** — not at the 1–7 day product horizon where ETAS triggering dominates. The
+decisive mechanistic detail: the calibrated neural's total forecast is **constant across windows** (18.1 at
+7 d, 77.3 at 30 d, ratio ≈ 30/7) ⇒ it deploys a time-flat **geodetic background**, not a triggering model.
+That is *why* it loses at 7 d (can't track sequences) and wins at 30 d (better background dominates the
+integral). This does not retract E10; it **bounds where that signal is real**, and it directly motivates a
+**14–30 day outlook product** (geodetic background) + the `mu = mu_neural` hybrid at 7 d gated to
+no-regression (`wip/horizon-aware-and-hybrid-design.md`; frontier-research rank 2).
 
 ---
 

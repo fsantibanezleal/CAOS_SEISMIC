@@ -435,13 +435,32 @@ recovers the Poisson test exactly. 4 tests: Poisson limit; accepts moderate over
 test wrongly rejects; **STILL fails the extreme 64-vs-248 case** (a 3.9× *rate* under-forecast is a real
 bias, not dispersion — a dispersion fix must never whitewash it); degenerate-`r` fallback.
 
-**Result + honest limit.** The NB N-test corrects the *evaluation* (IGPE unchanged) for typical
-over-dispersed sequences. It does NOT rescue the extreme benchmark window: ETAS forecasting 64 when 248
-occurred is a genuine **rate** under-forecast of a large sequence — the heavy-tailed **catalog-based**
-(branching-simulation) test is the next layer (pyCSEP 0.8.0 is installed; the E11-vectorized Omori/
-productivity machinery makes forward thinning cheap), and whether the gap is dispersion vs rate bias is
-itself the next honest measurement. **Status:** core N-test implemented + tested; back-analysis
-integration + the catalog-based layer are the next cycle.
+**Result.** The NB N-test corrects the *evaluation* (IGPE unchanged) for typical over-dispersed sequences,
+and is now reported **alongside** the Poisson N-test in the back-analysis (`n_test_nb_pass_rate`).
+
+**E13b — the catalog-based (branching-simulation) layer + the secondary-cascade finding.** Implemented
+`model/simulate.py`: an ETAS branching-process forward simulator (pooled across sims, vectorized per
+generation, counts only — locations are irrelevant to the total) that produces the **honest** in-window
+`M≥mc` count distribution, plus a `catalog_based_n_test` against it (5 unit tests). Applied to the real
+global tiled ETAS (per-tile params, interior parents → no halo double-counting; decomposition reproduces
+`N_fore` exactly, ratio 1.00) on a 30-day global window:
+
+| quantity | value |
+|---|---|
+| `N_fore` (frozen-intensity forecast) | 64.3 (background 60.1 + first-gen triggering 4.2) |
+| simulated mean (full cascade) | **82.1** (+28% — the within-window secondary triggering the frozen forecast omits) |
+| Fano (Var/mean, over-dispersion) | 1.8 |
+| observed `M≥mc` | 96 |
+| Poisson N-test | q=0.0001 → **FAIL** |
+| catalog-based N-test | q=0.13 → **PASS** (sim p05=63, median=82, p95=103) |
+
+**Two honest findings.** (1) The apparent under-forecast (64 vs 96) on this window is **over-dispersion +
+secondary cascade, NOT a rate bias** — the catalog-based test passes where the Poisson test (which assumes
+`Var=mean`) over-rejects. (2) A real, previously-unquantified effect: the frozen-intensity forecast
+**systematically under-counts by ~28%** because it omits within-window secondary triggering — the realised
+mean (82) exceeds `N_fore` (64). The catalog-based N-test is the right consistency tool; whether to also
+publish the cascade-corrected expected count is a follow-up. (One 30-day global window; the method
+generalises — full multi-window back-analysis integration is the next step.)
 
 ---
 

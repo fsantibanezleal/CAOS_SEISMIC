@@ -1,0 +1,39 @@
+{
+  "kind": "e13_catalog_based",
+  "cutoff": "2026-05-17",
+  "horizon_days": 30.0,
+  "mc": 5.35,
+  "b": 1.3371656911063288,
+  "n_fore_frozen": 64.34,
+  "triggering_first_gen": 4.23,
+  "bg_total": 60.11,
+  "sim_mean_with_cascade": 82.1,
+  "sim_fano": 1.787,
+  "secondary_cascade_lift_pct": 27.6,
+  "n_observed": 96,
+  "n_sims": 3000,
+  "poisson_n_test": {
+    "q": 0.00014,
+    "pass": false
+  },
+  "negbinom_n_test": {
+    "q": 0.16226,
+    "pass": true
+  },
+  "catalog_n_test": {
+    "test": "N_catalog",
+    "quantile": 0.133,
+    "passed": true,
+    "alpha": 0.05,
+    "delta1": 0.133,
+    "delta2": 0.884,
+    "n_obs": 96,
+    "sim_mean": 82.1047,
+    "sim_median": 82.0,
+    "sim_p05": 63.0,
+    "sim_p95": 103.0,
+    "n_sims": 3000
+  },
+  "verdict": "over-dispersion + secondary cascade explains it (catalog N-test passes where Poisson fails)",
+  "framing": "ETAS branching forward-simulation of the in-window M>=mc count. The frozen-intensity forecast (64.3) omits within-window secondary triggering; the full cascade lifts the mean to ~82 and the over-dispersion (Fano~1.8) widens p95 to ~103, so the observed 96 is consistent. The Poisson N-test (assumes Var=mean) over-rejects it as a gross miss; the catalog-based test does not. This is one 30-day global window; the method generalises."
+}

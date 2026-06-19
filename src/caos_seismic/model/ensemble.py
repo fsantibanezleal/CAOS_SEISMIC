@@ -161,6 +161,7 @@ class EnsembleForecaster(BaseForecaster):
         w_min: float = 0.0,
         n_min: int = 8,
         anchor_index: int = 0,
+        window_weights: list[float] | None = None,
     ) -> "EnsembleForecaster":
         """Set the pool weights by **log-score-optimal convex stacking** on a strictly-past holdout.
 
@@ -196,7 +197,10 @@ class EnsembleForecaster(BaseForecaster):
         ``J(w) = sum_j sum_c [omega log(L w) - (L w)] - (rho/2)||w - e_0||^2`` over the simplex.
         """
         K = len(self.components)
-        w = _solve_stacking_weights(holdout, K, rho=rho, w_min=w_min, n_min=n_min, anchor_index=anchor_index)
+        w = _solve_stacking_weights(
+            holdout, K, rho=rho, w_min=w_min, n_min=n_min, anchor_index=anchor_index,
+            window_weights=window_weights,
+        )
         self.components = [(n, m, float(w[k])) for k, (n, m, _) in enumerate(self.components)]
         self._record_params()
         n_obs = int(sum(float(np.asarray(om).sum()) for _, om in holdout)) if holdout else 0
@@ -222,6 +226,7 @@ def _solve_stacking_weights(
     w_min: float,
     n_min: int,
     anchor_index: int,
+    window_weights: list[float] | None = None,
 ) -> np.ndarray:
     """Convex log-score-optimal stacking weights over the simplex (the E12 solver).
 
@@ -233,6 +238,11 @@ def _solve_stacking_weights(
     holdout objective returns ``e_0`` exactly. This bounds the *fitted weights* by the anchor on the data
     they are fit to; it does NOT bound the out-of-sample IGPE of the resulting forecast (that is what the
     prospective back-analysis measures).
+
+    ``window_weights`` (one per holdout window) re-weights each window's log-score contribution — pass an
+    exponential time-decay (recent windows heavier) for the **temporally-adaptive** variant, so the weights
+    track the current sequence regime (short-memory at onset, long-memory in the tail). ``None`` ⇒ uniform
+    (the static E12). The ``n_min`` cold-start uses the *effective* (weighted) event count.
     """
     e0 = np.zeros(K, dtype=float)
     e0[anchor_index] = 1.0
@@ -241,22 +251,27 @@ def _solve_stacking_weights(
     try:
         L = np.vstack([np.asarray(Lj, dtype=float).reshape(-1, K) for Lj, _ in holdout])
         om = np.concatenate([np.asarray(omj, dtype=float).reshape(-1) for _, omj in holdout])
+        if window_weights is None:
+            cw = np.ones(om.shape[0], dtype=float)
+        else:
+            ww = np.asarray(window_weights, dtype=float)
+            cw = np.concatenate([np.full(np.asarray(omj).reshape(-1).shape[0], ww[j]) for j, (_, omj) in enumerate(holdout)])
     except Exception:
         return e0
-    if L.shape[0] != om.shape[0] or float(om.sum()) < float(n_min):
+    if L.shape[0] != om.shape[0] or float((cw * om).sum()) < float(n_min):
         return e0
     eps = np.finfo(float).tiny
     Lc = np.clip(L, 0.0, None)
 
     def neg_J(w: np.ndarray) -> float:
         lam = np.clip(Lc @ w, eps, None)
-        ll = float(np.sum(om * np.log(lam) - lam))
+        ll = float(np.sum(cw * (om * np.log(lam) - lam)))
         pen = 0.5 * float(rho) * float(np.sum((w - e0) ** 2))
         return -(ll - pen)
 
     def neg_grad(w: np.ndarray) -> np.ndarray:
         lam = np.clip(Lc @ w, eps, None)
-        g = Lc.T @ (om / lam - 1.0)
+        g = Lc.T @ (cw * (om / lam - 1.0))
         return -(g - float(rho) * (w - e0))
 
     try:

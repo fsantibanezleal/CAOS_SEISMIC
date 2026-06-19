@@ -381,6 +381,62 @@ multi-horizon back-analysis with the `igpe_vs_base_tiled` channel is the next ru
 
 ---
 
+## Research-2 — Frontier paths, adversarially validated: the honest 7-day ceiling (2026-06-18)
+
+**Motivation (Felipe's directive).** Our 1–7 day results are honest but modest (E11 neural fails at 7 d,
+E12 stacking gains only +0.0087). So: a NEW deep research into 2024–2026 frontier paths, with **every
+hypothesis adversarially refuted** before it can enter the menu — the discipline that keeps us from
+chasing retrospective hype. (38 agents; 6 frontier search angles → 10 hypotheses → 3 skeptics each → rank.)
+
+**Result — all 10 hypotheses were killed (0 survived ≥2/3 refutation).** The convergent verdict:
+**base tiled ETAS is at/near the practical ceiling for mean-rate 1–7 d IGPE over global M≥5.** No
+neural/foundation TPP has beaten ETAS prospectively; the only proven lever (score-weighted ETAS ensembles)
+caps at +0.016 ± 0.028 (CI crosses 0); our own E11/E12 confirm it. **Anyone promising a large 7-day gain is
+selling retrospective/hype.** Killed paths included: time-varying b in the GR tail (OAF holds b fixed,
+corrects the rate side; STAI is sub-Mc), regime-gated NPP routing (misreads EarthquakeNPP), EEPAS
+multiplicative strain (long-term/retrospective), GCMT-anisotropic kernel (retrospective rupture
+reconstruction; 90° plane ambiguity), MAGNET magnitude head (Mc 1.6–2.5, location handed in), STEP stack
+member (same principles → no orthogonality), quadtree multi-resolution (raises S-test power, not IGPE).
+
+**The redirection (the value of the null result).** "Near the ceiling on mean-rate IGPE" ≠ "nothing to
+fix." Our **actually-measured binding failure** at 7 d is NOT spatial shape (which every killed path
+attacked) — it is **count over-dispersion**: the benchmark global view has ETAS `n_forecast = 64.2` vs
+`n_observed = 248` with the **Poisson N-test at quantile 0**, because the gridded-Poisson likelihood
+assumes `Var[N] = E[N]` and over-rejects clustered (branching) sequence counts (Werner 2010; Kagan 2017;
+Savran 2020). The adversarially-survived menu (`wip/frontier-paths-2026-06-18.json`):
+
+1. **Over-dispersion-honest scoring (E13)** — negative-binomial / catalog-based N-test. Fixes the measured
+   consistency failure; leakage-free; publishable even at zero IGPE movement. **Strongest evidence.**
+2. **Horizon-aware deployment** — ship the geodetic-neural background as a NEW 14–30 d outlook (where E11
+   measured a robust +0.05…+0.10) + hybrid `mu = mu_neural` at 7 d gated to no-regression.
+3. **Temporally-adaptive E12 stack** — dynamic weights reweighted during sequences (the OEF-Italy lever);
+   small headroom (+0.005…+0.015), possibly non-significant.
+4. **Permanent stratification + negative-control guard** — institutionalize the over-fitting check (the
+   shuffled-label control that exposed half of E12's headline as a non-spatial artifact).
+
+## E13 — Over-dispersion-honest N-test: negative-binomial (2026-06-18)
+
+**Motivation.** The forecast *product* already emits over-dispersed (negative-binomial / Gamma-mixture)
+count bounds (`inference.daily`, `nb_r = 4`), but the *scoring* still used the **Poisson** N-test — so a
+vigorous-but-plausible sequence is read as a gross miscalibration (the benchmark N-test fails at quantile
+0). That mismatch is the binding consistency failure Research-2 surfaced.
+
+**Change.** `csep.n_test_negbinom` scores the observed total against a negative-binomial null with mean
+`N_fore` and variance `N_fore(1 + N_fore/r)`, `r` = the same over-dispersion the product uses; `r → ∞`
+recovers the Poisson test exactly. 4 tests: Poisson limit; accepts moderate over-dispersion the Poisson
+test wrongly rejects; **STILL fails the extreme 64-vs-248 case** (a 3.9× *rate* under-forecast is a real
+bias, not dispersion — a dispersion fix must never whitewash it); degenerate-`r` fallback.
+
+**Result + honest limit.** The NB N-test corrects the *evaluation* (IGPE unchanged) for typical
+over-dispersed sequences. It does NOT rescue the extreme benchmark window: ETAS forecasting 64 when 248
+occurred is a genuine **rate** under-forecast of a large sequence — the heavy-tailed **catalog-based**
+(branching-simulation) test is the next layer (pyCSEP 0.8.0 is installed; the E11-vectorized Omori/
+productivity machinery makes forward thinning cheap), and whether the gap is dispersion vs rate bias is
+itself the next honest measurement. **Status:** core N-test implemented + tested; back-analysis
+integration + the catalog-based layer are the next cycle.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base

@@ -1,0 +1,198 @@
+{
+  "kind": "neural_pseudoprospective",
+  "m_star": 5.0,
+  "horizons_days": [
+    7.0,
+    30.0
+  ],
+  "n_windows": 8,
+  "step_days": 7,
+  "cutoff0": "2026-04-22",
+  "by_horizon": {
+    "7": {
+      "n_windows_scored": 8,
+      "mean_igpe_vs_etas_nats": -0.05342,
+      "n_windows_positive": 4,
+      "per_window_igpe": [
+        -0.16175,
+        -0.07578,
+        0.1447,
+        0.08699,
+        -0.08715,
+        0.23338,
+        0.23288,
+        -0.80064
+      ]
+    },
+    "30": {
+      "n_windows_scored": 4,
+      "mean_igpe_vs_etas_nats": 0.07787,
+      "n_windows_positive": 4,
+      "per_window_igpe": [
+        0.052,
+        0.0193,
+        0.10291,
+        0.13728
+      ]
+    }
+  },
+  "per_window": [
+    {
+      "window": 0,
+      "cutoff": "2026-04-22",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 37,
+          "igpe_vs_etas_nats": -0.16175,
+          "n_fc_neural": 18.03,
+          "n_fc_etas": 16.25,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": true,
+          "n_obs": 166,
+          "igpe_vs_etas_nats": 0.052,
+          "n_fc_neural": 77.26,
+          "n_fc_etas": 65.34,
+          "ntest_neural_passed": false
+        }
+      }
+    },
+    {
+      "window": 1,
+      "cutoff": "2026-04-29",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 40,
+          "igpe_vs_etas_nats": -0.07578,
+          "n_fc_neural": 18.03,
+          "n_fc_etas": 15.27,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": true,
+          "n_obs": 178,
+          "igpe_vs_etas_nats": 0.0193,
+          "n_fc_neural": 77.28,
+          "n_fc_etas": 63.91,
+          "ntest_neural_passed": false
+        }
+      }
+    },
+    {
+      "window": 2,
+      "cutoff": "2026-05-06",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 40,
+          "igpe_vs_etas_nats": 0.1447,
+          "n_fc_neural": 18.04,
+          "n_fc_etas": 15.08,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": true,
+          "n_obs": 178,
+          "igpe_vs_etas_nats": 0.10291,
+          "n_fc_neural": 77.29,
+          "n_fc_etas": 63.48,
+          "ntest_neural_passed": false
+        }
+      }
+    },
+    {
+      "window": 3,
+      "cutoff": "2026-05-13",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 40,
+          "igpe_vs_etas_nats": 0.08699,
+          "n_fc_neural": 18.04,
+          "n_fc_etas": 15.07,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": true,
+          "n_obs": 236,
+          "igpe_vs_etas_nats": 0.13728,
+          "n_fc_neural": 77.32,
+          "n_fc_etas": 63.34,
+          "ntest_neural_passed": false
+        }
+      }
+    },
+    {
+      "window": 4,
+      "cutoff": "2026-05-20",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 48,
+          "igpe_vs_etas_nats": -0.08715,
+          "n_fc_neural": 18.05,
+          "n_fc_etas": 15.41,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": false
+        }
+      }
+    },
+    {
+      "window": 5,
+      "cutoff": "2026-05-27",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 35,
+          "igpe_vs_etas_nats": 0.23338,
+          "n_fc_neural": 18.06,
+          "n_fc_etas": 15.46,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": false
+        }
+      }
+    },
+    {
+      "window": 6,
+      "cutoff": "2026-06-03",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 92,
+          "igpe_vs_etas_nats": 0.23288,
+          "n_fc_neural": 18.06,
+          "n_fc_etas": 15.05,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": false
+        }
+      }
+    },
+    {
+      "window": 7,
+      "cutoff": "2026-06-10",
+      "by_horizon": {
+        "7": {
+          "scorable": true,
+          "n_obs": 64,
+          "igpe_vs_etas_nats": -0.80064,
+          "n_fc_neural": 18.08,
+          "n_fc_etas": 16.39,
+          "ntest_neural_passed": false
+        },
+        "30": {
+          "scorable": false
+        }
+      }
+    }
+  ],
+  "framing": "Pseudo-prospective: the strain-conditioned neural + tiled ETAS fit ONCE at cutoff0, then reconditioned forward weekly (no retrain per window). IGPE of the neural over ETAS per leakage-free holdout, at BOTH the 7-day product horizon and the 30-day gate horizon (E10 won the single 30-day window at +0.075). A POSITIVE and STABLE mean at a horizon means the geodetic context generalises there; a negative mean means the single-window win did not."
+}

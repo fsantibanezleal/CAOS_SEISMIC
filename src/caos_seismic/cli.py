@@ -27,9 +27,11 @@ Framing (non-negotiable): this is a *forecaster*, never a *predictor*. See `cont
 from __future__ import annotations
 
 import importlib
+import os
 import platform
 import subprocess
 import sys
+import tempfile
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -103,13 +105,21 @@ def _require_stage(module: str, *, extra: str | None = None):
         ) from exc
 
 
-def _git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a git command in the repo root, capturing text output."""
+def _git(
+    *args: str, check: bool = True, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run a git command in the repo root, capturing text output.
+
+    ``env`` (when given) is merged over the process environment — used to point ``GIT_INDEX_FILE`` at a
+    scratch index so the daily publish can build a commit on top of ``origin/main`` without touching the
+    working tree or the real index.
+    """
     return subprocess.run(
         ["git", "-C", str(REPO_ROOT), *args],
         check=check,
         capture_output=True,
         text=True,
+        env={**os.environ, **env} if env else None,
     )
 
 
@@ -713,19 +723,54 @@ def _publish_scoped(publish_cfg: dict, *, region: str, n_dates: int) -> None:
     today_iso = date.today().isoformat()
     suffix = f"{region} {today_iso}" + (f" (+{n_dates - 1} catch-up)" if n_dates > 1 else "")
     message = f"{prefix}: {suffix}"
+    # Commit locally too (keeps the working branch's tree clean; harmless if it later rides a PR).
     _git("commit", "-q", "-m", message, check=True)
     _echo(f"publish · committed: {message}")
 
-    # Push (best effort; a missing remote is a clear, non-fatal message for local dev).
-    push = _git("push", remote, f"HEAD:{branch}", check=False)
+    push = _publish_push_to_branch(staged, message, remote=remote, branch=branch)
     if push.returncode != 0:
         _echo(
-            f"publish · commit made locally but push failed (remote '{remote}', branch '{branch}'):\n"
+            f"publish · commit made locally but push to '{remote}/{branch}' failed:\n"
             f"{push.stderr.strip()}",
             err=True,
         )
         raise typer.Exit(1)
     _echo(f"publish · pushed to {remote} {branch}.")
+
+
+def _publish_push_to_branch(
+    staged: list[str], message: str, *, remote: str, branch: str
+) -> subprocess.CompletedProcess[str]:
+    """Push ONLY the scoped artifact changes onto ``remote/branch``, robust to a divergent working branch.
+
+    The daily job runs in a shared working directory that is usually on a *development* branch. A naive
+    ``git push HEAD:main`` is then rejected non-fast-forward (the dev branch lacks main's PR-merge commits),
+    which is exactly why the cron failed with exit 1 while still committing the forecast locally. Instead we
+    rebuild the commit on top of the **current** ``remote/branch`` tip using a scratch index + ``commit-tree``
+    (overlaying only the scoped ``staged`` paths onto that tree), then push that single, conflict-free commit.
+    Disjoint from code paths, so it never carries dev work to main and is always a clean fast-forward.
+    """
+    fetched = _git("fetch", remote, branch, check=False)
+    base = _git("rev-parse", "FETCH_HEAD", check=False).stdout.strip()
+    if fetched.returncode != 0 or not base:
+        # No reachable remote branch (fresh remote / offline) — fall back to the simple push.
+        return _git("push", remote, f"HEAD:{branch}", check=False)
+
+    idx = tempfile.NamedTemporaryFile(suffix=".idx", delete=False)
+    idx.close()
+    try:
+        env = {"GIT_INDEX_FILE": idx.name}
+        _git("read-tree", base, env=env, check=True)  # scratch index = remote/branch tree
+        for path in staged:
+            if (REPO_ROOT / path).exists():
+                _git("update-index", "--add", "--", path, env=env, check=True)
+            else:
+                _git("update-index", "--remove", "--", path, env=env, check=False)
+        tree = _git("write-tree", env=env, check=True).stdout.strip()
+        commit = _git("commit-tree", tree, "-p", base, "-m", message, env=env, check=True).stdout.strip()
+        return _git("push", remote, f"{commit}:{branch}", check=False)
+    finally:
+        os.unlink(idx.name)
 
 
 if __name__ == "__main__":  # pragma: no cover

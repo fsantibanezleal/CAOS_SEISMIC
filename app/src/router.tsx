@@ -6,6 +6,7 @@ import Introduction from "@/pages/Introduction";
 import Problem from "@/pages/Problem";
 import Methodology from "@/pages/Methodology";
 import Implementation from "@/pages/Implementation";
+import Experiments from "@/pages/Experiments";
 import BackAnalysis from "@/pages/BackAnalysis";
 import Monitoring from "@/pages/Monitoring";
 
@@ -30,6 +31,7 @@ const router = createBrowserRouter(
         { path: "problem", element: <Problem /> },
         { path: "methodology", element: <Methodology /> },
         { path: "implementation", element: <Implementation /> },
+        { path: "experiments", element: <Experiments /> },
         { path: "back-analysis", element: <BackAnalysis /> },
         { path: "monitoring", element: <Monitoring /> },
         { path: "*", element: <NotFound /> },

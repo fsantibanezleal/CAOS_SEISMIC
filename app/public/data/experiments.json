@@ -1,0 +1,53 @@
+{
+  "product": "CAOS_SEISMIC",
+  "kind": "experiment_journey",
+  "note_en": "An honest, append-only record of the experiments and the route taken — including the dead ends and the negative results. A change counts as an improvement only if it shows prospective skill; retrospective gains are recorded but never published as skill. Full technical detail: the repository experiment register (docs/experiments.md).",
+  "note_es": "Un registro honesto y append-only de los experimentos y la ruta tomada — incluidos los callejones sin salida y los resultados negativos. Un cambio es una mejora solo si muestra skill prospectivo; las ganancias retrospectivas se registran pero nunca se publican como skill. Detalle técnico completo: el registro de experimentos del repositorio (docs/experiments.md).",
+  "experiments": [
+    {
+      "id": "E1", "date": "2026-06-16", "status": "done", "phase": "data",
+      "en": { "title": "Global catalog enrichment", "summary": "Mw homogenization decimated the catalog 228k→16.5k (no mb→Mw reference). Added Scordilis-2006 literature conversions as a fallback.", "finding": "Recovered 6× the records → 97,230 real events (1990–2026). The naive global b inflated (1.59); the per-tile fit gives a reasonable b=1.337." },
+      "es": { "title": "Enriquecimiento del catálogo global", "summary": "La homogenización a Mw diezmó el catálogo 228k→16.5k (sin referencia mb→Mw). Se añadieron las conversiones de Scordilis-2006 como respaldo.", "finding": "Se recuperó 6× los registros → 97.230 eventos reales (1990–2026). El b global naïve infló (1.59); el fit por-tile da un b=1.337 razonable." }
+    },
+    {
+      "id": "E2", "date": "2026-06-17", "status": "done", "phase": "engineering",
+      "en": { "title": "Tractable global pipeline", "summary": "Five O(N²)/architecture fixes: KD-tree neighbours, a closed-form Omori window integral, and inference uses the regime-tiled ETAS (not a monolithic global ETAS).", "finding": "Inference 79→12 s; the whole pipeline runs end-to-end. A monolithic global ETAS is both O(N²) AND physically wrong (subduction ≠ stable interior)." },
+      "es": { "title": "Pipeline global tractable", "summary": "Cinco fixes O(N²)/arquitectura: vecinos por KD-tree, integral de Omori en forma cerrada, y la inferencia usa el ETAS por-tile (no un ETAS global monolítico).", "finding": "Inferencia 79→12 s; el pipeline corre end-to-end. Un ETAS global monolítico es O(N²) Y físicamente incorrecto (subducción ≠ interior estable)." }
+    },
+    {
+      "id": "E3", "date": "2026-06-17", "status": "done", "phase": "model",
+      "en": { "title": "First trained global model + live forecast", "summary": "Regime-tiled ETAS: 195 ETAS tiles, b=1.337, Mc=5.35 on 97k events. First real artifact published.", "finding": "Information gain 4.65 nats vs the Poisson null on the self-consistency check. N-test fails (count calibration pending) — reported honestly." },
+      "es": { "title": "Primer modelo global entrenado + pronóstico LIVE", "summary": "ETAS por-tile: 195 tiles ETAS, b=1.337, Mc=5.35 sobre 97k eventos. Primer artefacto real publicado.", "finding": "Info-gain 4.65 nats vs el null de Poisson en la auto-consistencia. N-test falla (calibración del conteo pendiente) — reportado honestamente." }
+    },
+    {
+      "id": "E4", "date": "2026-06-17", "status": "done", "phase": "engineering",
+      "en": { "title": "Efficient back-analysis (13×)", "summary": "Fit on a cadence + recondition daily (validated 0.05% vs full-refit), and a 0.5° scoring grid (M≥5 is sparse → better-powered CSEP and ~25× cheaper).", "finding": "34 min → 2.6 min on a 7-day × 7-view run. The dominant cost was the per-day inference, not the MLE." },
+      "es": { "title": "Back-analysis eficiente (13×)", "summary": "Fit en cadencia + re-condición diaria (validado 0.05% vs re-fit completo), y grilla de scoring 0.5° (M≥5 escasos → tests CSEP mejor-poblados y ~25× más barato).", "finding": "34 min → 2.6 min en una corrida 7-días × 7-vistas. El costo dominante era la inferencia diaria, no la MLE." }
+    },
+    {
+      "id": "E5", "date": "2026-06-17", "status": "done", "phase": "result",
+      "en": { "title": "Multi-country prospective baseline (the bias)", "summary": "60-day pseudo-prospective back-analysis over 8 views — the thesis measurement of where the model's skill lives.", "finding": "Global field +0.0835 nats/eq vs null; the high−low seismicity gap is +0.0184 (skill concentrates in active zones; Japan +0.072; low-seismicity interiors ≈ 0)." },
+      "es": { "title": "Baseline prospectivo multi-país (el bias)", "summary": "Back-analysis pseudo-prospectivo de 60 días sobre 8 vistas — la medición-tesis de dónde vive la skill del modelo.", "finding": "Campo global +0.0835 nats/sismo vs null; el gap alta−baja sismicidad es +0.0184 (la skill se concentra en zonas activas; Japón +0.072; interiores de baja sismicidad ≈ 0)." }
+    },
+    {
+      "id": "E8-E9", "date": "2026-06-17", "status": "done", "phase": "improvement",
+      "en": { "title": "Ensemble — a recorded dead end", "summary": "Implemented a weighted ensemble (the literature's #1 lever) and benchmarked it against every model.", "finding": "The naive equal-weight ensemble UNDERPERFORMS ETAS — averaging in the null and the weak Reasenberg–Jones dilutes the triggering signal. Honest negative result → not shipped; the real lever is score-weighted stacking of ETAS variants." },
+      "es": { "title": "Ensemble — un callejón sin salida registrado", "summary": "Se implementó un ensemble ponderado (la palanca #1 de la literatura) y se comparó contra todos los modelos.", "finding": "El ensemble naïve de peso igual SUB-rinde a ETAS — promediar el null y el débil Reasenberg–Jones diluye la señal de triggering. Resultado negativo honesto → no se despliega; la palanca real es el stacking score-weighted de variantes ETAS." }
+    },
+    {
+      "id": "research", "date": "2026-06-17", "status": "done", "phase": "research",
+      "en": { "title": "Cited evidence base (what beats ETAS)", "summary": "A deep, adversarially-verified literature synthesis of how (and whether) to beat ETAS, with prospective evidence as of 2024–2026.", "finding": "Score-weighted ETAS-family ensembles are the only proven prospective lever (and only modestly, +0.016 IGPE). No neural point process beats ETAS prospectively (EarthquakeNPP). Geodetic covariates help globally but can hurt regionally." },
+      "es": { "title": "Base de evidencia citada (qué supera a ETAS)", "summary": "Síntesis de literatura profunda y verificada adversarialmente de cómo (y si) superar a ETAS, con evidencia prospectiva 2024–2026.", "finding": "Los ensembles score-weighted de la familia ETAS son la única palanca prospectiva probada (y modesta, +0.016 IGPE). Ningún NPP supera a ETAS prospectivamente (EarthquakeNPP). Las covariables geodésicas ayudan global pero pueden dañar regional." }
+    },
+    {
+      "id": "E10", "date": "2026-06-18", "status": "done", "phase": "improvement",
+      "en": { "title": "Geodetic context + neural calibration", "summary": "Wired the real GNSS strain rate (NGL MIDAS, 20k stations) into the neural challenger, and fixed its absolute-rate calibration (it over-forecast ~490×).", "finding": "Once calibrated, the strain-conditioned neural beats ETAS on the in-loop gate: +0.075 nats/eq, N-test passes, forecast 218.9 vs 248 observed — more than the published reference repos achieved. BUT this is a single-window gate, not yet prospective." },
+      "es": { "title": "Contexto geodésico + calibración del neural", "summary": "Se cableó el strain GNSS real (NGL MIDAS, 20k estaciones) al challenger neural, y se arregló su calibración de tasa absoluta (sobre-pronosticaba ~490×).", "finding": "Una vez calibrado, el neural condicionado por strain le gana a ETAS en el gate in-loop: +0.075 nats/sismo, N-test pasa, pronóstico 218.9 vs 248 observados — más de lo que lograron los repos de referencia. PERO es una ventana única, aún no prospectivo." }
+    },
+    {
+      "id": "E11", "date": "2026-06-18", "status": "running", "phase": "validation",
+      "en": { "title": "Pseudo-prospective validation of the neural", "summary": "Does the single-window geodetic win generalise? The neural is fit once and reconditioned forward across weekly leakage-free windows; the mean IGPE vs ETAS is the prospective estimate.", "finding": "RUNNING. Early signal: the first window is NEGATIVE (−0.16) — the single-window win does not robustly hold, consistent with the field (no NPP beats ETAS prospectively). The honest mean will decide." },
+      "es": { "title": "Validación pseudo-prospectiva del neural", "summary": "¿La victoria geodésica de ventana única generaliza? El neural se ajusta una vez y se re-condiciona hacia adelante en ventanas semanales sin fuga; el IGPE medio vs ETAS es la estimación prospectiva.", "finding": "CORRIENDO. Señal temprana: la primera ventana es NEGATIVA (−0.16) — la victoria de ventana única no se sostiene robustamente, consistente con el campo (ningún NPP supera a ETAS prospectivamente). El promedio honesto decidirá." }
+    }
+  ]
+}

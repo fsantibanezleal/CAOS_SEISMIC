@@ -1333,6 +1333,90 @@ kbd {
   border-top: 2px solid var(--color-border);
   font-weight: 600;
 }
+
+/* Experiments journey timeline */
+.exp-timeline {
+  list-style: none;
+  padding: 0;
+  margin: 1.5rem 0;
+  border-left: 2px solid var(--color-border);
+}
+.exp-timeline .exp-item {
+  position: relative;
+  padding: 0.4rem 0 1.4rem 1.4rem;
+}
+.exp-timeline .exp-item::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 0.7rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent, #4aa3df);
+  border: 2px solid var(--color-bg, #0d1117);
+}
+.exp-timeline .exp-item.status-running::before {
+  background: #e0a030;
+  animation: exp-pulse 1.6s ease-in-out infinite;
+}
+.exp-timeline .exp-item.status-pending::before {
+  background: var(--color-text-muted, #888);
+}
+@keyframes exp-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(224, 160, 48, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(224, 160, 48, 0); }
+}
+.exp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+}
+.exp-meta .exp-id {
+  font-weight: 700;
+  color: var(--color-accent, #4aa3df);
+}
+.exp-meta .exp-date {
+  color: var(--color-text-muted, #888);
+}
+.exp-status.badge {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.03em;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+}
+.exp-status.badge.done { color: #2e9e5b; }
+.exp-status.badge.running { color: #e0a030; border-color: #e0a030; }
+.exp-status.badge.pending { color: var(--color-text-muted, #888); }
+.exp-phase.tag {
+  font-size: 0.68rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 0.3rem;
+  background: var(--color-surface, rgba(127, 127, 127, 0.08));
+  color: var(--color-text-muted, #888);
+}
+.exp-title {
+  margin: 0.35rem 0 0.2rem;
+  font-size: 1.05rem;
+}
+.exp-summary {
+  margin: 0 0 0.35rem;
+}
+.exp-finding {
+  margin: 0;
+  font-size: 0.92rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--color-border);
+  color: var(--color-text, inherit);
+}
+.exp-finding-key {
+  font-weight: 600;
+  color: var(--color-accent, #4aa3df);
+}
 .mono {
   font-family: var(--font-mono);
   font-size: 0.9em;

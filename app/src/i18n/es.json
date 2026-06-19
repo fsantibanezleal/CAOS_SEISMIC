@@ -9,8 +9,15 @@
     "problem": "El problema",
     "methodology": "Metodología",
     "implementation": "Implementación",
+    "experiments": "Experimentos",
     "backAnalysis": "Retroanálisis",
     "monitoring": "Monitoreo"
+  },
+  "exp": {
+    "title": "Experimentos y la ruta tomada",
+    "lede": "Un recorrido honesto y append-only de lo que probamos — incluidos los callejones sin salida y los resultados negativos. Un cambio es una mejora solo si muestra skill prospectivo.",
+    "error": "No se pudo cargar el recorrido de experimentos: {{message}}",
+    "footer": "El detalle técnico completo, con motivación → cambio → resultado medido → justificación, está en el registro de experimentos del repositorio (docs/experiments.md) y la wiki pública."
   },
   "header": {
     "github": "Código en GitHub",

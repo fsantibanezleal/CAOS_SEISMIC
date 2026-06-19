@@ -318,16 +318,24 @@ regionally. Each item gets its own E-entry with measured results when executed.
    ETAS** (it dilutes the triggering signal). The remaining lever is **score-weighted stacking of ETAS
    *variants*** (weights from the rolling prospective log-score; drop the null/R-J as equal members),
    which the evidence (F1) says yields a *small* gain — to be implemented + benchmarked next.
-2. **GCMT data-driven Mw conversion** — replace the Scordilis literature default with fitted station-pair
-   regressions; expected to correct the inflated b and sharpen the magnitude tail (→ closes E1's caveat).
-3. **Anisotropic / finite-fault aftershock kernel** — replace the isotropic spatial kernel for large
+2. **Context covariates (the thesis experiment)** — **DONE for GNSS strain (E10): the calibrated
+   context-neural beats ETAS on the in-loop gate (+0.075 nats, N-test passes).** **Pseudo-prospective
+   validation RUNNING (E11)** via the new neural `recondition` (fit once, recondition forward across weekly
+   windows) — the authoritative test of whether the single-window win generalises. The remaining covariates
+   (Coulomb stress, fault proximity, slab, tides) are zero-filled and would be wired the same way.
+3. **GCMT data-driven Mw conversion** — **DEFERRED, low priority.** The motivating problem (inflated b) is
+   largely resolved: the naive global fit's b=1.586 (Scordilis tail-compression) becomes **b=1.337 under the
+   per-tile fit** actually used in production. GCMT would sharpen the Mw homogenization further (a
+   data-quality refinement), but the production b is already reasonable.
+4. **Global event-event coupling channel (E11-bis — Felipe's teleseismic question)** — the current model
+   conditions LOCALLY (~500 km ETAS cutoff). A channel of recent worldwide seismicity (or dynamic-stress)
+   would test whether "Japan→Chile"-type coupling adds skill. Candidate, but the evidence is that remote
+   triggering of large events has weak/unestablished **prospective** value (Parsons & Velasco 2011) — to be
+   measured honestly, with ≈ 0 the likely (and still valid) outcome.
+5. **Anisotropic / finite-fault aftershock kernel** — replace the isotropic spatial kernel for large
    events; ETAS variants that beat vanilla ETAS prospectively use fault-aware spatial decay.
-4. **Context covariates** (the thesis experiment) — wire GNSS strain rate, Coulomb stress, fault
-   proximity, slab geometry, tidal stress into `context_tpp`; re-train; measure whether the
-   context-conditioned model shows **prospective** IGPE over ETAS (most such claims fail prospectively —
-   measuring it honestly is the contribution).
-5. **Foundation-model direction** (frontier) — pre-train on global seismicity, transfer per region
-   (see `CAOS_RES_Foundation_Models`); document current limitations.
+6. **Score-weighted ETAS-variant ensemble** (from item 1) + **foundation-model** pre-training
+   (`CAOS_RES_Foundation_Models`) — the longer-horizon levers.
 
 > The authoritative, cited evidence base for this menu is the deep-research synthesis launched 2026-06-17;
 > its findings will be folded into this register and the wiki `Models-*` pages.

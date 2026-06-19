@@ -306,6 +306,145 @@ correct and reusable.
 
 ---
 
+## E11 — Pseudo-prospective validation of the neural, dual-horizon (2026-06-18)
+
+**Motivation.** E10's +0.075 nats was a *single 30-day window* in-loop gate. The literature (and the
+EarthquakeNPP benchmark) is unambiguous that single-window wins do not generalise. E11 is the
+authoritative test: does the geodetic-context neural beat ETAS **prospectively**, across many leakage-free
+windows, and **at which horizon**?
+
+**Design.** Fit the strain-conditioned neural **once** at the earliest cutoff, then **recondition** it
+forward across 8 weekly leakage-free windows (the cadenced path — no retrain per window), scoring the
+IGPE of the neural over the tiled ETAS at **two horizons: 7 days (the product horizon) and 30 days (the
+gate horizon)**. The two-horizon design directly tests the hypothesis that the geodetic advantage is
+**horizon-dependent** (helps where the background/context dominates, i.e. longer horizons; loses where
+ETAS triggering dominates, i.e. short horizons).
+
+**Change that made it tractable (justification — Felipe's efficiency principle).** The neural's
+`expected_counts` was a per-cell Python loop over the 119,717-cell global grid × 12 time steps (~1.4M net
+forward passes, **~51 min per scoring window** — the full 8-window dual-horizon run would have been ~7 h).
+It was **vectorized**: the productivity `kappa` and spatial scale `zeta` depend only on the parent events
+and the temporal kernel `g` only on the step, so they are computed once and the cell loop collapses to a
+chunked great-circle distance matrix. Pinned numerically identical to the old quadrature by
+`tests/test_context_tpp_vectorization.py` (max relative error 6.7e-8, float32 round-off). Per window
+dropped from ~51 min to seconds.
+
+**Result (DECISIVE, horizon-dependent).**
+- **7-day product horizon:** mean IGPE vs ETAS = **−0.053** over 8 windows, only **4/8 positive**, very
+  noisy (per-window {−0.16, −0.08, +0.14, +0.09, −0.09, +0.23, +0.23, **−0.80**}; the last is a sequence
+  window the neural badly missed). **The neural does NOT beat ETAS at the operational horizon.**
+- **30-day horizon:** mean IGPE vs ETAS = **+0.078** over 4 windows, **4/4 positive** ({+0.052, +0.019,
+  +0.103, +0.137}). **E10's single-window +0.075 gate win GENERALISES at 30 days.**
+
+**Interpretation (the key finding).** The geodetic context is a **real lever, but only at the longer,
+background-dominated horizon** — not at the 1–7 day product horizon where ETAS triggering dominates. The
+decisive mechanistic detail: the calibrated neural's total forecast is **constant across windows** (18.1 at
+7 d, 77.3 at 30 d, ratio ≈ 30/7) ⇒ it deploys a time-flat **geodetic background**, not a triggering model.
+That is *why* it loses at 7 d (can't track sequences) and wins at 30 d (better background dominates the
+integral). This does not retract E10; it **bounds where that signal is real**, and it directly motivates a
+**14–30 day outlook product** (geodetic background) + the `mu = mu_neural` hybrid at 7 d gated to
+no-regression (`wip/horizon-aware-and-hybrid-design.md`; frontier-research rank 2).
+
+---
+
+## E12 — Score-weighted ETAS-variant stacking ensemble (2026-06-18)
+
+**Motivation.** The deep-research evidence base (improvement-evidence.md, F1) is that **score-weighted
+ETAS-family ensembles are the *only* proven prospective lever over a single well-fit ETAS** — and only by
+a *small* margin (+0.016 ± 0.028 IGPE; the CI already straddles zero, Herrmann & Marzocchi 2023). E8-E9
+recorded that the *naive equal-weight* pool of heterogeneous models {ETAS, smoothed-null, R-J}
+**underperforms** ETAS (it dilutes the triggering signal). E12 builds the construction the evidence
+actually supports.
+
+**Design (adversarial panel synthesis, `wip/e12-stacked-ensemble-design.json`).** A convex
+**log-score-optimal stacking** of **3 ETAS-FAMILY variants** — V0 base tiled ETAS (the pinned anchor),
+V1 short-memory (fast Omori: `max_parent_days` 730→120, `max_parent_dist_km` 500→250, `p∈[1.0,1.4]`), V2
+long-memory (late-aftershock tail: `max_parent_days` 730→1825, `p∈[0.9,1.1]`). A **single global** weight
+vector is learned from the rolling strictly-past Poisson log-score (== the IGPE numerator) and **shrunk
+hard toward the V0 vertex** (L2/Dirichlet). The data budget is the binding constraint (~248 global M≥5 per
+30-day window): with K=3 we fit only 2 free weights — no per-regime weights, no model zoo.
+
+**The anti-dilution guarantee (the E8-E9 fix, structural):** every member is a tiled-ETAS triggering
+model; the smoothed null enters **only** as each member's `mu(x,y)` background + the downstream cold-start
+floor, **never** as a weighted component (`build_etas_stack_ensemble` raises otherwise). Weights are
+**learned**, so a useless member is driven to its floor; the anchor is pinned and the optimum is provably
+≥ base in-sample and collapses to exactly base on sparse/quiet holdouts. Honest expectation: a small
+(+0.01..+0.02) and **possibly non-significant** gain.
+
+**Pre-registered ship / no-ship rule (fixed BEFORE the run, so the decision cannot move after seeing the
+number).** E12 **ships** (replaces base tiled ETAS as primary) iff ALL hold: (a) mean paired IGPE(E12 vs
+base tiled ETAS) > 0 on the GLOBAL view AND in ≥2 high-seismicity regional views; (b) the Rhoades-2011
+paired-T 95% CI excludes zero on the positive side at the **7-day** horizon; (c) the W-test corroborates
+(p<0.05, positive median); (d) per-window IGPE positive in ≥60% of weekly windows and the sign does not
+flip on the most-recent quintile; (e) E12 loses in no low-seismicity view by more than the noise floor
+(mean IGPE ≥ −0.005); (f) a negative-control shuffled-label fit does NOT score as well as the real fit;
+(g) E12 passes N/M/S/L consistency no worse than base. **If any of (a)–(g) fails, E12 is recorded as a
+dead-end** with the measured IGPE — "no demonstrated prospective gain over single tiled ETAS" is itself a
+valid result, exactly as E9 was recorded.
+
+**Status.** Core IMPLEMENTED + unit-tested (TiledForecaster kernel-override plumbing;
+`EnsembleForecaster.fit_weights_from_history` convex stacking solver with anchor shrinkage + cold-start
+fallback; `build_etas_stack_ensemble` structural guard; 8 tests). The leakage-free multi-region
+multi-horizon back-analysis with the `igpe_vs_base_tiled` channel is the next run.
+
+---
+
+## Research-2 — Frontier paths, adversarially validated: the honest 7-day ceiling (2026-06-18)
+
+**Motivation (Felipe's directive).** Our 1–7 day results are honest but modest (E11 neural fails at 7 d,
+E12 stacking gains only +0.0087). So: a NEW deep research into 2024–2026 frontier paths, with **every
+hypothesis adversarially refuted** before it can enter the menu — the discipline that keeps us from
+chasing retrospective hype. (38 agents; 6 frontier search angles → 10 hypotheses → 3 skeptics each → rank.)
+
+**Result — all 10 hypotheses were killed (0 survived ≥2/3 refutation).** The convergent verdict:
+**base tiled ETAS is at/near the practical ceiling for mean-rate 1–7 d IGPE over global M≥5.** No
+neural/foundation TPP has beaten ETAS prospectively; the only proven lever (score-weighted ETAS ensembles)
+caps at +0.016 ± 0.028 (CI crosses 0); our own E11/E12 confirm it. **Anyone promising a large 7-day gain is
+selling retrospective/hype.** Killed paths included: time-varying b in the GR tail (OAF holds b fixed,
+corrects the rate side; STAI is sub-Mc), regime-gated NPP routing (misreads EarthquakeNPP), EEPAS
+multiplicative strain (long-term/retrospective), GCMT-anisotropic kernel (retrospective rupture
+reconstruction; 90° plane ambiguity), MAGNET magnitude head (Mc 1.6–2.5, location handed in), STEP stack
+member (same principles → no orthogonality), quadtree multi-resolution (raises S-test power, not IGPE).
+
+**The redirection (the value of the null result).** "Near the ceiling on mean-rate IGPE" ≠ "nothing to
+fix." Our **actually-measured binding failure** at 7 d is NOT spatial shape (which every killed path
+attacked) — it is **count over-dispersion**: the benchmark global view has ETAS `n_forecast = 64.2` vs
+`n_observed = 248` with the **Poisson N-test at quantile 0**, because the gridded-Poisson likelihood
+assumes `Var[N] = E[N]` and over-rejects clustered (branching) sequence counts (Werner 2010; Kagan 2017;
+Savran 2020). The adversarially-survived menu (`wip/frontier-paths-2026-06-18.json`):
+
+1. **Over-dispersion-honest scoring (E13)** — negative-binomial / catalog-based N-test. Fixes the measured
+   consistency failure; leakage-free; publishable even at zero IGPE movement. **Strongest evidence.**
+2. **Horizon-aware deployment** — ship the geodetic-neural background as a NEW 14–30 d outlook (where E11
+   measured a robust +0.05…+0.10) + hybrid `mu = mu_neural` at 7 d gated to no-regression.
+3. **Temporally-adaptive E12 stack** — dynamic weights reweighted during sequences (the OEF-Italy lever);
+   small headroom (+0.005…+0.015), possibly non-significant.
+4. **Permanent stratification + negative-control guard** — institutionalize the over-fitting check (the
+   shuffled-label control that exposed half of E12's headline as a non-spatial artifact).
+
+## E13 — Over-dispersion-honest N-test: negative-binomial (2026-06-18)
+
+**Motivation.** The forecast *product* already emits over-dispersed (negative-binomial / Gamma-mixture)
+count bounds (`inference.daily`, `nb_r = 4`), but the *scoring* still used the **Poisson** N-test — so a
+vigorous-but-plausible sequence is read as a gross miscalibration (the benchmark N-test fails at quantile
+0). That mismatch is the binding consistency failure Research-2 surfaced.
+
+**Change.** `csep.n_test_negbinom` scores the observed total against a negative-binomial null with mean
+`N_fore` and variance `N_fore(1 + N_fore/r)`, `r` = the same over-dispersion the product uses; `r → ∞`
+recovers the Poisson test exactly. 4 tests: Poisson limit; accepts moderate over-dispersion the Poisson
+test wrongly rejects; **STILL fails the extreme 64-vs-248 case** (a 3.9× *rate* under-forecast is a real
+bias, not dispersion — a dispersion fix must never whitewash it); degenerate-`r` fallback.
+
+**Result + honest limit.** The NB N-test corrects the *evaluation* (IGPE unchanged) for typical
+over-dispersed sequences. It does NOT rescue the extreme benchmark window: ETAS forecasting 64 when 248
+occurred is a genuine **rate** under-forecast of a large sequence — the heavy-tailed **catalog-based**
+(branching-simulation) test is the next layer (pyCSEP 0.8.0 is installed; the E11-vectorized Omori/
+productivity machinery makes forward thinning cheap), and whether the gap is dispersion vs rate bias is
+itself the next honest measurement. **Status:** core N-test implemented + tested; back-analysis
+integration + the catalog-based layer are the next cycle.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base
@@ -315,9 +454,10 @@ NO neural / foundation TPP beats ETAS prospectively; geodetic covariates help gl
 regionally. Each item gets its own E-entry with measured results when executed.
 
 1. **Ensemble** — **IMPLEMENTED (E8) and BENCHMARKED (E9): the naive equal-weight version UNDERPERFORMS
-   ETAS** (it dilutes the triggering signal). The remaining lever is **score-weighted stacking of ETAS
-   *variants*** (weights from the rolling prospective log-score; drop the null/R-J as equal members),
-   which the evidence (F1) says yields a *small* gain — to be implemented + benchmarked next.
+   ETAS** (it dilutes the triggering signal). The remaining lever, **score-weighted stacking of ETAS
+   *variants***, is now **E12 — core IMPLEMENTED + unit-tested** (the convex log-score-optimal solver with
+   anchor shrinkage + the structural ETAS-family guard); the leakage-free multi-region back-analysis with
+   the `igpe_vs_base_tiled` channel is the remaining run, against the pre-registered ship rule.
 2. **Context covariates (the thesis experiment)** — **DONE for GNSS strain (E10): the calibrated
    context-neural beats ETAS on the in-loop gate (+0.075 nats, N-test passes).** **Pseudo-prospective
    validation RUNNING (E11)** via the new neural `recondition` (fit once, recondition forward across weekly

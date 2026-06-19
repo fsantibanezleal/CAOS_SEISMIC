@@ -166,9 +166,12 @@ class EnsembleForecaster(BaseForecaster):
 
         This is the only literature-proven prospective lever over a single well-fit ETAS (score-weighted
         ETAS-family ensembles; Marzocchi-Zechar-Jordan 2012 BMA, Serafini et al. 2022, Bayona et al. 2021).
-        It is implemented to be **fail-safe**: the anchor component (the base tiled ETAS, ``anchor_index``)
-        is the shrinkage target ``e_0``, so the convex optimum can never score worse *in objective* than
-        the base model, and on a sparse/quiet holdout it collapses to ``w = e_0`` (E12 == base).
+        It is implemented to be **fail-safe ON THE FIT HOLDOUT**: the anchor (the base tiled ETAS,
+        ``anchor_index``) is the shrinkage target ``e_0``, so the fitted weights never score worse than
+        ``e_0`` *on the holdout objective they are fit to*, and on a sparse/quiet holdout collapse to
+        ``w = e_0`` (E12 == base). **This is NOT a guarantee on the separately-scored out-of-sample
+        window** — that forecast is genuinely prospective and its IGPE vs base may be positive OR negative;
+        only the pre-registered paired T/W test over many windows decides whether E12 has real skill.
 
         Parameters
         ----------
@@ -225,9 +228,11 @@ def _solve_stacking_weights(
     Maximizes the held-out Poisson joint log-score of the pooled rate ``lambda = L w`` with an L2 pull
     toward the anchor vertex ``e_0``: ``J(w) = sum [omega·log(L w) - (L w)] - (rho/2)||w - e_0||^2``.
     The Poisson log-score is concave in ``lambda`` and ``lambda`` is linear in ``w``, so ``J`` is concave
-    over the simplex — a small SLSQP solve (K is 2-4). Fail-safe: any solver failure, an empty/sparse
-    holdout (< ``n_min`` events), or a solution that does not beat the anchor in objective returns ``e_0``
-    exactly (so the ensemble can never score worse than the base model by more than estimation noise).
+    over the simplex — a small SLSQP solve (K is 2-4). Fail-safe ON THE FIT HOLDOUT: any solver failure,
+    an empty/sparse holdout (< ``n_min`` events), or a solution that does not beat the anchor on the
+    holdout objective returns ``e_0`` exactly. This bounds the *fitted weights* by the anchor on the data
+    they are fit to; it does NOT bound the out-of-sample IGPE of the resulting forecast (that is what the
+    prospective back-analysis measures).
     """
     e0 = np.zeros(K, dtype=float)
     e0[anchor_index] = 1.0

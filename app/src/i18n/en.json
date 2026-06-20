@@ -11,7 +11,28 @@
     "implementation": "Implementation",
     "experiments": "Experiments",
     "backAnalysis": "Back-analysis",
-    "monitoring": "Monitoring"
+    "monitoring": "Monitoring",
+    "outlook": "30-day outlook"
+  },
+  "outlook": {
+    "title": "30-day outlook",
+    "lede": "A longer-horizon companion to the daily forecast: the expected M≥5 field over the next 30 days, informed by the geodetic context (GNSS strain rate).",
+    "honest": "This is the ONE place a covariate measurably beats ETAS. Our validation (E11/E14) shows the geodetic-context neural background wins at 30 days but NOT at 1–7 days — so the daily operational forecast (Monitoring) stays ETAS, and the geodetic context is used only here, where it earns its skill. No overclaim.",
+    "error": "Could not load the 30-day outlook: {{message}}",
+    "issued": "issued",
+    "expected30": "expected M≥5 in 30 d (global)",
+    "threshold": "threshold",
+    "evidenceTitle": "Why this horizon (the measured evidence)",
+    "evidenceLede": "Leakage-free pseudo-prospective information gain of the geodetic-neural background over ETAS at 30 days, per view (positive = the geodetic context helps). The 1–7 day equivalent is negative — which is exactly why the daily product stays ETAS.",
+    "view": "View",
+    "meanIgpe": "Mean IGPE vs ETAS (30 d)",
+    "windowsPos": "Windows +",
+    "nEq": "Events",
+    "verdict": "Verdict",
+    "topZonesTitle": "Highest 30-day probability zones",
+    "footer": "The outlook background is refit weekly (the geodetic field is slow-moving) and served as a static artifact; the daily ETAS triggering can be grafted on top. Full method: the experiment register (E11/E14).",
+    "noWebgl": "Your browser cannot render the WebGL map.",
+    "mapAria": "30-day outlook expected-count field map"
   },
   "exp": {
     "title": "Experiments & the route taken",

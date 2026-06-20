@@ -9,6 +9,7 @@ import Implementation from "@/pages/Implementation";
 import Experiments from "@/pages/Experiments";
 import BackAnalysis from "@/pages/BackAnalysis";
 import Monitoring from "@/pages/Monitoring";
+import Outlook from "@/pages/Outlook";
 
 /**
  * The six product routes (web-app-spec.md §1), wrapped by the App layout shell.
@@ -34,6 +35,7 @@ const router = createBrowserRouter(
         { path: "experiments", element: <Experiments /> },
         { path: "back-analysis", element: <BackAnalysis /> },
         { path: "monitoring", element: <Monitoring /> },
+        { path: "outlook", element: <Outlook /> },
         { path: "*", element: <NotFound /> },
       ],
     },

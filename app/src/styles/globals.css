@@ -1417,6 +1417,36 @@ kbd {
   font-weight: 600;
   color: var(--color-accent, #4aa3df);
 }
+
+/* 30-day outlook */
+.outlook-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin: 1.25rem 0;
+}
+.outlook-stats .stat {
+  display: flex;
+  flex-direction: column;
+}
+.outlook-stats .stat-num {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-accent, #4aa3df);
+  line-height: 1.1;
+}
+.outlook-stats .stat-lab {
+  font-size: 0.78rem;
+  color: var(--color-text-muted, #888);
+}
+.outlook-zones {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+  line-height: 1.7;
+}
+.outlook-zones .mono {
+  font-weight: 600;
+}
 .mono {
   font-family: var(--font-mono);
   font-size: 0.9em;

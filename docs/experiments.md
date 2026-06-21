@@ -493,6 +493,45 @@ generalises — full multi-window back-analysis integration is the next step.)
 
 ---
 
+## E14 — 30-day outlook: validating + productizing the one real win (2026-06-20)
+
+**Motivation.** Every short-horizon (1–7 d) lever this project tried hit the ETAS ceiling (frontier
+research; E12 NO-SHIP). The *one* place a covariate measurably beats ETAS is the **30-day** horizon (E11:
++0.078, geodetic-neural background). E14 (a) validates that 30-day win rigorously across regions, and
+(b) ships it as a product where it actually earns skill.
+
+**Validation (10 leakage-free windows, per view).** Fit the strain-neural once, recondition forward across
+10 weekly windows all fully 30-day-scorable, score IGPE(neural, ETAS) per view:
+
+| view | mean IGPE vs ETAS (30 d) | windows + | events |
+|---|---|---|---|
+| **GLOBAL** | **+0.106** | 9/10 | 2166 |
+| Chile | +0.560 | 10/10 | 47 |
+| Japan | +0.194 | 8/10 | 197 |
+| California | +1.061 | 9/9 | 11 |
+| New Zealand | +1.335 | 8/8 | 19 |
+
+**The 30-day geodetic win is GLOBAL + regionally robust** — positive in every view (global +0.106 over 2166
+events is the well-powered number; the small-n regions are noisier but consistently positive). This is the
+*opposite* of the 7-day result (E11/E12: noise / no generalisation): at 30 days the geodetic context
+genuinely helps. Honest framing preserved — the 1–7 day product stays ETAS; the geodetic context is used
+only at the horizon where it earns skill.
+
+**Product.** A new `/outlook` route renders the 30-day expected-count field (deck.gl heatmap, 119,640
+cells, n30=77.7 vs ETAS 64.3) + the validation table, with explicit honest framing. The generation is
+productionised as `inference.outlook` + a weekly `caos-seismic outlook` CLI job (the geodetic background is
+time-flat, so weekly — not daily — refit), published via the same robust commit-tree path as the daily job.
+Screenshot-verified before deploy (real field map + evidence render, no console errors).
+
+**Robustness (a real OOM, fixed at the root).** The first full run crashed with a numpy `MemoryError`: the
+neural triggering field built a `(1024 cells × ~34k parents)` **float64** distance matrix (~280 MB/array,
+~1 GB transient) per chunk — fine on a small catalog, fatal at the global parent count. Fixed to **float32
+on a 256-cell chunk with intermediates freed each chunk** (single precision is ample for a summed-to-scalar
+kernel; the vectorization test still passes), ~tens of MB peak and ~2× faster, plus per-window gc + CUDA-
+cache hygiene. The job now completes all 10 windows memory-safe on the full global catalog.
+
+---
+
 ## Pending experiments (evidence-ranked menu — to be slotted in as run)
 
 Ranked by expected prospective payoff, **grounded in the cited evidence base

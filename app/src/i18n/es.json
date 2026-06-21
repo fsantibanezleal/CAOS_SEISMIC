@@ -1145,11 +1145,12 @@
   },
   "calibration": {
     "modelQuality": "Calidad del modelo",
-    "tooltip": "La tríada verde / ámbar / rojo describe la CALIDAD DEL MODELO según las pruebas CSEP — nunca el peligro sísmico.",
+    "tooltip": "Describe la CALIDAD DEL MODELO según las pruebas de consistencia CSEP — nunca el peligro sísmico. \"Sin test por-pronóstico\" es neutro: el conteo global de M≥5 de un solo día es muy pequeño para CSEP-testear un pronóstico; el modelo se evalúa sobre muchas ventanas en el Retroanálisis.",
     "level": {
       "green": "dentro de la consistencia CSEP",
       "amber": "limítrofe",
-      "red": "rechazado / poco probado"
+      "red": "rechazado",
+      "untested": "sin test por-pronóstico — ver Retroanálisis"
     }
   },
   "csep": {
@@ -1177,7 +1178,8 @@
     },
     "igPoisson": "Ganancia de información vs Poisson",
     "igEtas": "Ganancia de información vs ETAS",
-    "necessaryNotSufficient": "Pasar las pruebas de consistencia calibra un modelo; nunca establece habilidad. La habilidad vive en las pruebas de comparación contra ETAS y la sismicidad suavizada. La ganancia de información va en nats, no en bits."
+    "necessaryNotSufficient": "Pasar las pruebas de consistencia calibra un modelo; nunca establece habilidad. La habilidad vive en las pruebas de comparación contra ETAS y la sismicidad suavizada. La ganancia de información va en nats, no en bits.",
+    "untestedNote": "Estas pruebas no se computan por-pronóstico: una sola ventana global de 1–7 días tiene muy pocos M≥5 para poblarlas, y un N-test de Poisson por-día sobre-rechaza conteos agrupados (un artefacto del test, no falla del modelo — experimento E13). La consistencia del modelo Y su habilidad sobre los baselines Poisson/ETAS se establecen sobre muchas ventanas en la página de Retroanálisis."
   },
   "monitoring": {
     "title": "Monitoreo",

@@ -6,25 +6,29 @@ import type { CsepScores } from "@/data/types";
  * Calibration badge — the ONLY place the green/amber/red traffic-light triad appears, and it
  * describes MODEL QUALITY, never earthquake danger (web-app-spec.md §7.3, evaluation-plan §9).
  *
- *   green  = within CSEP consistency (all tracked tests pass)
- *   amber  = borderline / partial (some tests pass, some borderline)
- *   red    = rejected / under-tested
+ *   green    = within CSEP consistency (all tracked tests pass)
+ *   amber    = borderline / partial (some tests pass, some borderline)
+ *   red      = REJECTED — a tracked test actually failed (do not trust the numbers)
+ *   untested = no per-forecast CSEP tests on this artifact (NEUTRAL, not a failure)
  *
- * This deliberately inverts the "red = run" instinct: red here means "do not trust this
- * model's numbers", not "danger". The badge is compact and always-present; the CSEP panel
- * (separate component) expands the per-test detail.
+ * The "untested" state is distinct from "red" on purpose: a single 1–7 day global forecast has
+ * too few M≥5 events to power the N/M/S/L tests, so the per-forecast pass flags are empty — that
+ * is NOT a rejection. The model's consistency + skill are established over many windows in the
+ * Back-analysis. Conflating the two (the old behaviour) made a healthy daily forecast read as
+ * "rejected", which is misleading. red here still means "do not trust", never "danger".
  */
-export type CalibrationLevel = "green" | "amber" | "red";
+export type CalibrationLevel = "green" | "amber" | "red" | "untested";
 
 /** Derive the badge level from the CSEP pass flags (model-quality only). */
 export function calibrationLevel(csep: CsepScores | undefined): CalibrationLevel {
   const pass = csep?.pass;
-  if (!pass || Object.keys(pass).length === 0) return "red"; // under-tested
+  // No per-forecast tests recorded ⇒ UNTESTED (neutral), not rejected — see Back-analysis.
+  if (!pass || Object.keys(pass).length === 0) return "untested";
   const flags = Object.values(pass);
   const passed = flags.filter(Boolean).length;
   if (passed === flags.length) return "green";
   if (passed >= Math.ceil(flags.length / 2)) return "amber";
-  return "red";
+  return "red"; // a tracked test genuinely failed
 }
 
 export interface CalibrationBadgeProps {

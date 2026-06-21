@@ -49,6 +49,13 @@
     "lightThemeShort": "Light",
     "darkThemeShort": "Dark"
   },
+  "arch": {
+    "open": "How it works — architecture",
+    "title": "Architecture — how CAOS_SEISMIC works",
+    "subtitle": "What runs where, the science, and the data contracts — the proof this is a real, complete system, not a demo.",
+    "close": "Close",
+    "footer": "Diagrams are theme-aware (they follow light / dark). Full technical depth: the in-app Methodology / Implementation pages and the repository docs/ wiki."
+  },
   "footer": {
     "attribution": "Independent research / education tool by Felipe Santibáñez-Leal.",
     "complement": "Complements official Operational Earthquake Forecasting (USGS, INGV, CSN, GeoNet, JMA); it is not an authoritative civil-protection alarm.",

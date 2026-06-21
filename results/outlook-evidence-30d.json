@@ -1,38 +1,38 @@
 {
   "global": {
-    "mean_igpe_vs_etas": 0.10564,
+    "mean_igpe_vs_etas": 0.11971,
     "windows_positive": "9/10",
     "n_eq": 2166,
     "ci_excludes_zero": true,
-    "t_ci_low": 0.07981482727713132
+    "t_ci_low": 0.09317562251262063
   },
   "CL": {
-    "mean_igpe_vs_etas": 0.56017,
+    "mean_igpe_vs_etas": 0.62111,
     "windows_positive": "10/10",
     "n_eq": 47,
     "ci_excludes_zero": true,
-    "t_ci_low": 0.1439648598170487
+    "t_ci_low": 0.15605885127856578
   },
   "JP": {
-    "mean_igpe_vs_etas": 0.1936,
+    "mean_igpe_vs_etas": 0.22098,
     "windows_positive": "8/10",
     "n_eq": 197,
     "ci_excludes_zero": true,
-    "t_ci_low": 0.11652836352393793
+    "t_ci_low": 0.14308702171659227
   },
   "US-CA": {
-    "mean_igpe_vs_etas": 1.06129,
-    "windows_positive": "9/9",
+    "mean_igpe_vs_etas": 0.95762,
+    "windows_positive": "7/9",
     "n_eq": 11,
     "ci_excludes_zero": true,
-    "t_ci_low": 0.7705572314004163
+    "t_ci_low": 0.5952204880919651
   },
   "NZ": {
-    "mean_igpe_vs_etas": 1.33523,
+    "mean_igpe_vs_etas": 1.28414,
     "windows_positive": "8/8",
     "n_eq": 19,
     "ci_excludes_zero": true,
-    "t_ci_low": 1.2145040222757026
+    "t_ci_low": 1.0729738066608219
   },
   "_summary": {
     "global_ci_excludes_zero": true,

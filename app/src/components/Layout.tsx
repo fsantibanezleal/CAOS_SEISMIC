@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
-import { Activity, Briefcase, Github, Globe } from "lucide-react";
+import { Activity, Briefcase, Github, Globe, Info } from "lucide-react";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { ArchitectureModal } from "@/components/ArchitectureModal";
 import { EXTERNAL_LINKS } from "@/lib/links";
 import { ROUTES } from "@/lib/routes";
 import { APP_BRANCH, APP_BUILD_TIME, APP_COMMIT_SHA, APP_VERSION } from "@/lib/version";
@@ -29,9 +30,11 @@ export interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { t } = useTranslation();
+  const [archOpen, setArchOpen] = useState(false);
 
   return (
     <div className="app-shell">
+      {archOpen ? <ArchitectureModal onClose={() => setArchOpen(false)} /> : null}
       <header className="site-header">
         <div className="header-inner">
           <NavLink to="/" className="brand" aria-label={t("product.name")}>
@@ -53,6 +56,16 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
 
           <div className="header-actions">
+            <button
+              type="button"
+              className="icon-btn arch-open"
+              onClick={() => setArchOpen(true)}
+              aria-label={t("arch.open")}
+              title={t("arch.open")}
+            >
+              <Info size={18} aria-hidden="true" />
+              <span className="sr-only">{t("arch.open")}</span>
+            </button>
             <a
               className="icon-btn"
               href={EXTERNAL_LINKS.github}

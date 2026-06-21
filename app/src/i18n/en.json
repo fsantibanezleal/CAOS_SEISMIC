@@ -1145,11 +1145,12 @@
   },
   "calibration": {
     "modelQuality": "Model quality",
-    "tooltip": "The green / amber / red triad describes MODEL QUALITY from CSEP tests — never earthquake danger.",
+    "tooltip": "Describes MODEL QUALITY from CSEP consistency tests — never earthquake danger. \"Not tested per forecast\" is neutral: a single day's global M≥5 count is too small to CSEP-test one forecast; the model is evaluated over many windows in Back-analysis.",
     "level": {
       "green": "within CSEP consistency",
       "amber": "borderline",
-      "red": "rejected / under-tested"
+      "red": "rejected",
+      "untested": "not tested per forecast — see Back-analysis"
     }
   },
   "csep": {
@@ -1177,7 +1178,8 @@
     },
     "igPoisson": "Information gain vs Poisson",
     "igEtas": "Information gain vs ETAS",
-    "necessaryNotSufficient": "Passing consistency tests calibrates one model; it never establishes skill. Skill lives in the comparison tests against ETAS and smoothed seismicity. Information gain is in nats, not bits."
+    "necessaryNotSufficient": "Passing consistency tests calibrates one model; it never establishes skill. Skill lives in the comparison tests against ETAS and smoothed seismicity. Information gain is in nats, not bits.",
+    "untestedNote": "These tests are not computed per forecast: a single 1–7 day global window has too few M≥5 events to power them, and a per-day Poisson N-test over-rejects clustered counts (a test artifact, not a model failure — experiment E13). The model's consistency AND its skill over the Poisson/ETAS baselines are established over many windows on the Back-analysis page."
   },
   "monitoring": {
     "title": "Monitoring",

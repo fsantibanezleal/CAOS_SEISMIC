@@ -23,6 +23,7 @@ export function CsepPanel({ calibration }: CsepPanelProps) {
   const { t } = useTranslation();
   const csep = calibration.csep ?? {};
   const pass = csep.pass ?? {};
+  const allUntested = Object.keys(pass).length === 0;
 
   const fmtNats = (v: number | null | undefined): string => {
     if (v === null || v === undefined) return "—";
@@ -71,6 +72,7 @@ export function CsepPanel({ calibration }: CsepPanelProps) {
         </div>
       </dl>
 
+      {allUntested ? <p className="csep-note untested-note">{t("csep.untestedNote")}</p> : null}
       <p className="csep-note muted">{t("csep.necessaryNotSufficient")}</p>
     </div>
   );

@@ -20,6 +20,7 @@ covariate earns skill; the short-horizon product stays ETAS.
 
 from __future__ import annotations
 
+import gc
 import gzip
 import json
 from dataclasses import dataclass, field
@@ -39,6 +40,17 @@ from ..inference.clock import conditioning_slice, target_slice
 from ..inference.daily import _catalog_hygiene, build_global_fit_cells
 from ..model.context_tpp import ContextTPPForecaster
 from ..model.tiled import TiledForecaster
+
+
+def _empty_torch_cache() -> None:
+    """Release the CUDA caching allocator between scoring windows (no-op without torch/GPU)."""
+    try:
+        import torch
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+    except Exception:
+        pass
 
 
 @dataclass
@@ -107,6 +119,11 @@ def generate_outlook(cfg: OutlookConfig | None = None, *, catalog: pd.DataFrame 
                     view_pe[vid].append(pe)
         snap = {vid: {"mean": (round(float(np.mean(view_win[vid])), 5) if view_win[vid] else None)} for vid, _ in views}
         evidence_path.write_text(json.dumps({"through_window": w, "by_view": snap}, indent=2), encoding="utf-8")
+        # Memory hygiene: free the per-window arrays + the torch cache so nothing accumulates across the
+        # scoring loop (defence-in-depth on top of the float32/chunked expected_counts).
+        del lam_n, lam_e, omega
+        gc.collect()
+        _empty_torch_cache()
 
     evidence: dict = {}
     for vid, _ in views:

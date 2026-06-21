@@ -1255,6 +1255,18 @@ kbd {
 .level-red .cal-dot {
   background-color: var(--color-bad);
 }
+/* untested = neutral (NOT a failure): a single forecast can't be CSEP-tested; see Back-analysis */
+.level-untested .cal-dot {
+  background-color: var(--color-fg-faint);
+  box-shadow: inset 0 0 0 1.5px var(--color-border);
+  background-image: none;
+}
+.csep-note.untested-note {
+  border-left: 2px solid var(--color-border);
+  padding-left: 0.7rem;
+  font-size: 0.86rem;
+  color: var(--color-text, inherit);
+}
 
 /* ── CSEP panel ── */
 .csep-panel {

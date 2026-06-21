@@ -1,0 +1,63 @@
+<svg viewBox="0 0 840 400" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="ah5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="28" font-size="15" font-weight="700" fill="var(--color-fg)">Data contracts &#38; design</text>
+
+  <!-- raw -->
+  <rect x="24" y="56" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="40" y="80" font-size="12" font-weight="600" fill="var(--color-fg)">Raw catalog</text>
+  <text x="40" y="100" font-size="10.5" fill="var(--color-text-muted)">ISC / USGS</text>
+  <text x="40" y="116" font-size="10.5" fill="var(--color-text-muted)">(git-ignored)</text>
+
+  <!-- ingestion contract -->
+  <rect x="222" y="46" width="250" height="90" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
+  <text x="238" y="68" font-size="12" font-weight="700" fill="var(--color-accent)">Contract 1 &#183; ingestion</text>
+  <text x="238" y="88" font-size="10.5" fill="var(--color-text-muted)">homogenize to Mw (Scordilis)</text>
+  <text x="238" y="104" font-size="10.5" fill="var(--color-text-muted)">estimate Mc, b (Aki&#8211;Utsu)</text>
+  <text x="238" y="120" font-size="10.5" fill="var(--color-text-muted)">decluster &#183; explicit outlier policy</text>
+
+  <!-- pipeline -->
+  <rect x="520" y="56" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="536" y="80" font-size="12" font-weight="600" fill="var(--color-fg)">Pipeline</text>
+  <text x="536" y="100" font-size="10.5" fill="var(--color-text-muted)">ETAS / neural fit</text>
+  <text x="536" y="116" font-size="10.5" fill="var(--color-text-muted)">&#8594; infer &#8594; bake</text>
+
+  <!-- artifact contract -->
+  <rect x="222" y="172" width="250" height="92" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
+  <text x="238" y="194" font-size="12" font-weight="700" fill="var(--color-accent)">Contract 2 &#183; artifact</text>
+  <text x="238" y="214" font-size="10.5" fill="var(--color-text-muted)">sparse quantized field</text>
+  <text x="238" y="230" font-size="10.5" fill="var(--color-text-muted)">(log-uint16 codes, H3-indexed)</text>
+  <text x="238" y="248" font-size="10.5" fill="var(--color-text-muted)">+ index.json &#183; mirrored by a TS type</text>
+
+  <!-- web -->
+  <rect x="520" y="182" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="536" y="206" font-size="12" font-weight="600" fill="var(--color-fg)">Web (replay)</text>
+  <text x="536" y="226" font-size="10.5" fill="var(--color-text-muted)">deck.gl field</text>
+  <text x="536" y="242" font-size="10.5" fill="var(--color-warn)">drift &#8594; build fails</text>
+
+  <!-- views card -->
+  <rect x="694" y="56" width="122" height="196" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="710" y="78" font-size="11.5" font-weight="600" fill="var(--color-fg)">Cases = VIEWS</text>
+  <text x="710" y="98" font-size="10.5" fill="var(--color-text-muted)">into one global</text>
+  <text x="710" y="113" font-size="10.5" fill="var(--color-text-muted)">field:</text>
+  <text x="710" y="136" font-size="10.5" fill="var(--color-text-muted)">Chile &#183; Japan</text>
+  <text x="710" y="152" font-size="10.5" fill="var(--color-text-muted)">California &#183; NZ</text>
+  <text x="710" y="168" font-size="10.5" fill="var(--color-text-muted)">Italy &#183; &#8230;</text>
+  <text x="710" y="202" font-size="10.5" fill="var(--color-text-muted)">grouped by</text>
+  <text x="710" y="217" font-size="10.5" fill="var(--color-text-muted)">seismicity class</text>
+
+  <!-- arrows -->
+  <line x1="174" y1="92" x2="220" y2="92" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <line x1="472" y1="92" x2="518" y2="92" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <path d="M595,126 L595,154 L347,154 L347,170" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <line x1="472" y1="216" x2="518" y2="216" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
+
+  <!-- honest framing -->
+  <rect x="24" y="296" width="792" height="56" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="40" y="320" font-size="12" font-weight="600" fill="var(--color-accent)">Honest framing (enforced everywhere)</text>
+  <text x="40" y="340" font-size="11" fill="var(--color-text-muted)">forecasts not predictions &#183; null/negative results recorded &#183; numbers sourced &#183; the E1&#8594;E14 register is the day-by-day audit trail</text>
+</svg>

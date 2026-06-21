@@ -1,0 +1,40 @@
+<svg viewBox="0 0 840 410" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+  <defs>
+    <marker id="ah4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    </marker>
+  </defs>
+
+  <text x="20" y="28" font-size="15" font-weight="700" fill="var(--color-fg)">The science</text>
+
+  <!-- ETAS base -->
+  <rect x="24" y="48" width="430" height="150" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="40" y="72" font-size="13" font-weight="700" fill="var(--color-accent)">Base &#8212; regime-tiled ETAS (Ogata)</text>
+  <text x="40" y="98" font-size="13" fill="var(--color-fg)" font-family="ui-monospace, monospace">&#955;(x,t) = &#956;(x) + &#931; k(m)&#183;g(t&#8722;t&#7522;)&#183;f(r)</text>
+  <text x="40" y="120" font-size="11" fill="var(--color-text-muted)">&#956;(x): smoothed-seismicity background</text>
+  <text x="40" y="138" font-size="11" fill="var(--color-text-muted)">g: Omori&#8211;Utsu time &#183; k: Utsu productivity &#183; f: spatial</text>
+  <text x="40" y="162" font-size="11" fill="var(--color-text-muted)">fit per tectonic-regime tile (~195)</text>
+  <text x="40" y="180" font-size="11" fill="var(--color-text-muted)">b &#8776; 1.34 &#183; Mc = 5.35 &#183; serves the 1&#8211;7 day product</text>
+
+  <!-- Geodetic neural -->
+  <rect x="474" y="48" width="342" height="150" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
+  <text x="490" y="72" font-size="13" font-weight="700" fill="var(--color-accent)">Challenger &#8212; geodetic context-neural</text>
+  <text x="490" y="98" font-size="11" fill="var(--color-text-muted)">GNSS strain rate &#8594; CNN encoder</text>
+  <text x="490" y="116" font-size="11" fill="var(--color-text-muted)">&#8594; calibrated background field</text>
+  <text x="490" y="142" font-size="11" fill="var(--color-good)">beats ETAS at 30 d: +0.106 IGPE (all views +)</text>
+  <text x="490" y="160" font-size="11" fill="var(--color-warn)">NOT at 1&#8211;7 d (ETAS triggering wins)</text>
+  <text x="490" y="182" font-size="11" fill="var(--color-text-muted)">&#8594; serves the 30-day outlook only</text>
+
+  <!-- evaluation strip -->
+  <rect x="24" y="222" width="792" height="118" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
+  <text x="40" y="246" font-size="13" font-weight="700" fill="var(--color-accent)">Honest evaluation</text>
+  <text x="40" y="272" font-size="11.5" fill="var(--color-fg)">Catalog-based N-test (experiment E13): an ETAS branching simulation gives the over-dispersion-honest count</text>
+  <text x="40" y="290" font-size="11.5" fill="var(--color-fg)">distribution &#8212; an apparent under-forecast reads as over-dispersion + secondary cascade, not a model failure.</text>
+  <text x="40" y="316" font-size="11.5" fill="var(--color-fg)">Skill = information gain per earthquake (IGPE, nats) vs the Poisson null AND ETAS, measured leakage-free.</text>
+
+  <!-- arrows base/challenger -> eval -->
+  <line x1="230" y1="198" x2="230" y2="220" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah4)"/>
+  <line x1="620" y1="198" x2="620" y2="220" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah4)"/>
+
+  <text x="20" y="372" font-size="11" fill="var(--color-text-muted)">A change counts as an improvement only if it shows prospective skill; null and negative results are recorded, never hidden.</text>
+</svg>

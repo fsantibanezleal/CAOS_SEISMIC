@@ -1255,6 +1255,138 @@ kbd {
 .level-red .cal-dot {
   background-color: var(--color-bad);
 }
+/* ── Architecture modal (ADR-0058: the in-app "How it works" ⓘ panel) ── */
+.arch-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+}
+.arch-modal {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 0.8rem;
+  box-shadow: 0 18px 60px var(--color-shadow, rgba(0, 0, 0, 0.5));
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  outline: none;
+}
+.arch-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.arch-head h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.arch-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  max-width: 60ch;
+}
+.arch-close {
+  flex: 0 0 auto;
+}
+.arch-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.arch-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.32rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+.arch-tab:hover {
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+.arch-tab.on {
+  background: var(--color-accent-soft, var(--color-surface-2));
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  font-weight: 600;
+}
+.arch-tab-n {
+  display: inline-grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--color-surface-2);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.arch-tab.on .arch-tab-n {
+  background: var(--color-accent);
+  color: var(--color-accent-fg, #fff);
+}
+.arch-body {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  overflow: auto;
+}
+.arch-diagram {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.6rem;
+  padding: 0.75rem;
+}
+.arch-svg {
+  width: 100%;
+}
+.arch-svg svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.arch-text p {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.arch-text p:last-child {
+  margin-bottom: 0;
+}
+.arch-foot {
+  padding: 0.7rem 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 820px) {
+  .arch-body {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* untested = neutral (NOT a failure): a single forecast can't be CSEP-tested; see Back-analysis */
 .level-untested .cal-dot {
   background-color: var(--color-fg-faint);

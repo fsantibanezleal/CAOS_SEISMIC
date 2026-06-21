@@ -1,0 +1,43 @@
+{
+  "global": {
+    "mean_igpe_vs_etas": 0.10564,
+    "windows_positive": "9/10",
+    "n_eq": 2166,
+    "ci_excludes_zero": true,
+    "t_ci_low": 0.07981482727713132
+  },
+  "CL": {
+    "mean_igpe_vs_etas": 0.56017,
+    "windows_positive": "10/10",
+    "n_eq": 47,
+    "ci_excludes_zero": true,
+    "t_ci_low": 0.1439648598170487
+  },
+  "JP": {
+    "mean_igpe_vs_etas": 0.1936,
+    "windows_positive": "8/10",
+    "n_eq": 197,
+    "ci_excludes_zero": true,
+    "t_ci_low": 0.11652836352393793
+  },
+  "US-CA": {
+    "mean_igpe_vs_etas": 1.06129,
+    "windows_positive": "9/9",
+    "n_eq": 11,
+    "ci_excludes_zero": true,
+    "t_ci_low": 0.7705572314004163
+  },
+  "NZ": {
+    "mean_igpe_vs_etas": 1.33523,
+    "windows_positive": "8/8",
+    "n_eq": 19,
+    "ci_excludes_zero": true,
+    "t_ci_low": 1.2145040222757026
+  },
+  "_summary": {
+    "global_ci_excludes_zero": true,
+    "high_seis_views_positive": 4,
+    "n_high_seis": 4,
+    "verdict": "30d geodetic win GLOBAL+regionally robust"
+  }
+}

@@ -49,6 +49,13 @@
     "lightThemeShort": "Claro",
     "darkThemeShort": "Oscuro"
   },
+  "arch": {
+    "open": "Cómo funciona — arquitectura",
+    "title": "Arquitectura — cómo funciona CAOS_SEISMIC",
+    "subtitle": "Qué corre dónde, la ciencia y los contratos de datos — la prueba de que esto es un sistema real y completo, no una demo.",
+    "close": "Cerrar",
+    "footer": "Los diagramas siguen el tema (claro / oscuro). Detalle técnico completo: las páginas in-app de Metodología / Implementación y la wiki docs/ del repositorio."
+  },
   "footer": {
     "attribution": "Herramienta independiente de investigación / educación de Felipe Santibáñez-Leal.",
     "complement": "Complementa el Pronóstico Operacional de Terremotos oficial (USGS, INGV, CSN, GeoNet, JMA); no es una alarma autoritativa de protección civil.",

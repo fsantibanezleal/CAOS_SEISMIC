@@ -1,49 +1,90 @@
-<svg viewBox="0 0 840 360" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 470" width="880" class="arch-svg" role="img" aria-label="CAOS_SEISMIC overview: what the system is and the design-build lifecycle from research to deploy">
+  <style>
+    .arch-svg text { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+    .arch-svg .mono { font-family: ui-monospace, Consolas, monospace; }
+    .arch-svg .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1.2; }
+    .arch-svg .bx-hi { stroke: var(--color-accent); }
+    .arch-svg .bx-web { stroke: var(--color-good); }
+    .arch-svg .bx-eng { stroke: var(--color-warn); }
+    .arch-svg .ttl { fill: var(--color-text); font-size: 12.5px; font-weight: 600; }
+    .arch-svg .big { fill: var(--color-text); font-size: 15px; font-weight: 700; }
+    .arch-svg .sub { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .it { fill: var(--color-text); font-size: 10.5px; }
+    .arch-svg .cd { fill: var(--color-accent); font-size: 10px; }
+    .arch-svg .mu { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .arch-svg .lbl { fill: var(--color-text-muted); font-size: 9.5px; }
+    .arch-svg .stage-n { fill: var(--color-accent); font-size: 11px; font-weight: 700; }
+  </style>
   <defs>
-    <marker id="ah1" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    <marker id="ov-ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--color-fg-subtle)"/>
     </marker>
   </defs>
 
-  <text x="20" y="30" font-size="16" font-weight="700" fill="var(--color-fg)">CAOS_SEISMIC</text>
-  <text x="20" y="50" font-size="12" fill="var(--color-text-muted)">Global conditional probabilistic seismic forecasting &#8212; forecasts, never predictions</text>
+  <!-- identity band -->
+  <rect class="bx bx-hi" x="14" y="14" width="852" height="92" rx="10"/>
+  <text class="big" x="28" y="42">CAOS_SEISMIC</text>
+  <text class="sub" x="28" y="60">Global · conditional · probabilistic · short-term seismic FORECASTING — a probability field, never a deterministic prediction</text>
+  <text class="it" x="28" y="80">The question it answers:</text>
+  <text class="mu" x="178" y="80">how much does GLOBAL context (recent worldwide seismicity, geodetic strain) condition the LOCAL short-term forecast?</text>
+  <text class="cd mono" x="28" y="96">honesty layer: forecasts not predictions · null/negative results recorded · numbers sourced</text>
 
-  <!-- the design-build lifecycle -->
-  <text x="20" y="92" font-size="12" font-weight="600" fill="var(--color-accent)">Design &#183; build lifecycle</text>
+  <!-- lifecycle title -->
+  <text class="ttl" x="14" y="138">Design · build lifecycle — the pipeline + its honest validation ARE the product; the web app replays a validated, committed subset</text>
 
-  <!-- 6 stages, two rows of 3 -->
+  <!-- 6 stages -->
   <g>
-    <rect x="20"  y="108" width="240" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-    <text x="36" y="132" font-size="13" font-weight="600" fill="var(--color-fg)">1 &#183; Deep research</text>
-    <text x="36" y="152" font-size="11" fill="var(--color-text-muted)">SOTA methods, cited evidence</text>
+    <rect class="bx" x="14" y="152" width="262" height="84" rx="8"/>
+    <text class="stage-n" x="26" y="174">1</text>
+    <text class="ttl" x="44" y="174">Deep research</text>
+    <text class="it" x="26" y="194">SOTA methods, adversarially verified</text>
+    <text class="mu" x="26" y="210">cited evidence base; no toy substitutes</text>
+    <text class="cd mono" x="26" y="227">docs/ improvement-evidence.md</text>
 
-    <rect x="300" y="108" width="240" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-    <text x="316" y="132" font-size="13" font-weight="600" fill="var(--color-fg)">2 &#183; Models</text>
-    <text x="316" y="152" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">src/caos_seismic/model/</text>
+    <rect class="bx bx-eng" x="296" y="152" width="262" height="84" rx="8"/>
+    <text class="stage-n" x="308" y="174">2</text>
+    <text class="ttl" x="326" y="174">Models</text>
+    <text class="it" x="308" y="194">regime-tiled ETAS + geodetic neural</text>
+    <text class="cd mono" x="308" y="211">model/tiled.py · model/etas.py</text>
+    <text class="cd mono" x="308" y="227">model/context_tpp.py</text>
 
-    <rect x="580" y="108" width="240" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-    <text x="596" y="132" font-size="13" font-weight="600" fill="var(--color-fg)">3 &#183; Validate</text>
-    <text x="596" y="152" font-size="11" fill="var(--color-text-muted)">leakage-free CSEP / IGPE</text>
+    <rect class="bx" x="578" y="152" width="288" height="84" rx="8"/>
+    <text class="stage-n" x="590" y="174">3</text>
+    <text class="ttl" x="608" y="174">Validate (leakage-free)</text>
+    <text class="it" x="590" y="194">pseudo-prospective CSEP back-analysis</text>
+    <text class="mu" x="590" y="210">IGPE (nats) vs Poisson null AND ETAS</text>
+    <text class="cd mono" x="590" y="227">eval/csep.py · eval/backanalysis.py</text>
 
-    <rect x="20"  y="220" width="240" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-    <text x="36" y="244" font-size="13" font-weight="600" fill="var(--color-fg)">4 &#183; Bake artifact</text>
-    <text x="36" y="264" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">results/ (compact, gzip)</text>
+    <rect class="bx" x="14" y="300" width="262" height="84" rx="8"/>
+    <text class="stage-n" x="26" y="322">4</text>
+    <text class="ttl" x="44" y="322">Bake artifact</text>
+    <text class="it" x="26" y="342">compact, sparse, quantized field</text>
+    <text class="mu" x="26" y="358">deterministic; sha-auditable</text>
+    <text class="cd mono" x="26" y="375">results/forecast-*.json.gz</text>
 
-    <rect x="300" y="220" width="240" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-    <text x="316" y="244" font-size="13" font-weight="600" fill="var(--color-fg)">5 &#183; SPA replay</text>
-    <text x="316" y="264" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">app/ (read-only)</text>
+    <rect class="bx" x="296" y="300" width="262" height="84" rx="8"/>
+    <text class="stage-n" x="308" y="322">5</text>
+    <text class="ttl" x="326" y="322">SPA replay</text>
+    <text class="it" x="308" y="342">read-only projection of the artifact</text>
+    <text class="mu" x="308" y="358">no compute in the browser</text>
+    <text class="cd mono" x="308" y="375">app/ (Vite + React + TS)</text>
 
-    <rect x="580" y="220" width="240" height="64" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
-    <text x="596" y="244" font-size="13" font-weight="600" fill="var(--color-accent)">6 &#183; Deploy</text>
-    <text x="596" y="264" font-size="11" fill="var(--color-text-muted)">git-as-data &#8594; GitHub Pages</text>
+    <rect class="bx bx-web" x="578" y="300" width="288" height="84" rx="8"/>
+    <text class="stage-n" x="590" y="322">6</text>
+    <text class="ttl" x="608" y="322">Deploy</text>
+    <text class="it" x="590" y="342">git-as-data → static hosting</text>
+    <text class="cd mono" x="590" y="359">commit results/ → main → GitHub Pages</text>
+    <text class="mu" x="590" y="375">daily + weekly scheduled jobs keep it current</text>
   </g>
 
-  <!-- arrows: 1->2->3 (top row), 3->4 (wrap), 4->5->6 (bottom row) -->
-  <line x1="260" y1="140" x2="298" y2="140" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah1)"/>
-  <line x1="540" y1="140" x2="578" y2="140" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah1)"/>
-  <path d="M700,172 L700,196 L140,196 L140,218" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah1)"/>
-  <line x1="260" y1="252" x2="298" y2="252" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah1)"/>
-  <line x1="540" y1="252" x2="578" y2="252" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah1)"/>
+  <!-- flows: 1->2->3 (wrap) 4->5->6 -->
+  <path class="flow" d="M276,194 L296,194" marker-end="url(#ov-ar)"/>
+  <path class="flow" d="M558,194 L578,194" marker-end="url(#ov-ar)"/>
+  <path class="flow" d="M722,236 L722,260 L145,260 L145,300" marker-end="url(#ov-ar)"/>
+  <text class="lbl" x="430" y="254">a change ships only if it shows prospective skill</text>
+  <path class="flow" d="M276,342 L296,342" marker-end="url(#ov-ar)"/>
+  <path class="flow" d="M558,342 L578,342" marker-end="url(#ov-ar)"/>
 
-  <text x="20" y="330" font-size="11" fill="var(--color-text-muted)">The pipeline + its honest validation ARE the product; the web app replays a validated, committed subset.</text>
+  <text class="mu" x="14" y="410">Two product surfaces: the 1–7 day daily forecast (ETAS) and the 30-day outlook (geodetic neural) — each model used at the horizon where it earns skill.</text>
 </svg>

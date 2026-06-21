@@ -1,0 +1,26 @@
+{
+  "model": "context_tpp",
+  "version": "0.1.0",
+  "region": "global",
+  "t_issue": "20260518T062850Z",
+  "mc": 5.05,
+  "b_prior": 1.2389056895587285,
+  "channels": [
+    "smoothed_seismicity_lograte",
+    "slab_depth_km",
+    "slab_dip_deg",
+    "dist_to_fault_km",
+    "plate_boundary_type",
+    "gnss_strain_rate",
+    "stress_orientation",
+    "tidal_cfs_amplitude"
+  ],
+  "missing_channels": [
+    "slab_depth_km",
+    "slab_dip_deg",
+    "dist_to_fault_km",
+    "plate_boundary_type",
+    "stress_orientation",
+    "tidal_cfs_amplitude"
+  ]
+}

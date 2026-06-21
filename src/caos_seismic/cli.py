@@ -364,6 +364,31 @@ def daily(
     _echo("daily · published.")
 
 
+@app.command()
+def outlook(
+    region: str = typer.Option("global", "--region", "-r", help="Region id. Default: the global field."),
+    no_publish: bool = typer.Option(False, "--no-publish", help="Generate but skip the git commit/push."),
+) -> None:
+    """The WEEKLY 30-day outlook job: fit the geodetic neural background -> validate at 30 d -> publish.
+
+    The geodetic context beats ETAS only at the 30-day horizon (E11/E14), and that background is time-flat,
+    so this runs on a *weekly* cadence (separate from the daily ETAS job). It writes the 30-day field +
+    per-view validation evidence under results/ and (unless --no-publish) publishes them via the same robust
+    scoped commit-tree path the daily job uses, so the live /outlook surface stays current.
+    """
+    mod = _require_stage("inference.outlook", extra="science")
+    reg = load_region(region)
+    _echo(f"outlook · region={reg.id} · fitting geodetic neural (weekly cadence)...")
+    summary = mod.generate_outlook(mod.OutlookConfig(region_id=reg.id))
+    _echo(f"outlook · {summary['artifact']} ({summary['n_cells']} cells, n30={summary['n_total_30d']}); "
+          f"evidence: {summary['evidence']['verdict']}")
+    if no_publish:
+        _echo("outlook · --no-publish set; not committing.")
+        return
+    _publish_scoped(load("publish"), region=reg.id, n_dates=1)
+    _echo("outlook · published.")
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # check — environment + repo + config sanity (no network, no science deps)
 # ─────────────────────────────────────────────────────────────────────────────

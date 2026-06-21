@@ -11,7 +11,28 @@
     "implementation": "Implementación",
     "experiments": "Experimentos",
     "backAnalysis": "Retroanálisis",
-    "monitoring": "Monitoreo"
+    "monitoring": "Monitoreo",
+    "outlook": "Pronóstico 30 días"
+  },
+  "outlook": {
+    "title": "Pronóstico a 30 días",
+    "lede": "Un complemento de horizonte largo al pronóstico diario: el campo esperado de M≥5 en los próximos 30 días, informado por el contexto geodésico (tasa de deformación GNSS).",
+    "honest": "Este es el ÚNICO lugar donde una covariable le gana medible a ETAS. Nuestra validación (E11/E14) muestra que el background neural geodésico gana a 30 días pero NO a 1–7 días — así que el pronóstico operacional diario (Monitoreo) sigue siendo ETAS, y el contexto geodésico se usa solo aquí, donde sí aporta skill. Sin sobre-afirmar.",
+    "error": "No se pudo cargar el pronóstico a 30 días: {{message}}",
+    "issued": "emitido",
+    "expected30": "M≥5 esperados en 30 d (global)",
+    "threshold": "umbral",
+    "evidenceTitle": "Por qué este horizonte (la evidencia medida)",
+    "evidenceLede": "Ganancia de información pseudo-prospectiva sin fuga del background neural-geodésico sobre ETAS a 30 días, por vista (positivo = el contexto geodésico ayuda). El equivalente a 1–7 días es negativo — por eso el producto diario sigue siendo ETAS.",
+    "view": "Vista",
+    "meanIgpe": "IGPE medio vs ETAS (30 d)",
+    "windowsPos": "Ventanas +",
+    "nEq": "Eventos",
+    "verdict": "Veredicto",
+    "topZonesTitle": "Zonas de mayor probabilidad a 30 días",
+    "footer": "El background del outlook se reajusta semanalmente (el campo geodésico cambia lento) y se sirve como artefacto estático; el triggering ETAS diario puede injertarse encima. Método completo: el registro de experimentos (E11/E14).",
+    "noWebgl": "Tu navegador no puede renderizar el mapa WebGL.",
+    "mapAria": "Mapa del campo esperado del pronóstico a 30 días"
   },
   "exp": {
     "title": "Experimentos y la ruta tomada",

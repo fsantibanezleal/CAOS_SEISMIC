@@ -995,20 +995,27 @@ class ContextTPPForecaster(BaseForecaster):
             for s, w in zip(mids, dts):
                 dt = torch.as_tensor(self._ev_t + float(s), dtype=torch.float32, device=self._device)
                 g_int += float(w) * net.temporal_density(dt).cpu().numpy().astype(np.float64)
-        amp = kappa * g_int                                  # (P,) per-parent amplitude κ_p·G_p
-        inv_zeta2 = 1.0 / (zeta * zeta)                      # (P,)
-        norm = 0.5 / (np.pi * zeta * zeta)                   # (P,) 2-D Cauchy-like normaliser
-        ev_lat = np.asarray(self._ev_lat, dtype=np.float64)
-        ev_lon = np.asarray(self._ev_lon, dtype=np.float64)
+        # Per-parent constants in float32 — the (chunk × P) kernel is summed to a per-cell scalar, so
+        # single precision is ample and HALVES the peak memory vs float64. (P can be tens of thousands.)
+        amp = (kappa * g_int).astype(np.float32)             # (P,) per-parent amplitude κ_p·G_p
+        inv_zeta2 = (1.0 / (zeta * zeta)).astype(np.float32)  # (P,)
+        norm = (0.5 / (np.pi * zeta * zeta)).astype(np.float32)  # (P,) 2-D Cauchy-like normaliser
+        ev_lat = np.asarray(self._ev_lat, dtype=np.float32)
+        ev_lon = np.asarray(self._ev_lon, dtype=np.float32)
         out = np.zeros(n_cells, dtype=np.float64)
-        chunk = 1024  # bound the (chunk × P) distance matrix to a few tens of MB
+        inv_deg = np.float32(1.0 / DEG2KM)
+        # Small chunk so the transient (chunk × P) float32 buffers stay ~tens of MB even at P~35k
+        # (the old 1024-cell × float64 chunk peaked near a gigabyte and OOM'd on large global catalogs);
+        # intermediates are freed each chunk so memory cannot accumulate across cells or scoring windows.
+        chunk = 256
         for a in range(0, n_cells, chunk):
-            cl = np.asarray(lats[a : a + chunk], dtype=np.float64)[:, None]   # (c,1)
-            clo = np.asarray(lons[a : a + chunk], dtype=np.float64)[:, None]  # (c,1)
-            r_km = haversine_km(cl, clo, ev_lat, ev_lon)                      # (c, P)
-            r2_deg = (r_km / DEG2KM) ** 2
-            f = norm[None, :] * np.power(1.0 + r2_deg * inv_zeta2[None, :], -1.5)  # (c, P)
-            out[a : a + chunk] = f @ amp
+            cl = np.asarray(lats[a : a + chunk], dtype=np.float32)[:, None]   # (c,1)
+            clo = np.asarray(lons[a : a + chunk], dtype=np.float32)[:, None]  # (c,1)
+            r_km = haversine_km(cl, clo, ev_lat, ev_lon).astype(np.float32)   # (c, P) f32
+            r2_deg = (r_km * inv_deg) ** 2                                    # (c, P)
+            f = norm[None, :] * np.power(1.0 + r2_deg * inv_zeta2[None, :], np.float32(-1.5))
+            out[a : a + chunk] = (f @ amp).astype(np.float64)
+            del cl, clo, r_km, r2_deg, f
         return out
 
     # ── context / patch helpers ───────────────────────────────────────────────

@@ -1,54 +1,95 @@
-<svg viewBox="0 0 840 400" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 480" width="880" class="arch-svg" role="img" aria-label="CAOS_SEISMIC web app: pages, the read-only data client, the rendered field, the contract gate, and the build/deploy">
+  <style>
+    .arch-svg text { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+    .arch-svg .mono { font-family: ui-monospace, Consolas, monospace; }
+    .arch-svg .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1.2; }
+    .arch-svg .bx-hi { stroke: var(--color-accent); }
+    .arch-svg .bx-web { stroke: var(--color-good); }
+    .arch-svg .bx-gate { stroke: var(--color-warn); }
+    .arch-svg .ttl { fill: var(--color-text); font-size: 12.5px; font-weight: 600; }
+    .arch-svg .sub { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .it { fill: var(--color-text); font-size: 10.5px; }
+    .arch-svg .cd { fill: var(--color-accent); font-size: 10px; }
+    .arch-svg .mu { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .warn { fill: var(--color-warn); font-size: 10.5px; font-weight: 600; }
+    .arch-svg .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .arch-svg .lbl { fill: var(--color-text-muted); font-size: 9.5px; }
+  </style>
   <defs>
-    <marker id="ah3" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    <marker id="wa-ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--color-fg-subtle)"/>
     </marker>
   </defs>
 
-  <text x="20" y="28" font-size="15" font-weight="700" fill="var(--color-fg)">Web-app flow</text>
-  <text x="20" y="46" font-size="11" fill="var(--color-text-muted)">Vite + React + TypeScript &#183; static-first, read-only</text>
-
   <!-- pages -->
-  <rect x="24" y="70" width="200" height="118" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="40" y="92" font-size="12" font-weight="600" fill="var(--color-fg)">Pages (8 routes)</text>
-  <text x="40" y="112" font-size="10.5" fill="var(--color-text-muted)">Intro &#183; Problem &#183; Method</text>
-  <text x="40" y="128" font-size="10.5" fill="var(--color-text-muted)">Implementation &#183; Experiments</text>
-  <text x="40" y="144" font-size="10.5" fill="var(--color-text-muted)">Back-analysis</text>
-  <text x="40" y="160" font-size="10.5" fill="var(--color-accent)">Monitoring (1&#8211;7 d)</text>
-  <text x="40" y="176" font-size="10.5" fill="var(--color-accent)">Outlook (30 d)</text>
+  <rect class="bx bx-hi" x="14" y="20" width="236" height="252" rx="10"/>
+  <text class="ttl" x="26" y="42">SPA pages — 8 routes</text>
+  <text class="sub mono" x="26" y="57">router.tsx · components/Layout.tsx</text>
+  <rect class="bx" x="26" y="68" width="212" height="58" rx="6"/>
+  <text class="it" x="36" y="86">Narrative + docs</text>
+  <text class="mu" x="36" y="101">Introduction · Problem · Methodology</text>
+  <text class="mu" x="36" y="116">Implementation · Experiments</text>
+  <rect class="bx" x="26" y="134" width="212" height="42" rx="6"/>
+  <text class="it" x="36" y="152">Evaluation</text>
+  <text class="mu" x="36" y="167">Back-analysis (real CSEP results)</text>
+  <rect class="bx bx-web" x="26" y="184" width="212" height="42" rx="6"/>
+  <text class="it" x="36" y="202">Monitoring — 1–7 day field</text>
+  <text class="cd mono" x="36" y="217">pages/Monitoring.tsx</text>
+  <rect class="bx bx-web" x="26" y="234" width="212" height="30" rx="6"/>
+  <text class="cd mono" x="36" y="253">pages/Outlook.tsx · 30-day</text>
 
   <!-- data client -->
-  <rect x="300" y="78" width="220" height="64" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="316" y="100" font-size="12" font-weight="600" fill="var(--color-fg)" font-family="ui-monospace, monospace">data/client.ts</text>
-  <text x="316" y="120" font-size="10.5" fill="var(--color-text-muted)">gzip-aware loader, decodes</text>
-  <text x="316" y="134" font-size="10.5" fill="var(--color-text-muted)">quantized log-uint16 rates</text>
+  <rect class="bx" x="306" y="48" width="234" height="92" rx="10"/>
+  <text class="ttl" x="318" y="70">Data client (read-only)</text>
+  <text class="cd mono" x="318" y="86">data/client.ts</text>
+  <text class="it" x="318" y="104">gzip-aware fetch + decode</text>
+  <text class="mu" x="318" y="120">inflate .gz · expand log-uint16</text>
+  <text class="mu" x="318" y="134">rate codes → expected counts</text>
 
   <!-- artifacts -->
-  <rect x="300" y="166" width="220" height="58" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="316" y="188" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">data/index.json</text>
-  <text x="316" y="208" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">forecast-&lt;date&gt;.json.gz</text>
+  <rect class="bx" x="306" y="160" width="234" height="92" rx="10"/>
+  <text class="ttl" x="318" y="182">Committed artifacts</text>
+  <text class="sub" x="318" y="197">served from data/ (static)</text>
+  <text class="cd mono" x="318" y="216">index.json</text>
+  <text class="mu" x="430" y="216">latest pointer + history</text>
+  <text class="cd mono" x="318" y="233">forecast-&lt;date&gt;.json.gz</text>
+  <text class="cd mono" x="318" y="248">outlook-30d-*.json.gz</text>
 
   <!-- render -->
-  <rect x="596" y="78" width="220" height="64" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
-  <text x="612" y="100" font-size="12" font-weight="600" fill="var(--color-accent)">deck.gl + MapLibre</text>
-  <text x="612" y="120" font-size="10.5" fill="var(--color-text-muted)">H3 / heatmap field layer,</text>
-  <text x="612" y="134" font-size="10.5" fill="var(--color-text-muted)">value-readout on the controls</text>
+  <rect class="bx bx-web" x="596" y="48" width="270" height="92" rx="10"/>
+  <text class="ttl" x="608" y="70">Render — deck.gl + MapLibre</text>
+  <text class="sub" x="608" y="85">interleaved WebGL overlay</text>
+  <text class="it" x="608" y="104">H3 hexbin / heatmap field layer</text>
+  <text class="mu" x="608" y="120">perceptually-uniform ramp · value</text>
+  <text class="mu" x="608" y="134">read-out on the controls (no alarms)</text>
 
   <!-- contract gate -->
-  <rect x="596" y="166" width="220" height="58" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="612" y="188" font-size="11.5" font-weight="600" fill="var(--color-fg)">TS contract type</text>
-  <text x="612" y="208" font-size="10.5" fill="var(--color-warn)">schema drift &#8594; build fails</text>
+  <rect class="bx bx-gate" x="596" y="160" width="270" height="92" rx="10"/>
+  <text class="ttl" x="608" y="182">Build-time contract gate</text>
+  <text class="cd mono" x="608" y="199">data/types.ts ⇔ src/.../contracts.py</text>
+  <text class="it" x="608" y="218">the TS type mirrors the artifact</text>
+  <text class="warn" x="608" y="238">schema drift → the build FAILS</text>
 
   <!-- deploy strip -->
-  <rect x="24" y="250" width="792" height="56" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="40" y="274" font-size="12" font-weight="600" fill="var(--color-fg)">Deploy</text>
-  <text x="40" y="293" font-size="11" fill="var(--color-text-muted)" font-family="ui-monospace, monospace">npm run build  &#8594;  copy results/* into dist/data  &#8594;  GitHub Pages serves SPA + artifacts (404.html = index.html)</text>
+  <rect class="bx" x="14" y="296" width="852" height="78" rx="10"/>
+  <text class="ttl" x="26" y="318">Deploy — static, no server</text>
+  <rect class="bx" x="26" y="328" width="250" height="36" rx="6"/>
+  <text class="cd mono" x="36" y="350">npm run build</text>
+  <rect class="bx" x="300" y="328" width="280" height="36" rx="6"/>
+  <text class="cd mono" x="310" y="350">copy results/* → dist/data</text>
+  <rect class="bx bx-web" x="604" y="328" width="248" height="36" rx="6"/>
+  <text class="cd mono" x="614" y="350">GitHub Pages (404.html = index)</text>
 
-  <!-- arrows -->
-  <line x1="224" y1="110" x2="298" y2="110" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah3)"/>
-  <line x1="410" y1="142" x2="410" y2="164" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah3)"/>
-  <line x1="520" y1="110" x2="594" y2="110" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah3)"/>
-  <line x1="706" y1="142" x2="706" y2="164" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah3)"/>
+  <!-- flows -->
+  <path class="flow" d="M250,94 L306,94" marker-end="url(#wa-ar)"/>
+  <text class="lbl" x="256" y="86">loadLatest()</text>
+  <path class="flow" d="M423,140 L423,160" marker-end="url(#wa-ar)"/>
+  <text class="lbl" x="429" y="154">fetch + inflate</text>
+  <path class="flow" d="M540,94 L596,94" marker-end="url(#wa-ar)"/>
+  <text class="lbl" x="546" y="86">CellSelection[]</text>
+  <path class="flow" d="M731,140 L731,160" marker-end="url(#wa-ar)"/>
+  <path class="flow" d="M276,346 L300,346" marker-end="url(#wa-ar)"/>
+  <path class="flow" d="M580,346 L604,346" marker-end="url(#wa-ar)"/>
 
-  <text x="20" y="332" font-size="11" fill="var(--color-text-muted)">The SPA computes nothing: it loads the committed field and renders it. The TypeScript mirror keeps the UI and the artifact in lockstep.</text>
+  <text class="mu" x="14" y="404">The SPA computes nothing: it loads the committed field and renders it. The TypeScript mirror keeps the UI and the baked artifact in lockstep.</text>
 </svg>

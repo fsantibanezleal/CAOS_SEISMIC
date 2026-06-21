@@ -1,63 +1,101 @@
-<svg viewBox="0 0 840 400" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 480" width="880" class="arch-svg" role="img" aria-label="CAOS_SEISMIC data contracts: the ingestion contract, the artifact contract, the country views, and the enforced honest framing">
+  <style>
+    .arch-svg text { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+    .arch-svg .mono { font-family: ui-monospace, Consolas, monospace; }
+    .arch-svg .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1.2; }
+    .arch-svg .bx-hi { stroke: var(--color-accent); }
+    .arch-svg .bx-web { stroke: var(--color-good); }
+    .arch-svg .bx-gate { stroke: var(--color-warn); }
+    .arch-svg .ttl { fill: var(--color-text); font-size: 12.5px; font-weight: 600; }
+    .arch-svg .sub { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .it { fill: var(--color-text); font-size: 10.5px; }
+    .arch-svg .cd { fill: var(--color-accent); font-size: 10px; }
+    .arch-svg .mu { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .warn { fill: var(--color-warn); font-size: 10.5px; font-weight: 600; }
+    .arch-svg .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .arch-svg .lbl { fill: var(--color-text-muted); font-size: 9.5px; }
+  </style>
   <defs>
-    <marker id="ah5" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    <marker id="ct-ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--color-fg-subtle)"/>
     </marker>
   </defs>
 
-  <text x="20" y="28" font-size="15" font-weight="700" fill="var(--color-fg)">Data contracts &#38; design</text>
-
   <!-- raw -->
-  <rect x="24" y="56" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="40" y="80" font-size="12" font-weight="600" fill="var(--color-fg)">Raw catalog</text>
-  <text x="40" y="100" font-size="10.5" fill="var(--color-text-muted)">ISC / USGS</text>
-  <text x="40" y="116" font-size="10.5" fill="var(--color-text-muted)">(git-ignored)</text>
+  <rect class="bx" x="14" y="44" width="150" height="100" rx="10"/>
+  <text class="ttl" x="26" y="66">Raw catalog</text>
+  <text class="sub" x="26" y="81">git-ignored, in the vault</text>
+  <text class="it" x="26" y="100">ISC reviewed bulletin</text>
+  <text class="it" x="26" y="116">USGS ComCat (real-time)</text>
+  <text class="mu" x="26" y="134">bring-your-own-data entry</text>
 
-  <!-- ingestion contract -->
-  <rect x="222" y="46" width="250" height="90" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
-  <text x="238" y="68" font-size="12" font-weight="700" fill="var(--color-accent)">Contract 1 &#183; ingestion</text>
-  <text x="238" y="88" font-size="10.5" fill="var(--color-text-muted)">homogenize to Mw (Scordilis)</text>
-  <text x="238" y="104" font-size="10.5" fill="var(--color-text-muted)">estimate Mc, b (Aki&#8211;Utsu)</text>
-  <text x="238" y="120" font-size="10.5" fill="var(--color-text-muted)">decluster &#183; explicit outlier policy</text>
+  <!-- contract 1 -->
+  <rect class="bx bx-hi" x="196" y="30" width="244" height="128" rx="10"/>
+  <text class="ttl" x="208" y="52">Contract 1 · ingestion</text>
+  <text class="cd mono" x="208" y="67">data/clean.py (raw → pipeline)</text>
+  <text class="it" x="208" y="88">homogenize to Mw</text>
+  <text class="mu" x="208" y="103">Scordilis-2006 conversions (TLS)</text>
+  <text class="it" x="208" y="123">estimate Mc, b</text>
+  <text class="mu" x="208" y="138">Aki–Utsu · space–time completeness</text>
+  <text class="warn" x="208" y="154">decluster · explicit outlier policy</text>
 
   <!-- pipeline -->
-  <rect x="520" y="56" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="536" y="80" font-size="12" font-weight="600" fill="var(--color-fg)">Pipeline</text>
-  <text x="536" y="100" font-size="10.5" fill="var(--color-text-muted)">ETAS / neural fit</text>
-  <text x="536" y="116" font-size="10.5" fill="var(--color-text-muted)">&#8594; infer &#8594; bake</text>
+  <rect class="bx bx-eng" x="472" y="44" width="150" height="100" rx="10"/>
+  <text class="ttl" x="484" y="66">Pipeline</text>
+  <text class="sub" x="484" y="81">staged, deterministic</text>
+  <text class="it" x="484" y="100">fit → infer → bake</text>
+  <text class="cd mono" x="484" y="118">inference/daily.py</text>
+  <text class="cd mono" x="484" y="134">inference/outlook.py</text>
 
-  <!-- artifact contract -->
-  <rect x="222" y="172" width="250" height="92" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
-  <text x="238" y="194" font-size="12" font-weight="700" fill="var(--color-accent)">Contract 2 &#183; artifact</text>
-  <text x="238" y="214" font-size="10.5" fill="var(--color-text-muted)">sparse quantized field</text>
-  <text x="238" y="230" font-size="10.5" fill="var(--color-text-muted)">(log-uint16 codes, H3-indexed)</text>
-  <text x="238" y="248" font-size="10.5" fill="var(--color-text-muted)">+ index.json &#183; mirrored by a TS type</text>
+  <!-- contract 2 -->
+  <rect class="bx bx-hi" x="196" y="186" width="244" height="132" rx="10"/>
+  <text class="ttl" x="208" y="208">Contract 2 · artifact</text>
+  <text class="cd mono" x="208" y="223">contracts.py (pipeline → web)</text>
+  <text class="it" x="208" y="244">sparse, quantized field</text>
+  <text class="mu" x="208" y="259">log-uint16 rate codes · H3-indexed</text>
+  <text class="it" x="208" y="280">+ index.json pointer</text>
+  <text class="mu" x="208" y="295">30-day outlook ships its own field</text>
+  <text class="mu" x="208" y="310">+ a multi-region evidence file</text>
 
   <!-- web -->
-  <rect x="520" y="182" width="150" height="70" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="536" y="206" font-size="12" font-weight="600" fill="var(--color-fg)">Web (replay)</text>
-  <text x="536" y="226" font-size="10.5" fill="var(--color-text-muted)">deck.gl field</text>
-  <text x="536" y="242" font-size="10.5" fill="var(--color-warn)">drift &#8594; build fails</text>
+  <rect class="bx bx-gate" x="472" y="186" width="150" height="100" rx="10"/>
+  <text class="ttl" x="484" y="208">Web (replay)</text>
+  <text class="cd mono" x="484" y="223">data/types.ts</text>
+  <text class="it" x="484" y="244">TS type mirrors</text>
+  <text class="it" x="484" y="260">the artifact</text>
+  <text class="warn" x="484" y="280">drift → build fails</text>
 
-  <!-- views card -->
-  <rect x="694" y="56" width="122" height="196" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="710" y="78" font-size="11.5" font-weight="600" fill="var(--color-fg)">Cases = VIEWS</text>
-  <text x="710" y="98" font-size="10.5" fill="var(--color-text-muted)">into one global</text>
-  <text x="710" y="113" font-size="10.5" fill="var(--color-text-muted)">field:</text>
-  <text x="710" y="136" font-size="10.5" fill="var(--color-text-muted)">Chile &#183; Japan</text>
-  <text x="710" y="152" font-size="10.5" fill="var(--color-text-muted)">California &#183; NZ</text>
-  <text x="710" y="168" font-size="10.5" fill="var(--color-text-muted)">Italy &#183; &#8230;</text>
-  <text x="710" y="202" font-size="10.5" fill="var(--color-text-muted)">grouped by</text>
-  <text x="710" y="217" font-size="10.5" fill="var(--color-text-muted)">seismicity class</text>
+  <!-- views -->
+  <rect class="bx bx-web" x="654" y="30" width="212" height="288" rx="10"/>
+  <text class="ttl" x="666" y="52">Cases = country VIEWS</text>
+  <text class="sub" x="666" y="67">into ONE global field</text>
+  <text class="cd mono" x="666" y="86">eval/views.py</text>
+  <text class="it" x="666" y="110">High seismicity</text>
+  <text class="mu" x="666" y="126">Chile · Japan · California · NZ</text>
+  <text class="it" x="666" y="150">Low seismicity</text>
+  <text class="mu" x="666" y="166">stable interiors (≈ 0 skill)</text>
+  <text class="it" x="666" y="190">+ Italy · Greece · Mexico</text>
+  <text class="it" x="666" y="206">Peru · Türkiye · Indonesia · …</text>
+  <text class="mu" x="666" y="232">a view never re-computes — it</text>
+  <text class="mu" x="666" y="247">narrows which cells are shown</text>
+  <text class="mu" x="666" y="271">pre-registered seismicity class</text>
+  <text class="mu" x="666" y="286">→ the high-vs-low bias is fixed</text>
+  <text class="mu" x="666" y="301">before scoring, not post-hoc</text>
 
-  <!-- arrows -->
-  <line x1="174" y1="92" x2="220" y2="92" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
-  <line x1="472" y1="92" x2="518" y2="92" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
-  <path d="M595,126 L595,154 L347,154 L347,170" fill="none" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
-  <line x1="472" y1="216" x2="518" y2="216" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah5)"/>
+  <!-- flows -->
+  <path class="flow" d="M164,94 L196,94" marker-end="url(#ct-ar)"/>
+  <path class="flow" d="M440,94 L472,94" marker-end="url(#ct-ar)"/>
+  <text class="lbl" x="444" y="86">clean Mw</text>
+  <path class="flow" d="M547,144 L547,186" marker-end="url(#ct-ar)"/>
+  <text class="lbl" x="553" y="170">bake</text>
+  <path class="flow" d="M440,236 L472,236" marker-end="url(#ct-ar)"/>
+  <text class="lbl" x="444" y="228">serve</text>
 
   <!-- honest framing -->
-  <rect x="24" y="296" width="792" height="56" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="40" y="320" font-size="12" font-weight="600" fill="var(--color-accent)">Honest framing (enforced everywhere)</text>
-  <text x="40" y="340" font-size="11" fill="var(--color-text-muted)">forecasts not predictions &#183; null/negative results recorded &#183; numbers sourced &#183; the E1&#8594;E14 register is the day-by-day audit trail</text>
+  <rect class="bx bx-hi" x="14" y="338" width="852" height="74" rx="10"/>
+  <text class="ttl" x="26" y="360">Design discipline — honest framing, enforced everywhere</text>
+  <text class="it" x="26" y="382">forecasts not predictions · no alarms · null/negative results recorded · numbers sourced (labeled if synthetic)</text>
+  <text class="mu" x="26" y="400">the experiment register E1→E14 (docs/experiments.md + the in-app Experiments page) is the day-by-day audit trail — what proves the work is real</text>
+
+  <text class="mu" x="14" y="438">Bad/incomplete data is handled explicitly at Contract 1, never silently coerced; the artifact is the single source of truth for every number the SPA shows.</text>
 </svg>

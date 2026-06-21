@@ -1,40 +1,78 @@
-<svg viewBox="0 0 840 410" xmlns="http://www.w3.org/2000/svg" font-family="system-ui, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 500" width="880" class="arch-svg" role="img" aria-label="CAOS_SEISMIC science: regime-tiled ETAS, the geodetic context-neural challenger, and the leakage-free evaluation">
+  <style>
+    .arch-svg text { font-family: Inter, "Segoe UI", system-ui, sans-serif; }
+    .arch-svg .mono { font-family: ui-monospace, Consolas, monospace; }
+    .arch-svg .bx { fill: var(--color-surface-2); stroke: var(--color-border); stroke-width: 1.2; }
+    .arch-svg .bx-hi { stroke: var(--color-accent); }
+    .arch-svg .bx-eng { stroke: var(--color-warn); }
+    .arch-svg .ttl { fill: var(--color-text); font-size: 12.5px; font-weight: 600; }
+    .arch-svg .sub { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .it { fill: var(--color-text); font-size: 10.5px; }
+    .arch-svg .eq { fill: var(--color-text); font-size: 13px; }
+    .arch-svg .cd { fill: var(--color-accent); font-size: 10px; }
+    .arch-svg .mu { fill: var(--color-text-muted); font-size: 10px; }
+    .arch-svg .good { fill: var(--color-good); font-size: 10.5px; font-weight: 600; }
+    .arch-svg .warn { fill: var(--color-warn); font-size: 10.5px; font-weight: 600; }
+    .arch-svg .flow { fill: none; stroke: var(--color-fg-subtle); stroke-width: 1.5; }
+    .arch-svg .lbl { fill: var(--color-text-muted); font-size: 9.5px; }
+  </style>
   <defs>
-    <marker id="ah4" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
-      <path d="M0,0 L7,3 L0,6 Z" fill="var(--color-fg-subtle)"/>
+    <marker id="sc-ar" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--color-fg-subtle)"/>
     </marker>
   </defs>
 
-  <text x="20" y="28" font-size="15" font-weight="700" fill="var(--color-fg)">The science</text>
-
   <!-- ETAS base -->
-  <rect x="24" y="48" width="430" height="150" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="40" y="72" font-size="13" font-weight="700" fill="var(--color-accent)">Base &#8212; regime-tiled ETAS (Ogata)</text>
-  <text x="40" y="98" font-size="13" fill="var(--color-fg)" font-family="ui-monospace, monospace">&#955;(x,t) = &#956;(x) + &#931; k(m)&#183;g(t&#8722;t&#7522;)&#183;f(r)</text>
-  <text x="40" y="120" font-size="11" fill="var(--color-text-muted)">&#956;(x): smoothed-seismicity background</text>
-  <text x="40" y="138" font-size="11" fill="var(--color-text-muted)">g: Omori&#8211;Utsu time &#183; k: Utsu productivity &#183; f: spatial</text>
-  <text x="40" y="162" font-size="11" fill="var(--color-text-muted)">fit per tectonic-regime tile (~195)</text>
-  <text x="40" y="180" font-size="11" fill="var(--color-text-muted)">b &#8776; 1.34 &#183; Mc = 5.35 &#183; serves the 1&#8211;7 day product</text>
+  <rect class="bx bx-hi" x="14" y="18" width="500" height="200" rx="10"/>
+  <text class="ttl" x="26" y="40">Base — regime-tiled space-time ETAS (Ogata 1998)</text>
+  <text class="cd mono" x="26" y="55">model/etas.py · model/tiled.py</text>
+  <rect class="bx" x="26" y="66" width="476" height="40" rx="6"/>
+  <text class="eq mono" x="38" y="92">&#955;(x,t) = &#956;(x) + &#931;&#7522; k(m&#7522;)&#183;g(t&#8722;t&#7522;)&#183;f(r | m&#7522;)</text>
+  <text class="it" x="26" y="126">&#956;(x)</text>
+  <text class="mu" x="70" y="126">smoothed-seismicity background (the stationary prior)</text>
+  <text class="it" x="26" y="144">g · k · f</text>
+  <text class="mu" x="70" y="144">Omori&#8211;Utsu decay · Utsu productivity · mag-dependent spatial kernel</text>
+  <text class="it" x="26" y="168">Fit per tectonic-regime tile (~195 tiles), both ETAS stability gates enforced.</text>
+  <text class="cd mono" x="26" y="190">b &#8776; 1.34 &#183; Mc = 5.35 &#183; ~97k events 1990&#8211;2026</text>
+  <text class="good" x="26" y="208">serves the 1&#8211;7 day daily product (triggering-dominated)</text>
 
-  <!-- Geodetic neural -->
-  <rect x="474" y="48" width="342" height="150" rx="8" fill="var(--color-surface)" stroke="var(--color-border)"/>
-  <text x="490" y="72" font-size="13" font-weight="700" fill="var(--color-accent)">Challenger &#8212; geodetic context-neural</text>
-  <text x="490" y="98" font-size="11" fill="var(--color-text-muted)">GNSS strain rate &#8594; CNN encoder</text>
-  <text x="490" y="116" font-size="11" fill="var(--color-text-muted)">&#8594; calibrated background field</text>
-  <text x="490" y="142" font-size="11" fill="var(--color-good)">beats ETAS at 30 d: +0.106 IGPE (all views +)</text>
-  <text x="490" y="160" font-size="11" fill="var(--color-warn)">NOT at 1&#8211;7 d (ETAS triggering wins)</text>
-  <text x="490" y="182" font-size="11" fill="var(--color-text-muted)">&#8594; serves the 30-day outlook only</text>
+  <!-- geodetic neural -->
+  <rect class="bx bx-eng" x="534" y="18" width="332" height="200" rx="10"/>
+  <text class="ttl" x="546" y="40">Challenger — geodetic context-neural</text>
+  <text class="cd mono" x="546" y="55">model/context_tpp.py</text>
+  <rect class="bx" x="546" y="66" width="308" height="56" rx="6"/>
+  <text class="it" x="556" y="84">GNSS strain-rate field</text>
+  <text class="mu" x="556" y="99">→ CNN spatial-context encoder</text>
+  <text class="mu" x="556" y="114">→ calibrated background intensity</text>
+  <text class="good" x="546" y="142">30 d: +0.106 IGPE vs ETAS (all 5 views +)</text>
+  <text class="warn" x="546" y="162">1&#8211;7 d: loses — ETAS triggering dominates</text>
+  <text class="it" x="546" y="184">horizon-dependent: a covariate that helps</text>
+  <text class="mu" x="546" y="200">only at the longer, background-led horizon</text>
+  <text class="good" x="546" y="216">→ serves the 30-day outlook only</text>
 
-  <!-- evaluation strip -->
-  <rect x="24" y="222" width="792" height="118" rx="8" fill="var(--color-accent-soft, var(--color-surface-2))" stroke="var(--color-accent)"/>
-  <text x="40" y="246" font-size="13" font-weight="700" fill="var(--color-accent)">Honest evaluation</text>
-  <text x="40" y="272" font-size="11.5" fill="var(--color-fg)">Catalog-based N-test (experiment E13): an ETAS branching simulation gives the over-dispersion-honest count</text>
-  <text x="40" y="290" font-size="11.5" fill="var(--color-fg)">distribution &#8212; an apparent under-forecast reads as over-dispersion + secondary cascade, not a model failure.</text>
-  <text x="40" y="316" font-size="11.5" fill="var(--color-fg)">Skill = information gain per earthquake (IGPE, nats) vs the Poisson null AND ETAS, measured leakage-free.</text>
+  <!-- evaluation band -->
+  <rect class="bx bx-hi" x="14" y="240" width="852" height="172" rx="10"/>
+  <text class="ttl" x="26" y="262">Honest evaluation — skill is measured, never asserted</text>
+  <rect class="bx" x="26" y="274" width="408" height="124" rx="6"/>
+  <text class="it" x="38" y="294">Catalog-based N-test (experiment E13)</text>
+  <text class="cd mono" x="38" y="311">model/simulate.py</text>
+  <text class="mu" x="38" y="330">ETAS branching simulation → over-dispersion-honest</text>
+  <text class="mu" x="38" y="345">count distribution (Var ≫ mean during sequences)</text>
+  <text class="it" x="38" y="368">an apparent under-forecast reads as over-dispersion</text>
+  <text class="it" x="38" y="383">+ secondary cascade — NOT a model failure</text>
+  <rect class="bx" x="446" y="274" width="408" height="124" rx="6"/>
+  <text class="it" x="458" y="294">Skill = information gain per earthquake (nats)</text>
+  <text class="cd mono" x="458" y="311">eval/csep.py · eval/backanalysis.py</text>
+  <text class="mu" x="458" y="330">IGPE vs the Poisson null AND vs ETAS, paired</text>
+  <text class="mu" x="458" y="345">Rhoades-2011 T/W tests, leakage-free windows</text>
+  <text class="it" x="458" y="368">+ N/M/S/L consistency · reliability diagrams</text>
+  <text class="mu" x="458" y="383">global IGPE +0.0835 nats/eq vs the null baseline</text>
 
-  <!-- arrows base/challenger -> eval -->
-  <line x1="230" y1="198" x2="230" y2="220" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah4)"/>
-  <line x1="620" y1="198" x2="620" y2="220" stroke="var(--color-fg-subtle)" stroke-width="1.5" marker-end="url(#ah4)"/>
+  <!-- flows base/challenger -> eval -->
+  <path class="flow" d="M264,218 L264,238" marker-end="url(#sc-ar)"/>
+  <text class="lbl" x="270" y="232">scored</text>
+  <path class="flow" d="M700,218 L700,238" marker-end="url(#sc-ar)"/>
+  <text class="lbl" x="706" y="232">scored</text>
 
-  <text x="20" y="372" font-size="11" fill="var(--color-text-muted)">A change counts as an improvement only if it shows prospective skill; null and negative results are recorded, never hidden.</text>
+  <text class="mu" x="14" y="436">A change counts as an improvement only if it shows prospective skill; null and negative results are recorded (the E1→E14 register), never hidden.</text>
 </svg>

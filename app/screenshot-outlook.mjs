@@ -11,8 +11,16 @@ page.on('pageerror', (e) => errors.push('PAGEERROR: ' + String(e)));
 page.on('requestfailed', (r) => { const u = r.url(); if (/data\/outlook/.test(u)) errors.push('REQFAIL: ' + u); });
 
 try {
-  await page.goto(`${base}/outlook`, { waitUntil: 'networkidle', timeout: 60000 });
-  await page.waitForTimeout(5000); // let OSM tiles + the deck.gl heatmap paint
+  // Navigate to the SPA root, then client-route to /outlook (avoids a server 404 on deep links in preview).
+  await page.goto(`${base}/`, { waitUntil: 'networkidle', timeout: 60000 });
+  await page.waitForTimeout(1500);
+  const link = page.locator('a[href$="/outlook"], a[href="/outlook"]').first();
+  if (await link.count()) {
+    await link.click();
+  } else {
+    await page.goto(`${base}/outlook`, { waitUntil: 'networkidle', timeout: 60000 });
+  }
+  await page.waitForTimeout(6000); // let OSM tiles + the deck.gl heatmap paint
   // surface what rendered
   const h1 = await page.locator('h1').first().textContent().catch(() => null);
   const statNums = await page.locator('.outlook-stats .stat-num').allTextContents().catch(() => []);

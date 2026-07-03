@@ -1,6 +1,9 @@
 <!-- markdownlint-disable MD013 -->
 # CAOS_SEISMIC — Conditional Probabilistic Seismic Forecasting
 
+[![License](https://img.shields.io/github/license/fsantibanezleal/CAOS_SEISMIC)](LICENSE)
+[![Live demo](https://img.shields.io/badge/demo-live-2ea44f)](https://seismic.fasl-work.com)
+
 > **Earthquakes cannot be predicted, but their probability can be forecast — reported honestly, with
 > uncertainty, evaluated against reality, never as an alarm and never as a promise of safety.**
 

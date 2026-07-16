@@ -1,11 +1,11 @@
 {
   "schema_version": "1.0",
   "product": "CAOS_SEISMIC",
-  "updated_at": "2026-07-15T07:09:12Z",
+  "updated_at": "2026-07-16T07:08:55Z",
   "latest": {
-    "issued_at": "2026-07-15T00:00:00Z",
+    "issued_at": "2026-07-16T00:00:00Z",
     "region": "global",
-    "file": "forecast-global-2026-07-15.json.gz",
+    "file": "forecast-global-2026-07-16.json.gz",
     "horizons_days": [
       1,
       2,
@@ -16,10 +16,10 @@
       6.0,
       7.0
     ],
-    "size_bytes": 1205551,
+    "size_bytes": 1205354,
     "staleness_ok": true,
-    "generated": "2026-07-15T00:00:00Z",
-    "next_run": "2026-07-16T00:00:00Z",
+    "generated": "2026-07-16T00:00:00Z",
+    "next_run": "2026-07-17T00:00:00Z",
     "views": [
       {
         "id": "CL",
@@ -90,9 +90,9 @@
   },
   "latest_by_region": {
     "global": {
-      "issued_at": "2026-07-15T00:00:00Z",
+      "issued_at": "2026-07-16T00:00:00Z",
       "region": "global",
-      "file": "forecast-global-2026-07-15.json.gz",
+      "file": "forecast-global-2026-07-16.json.gz",
       "horizons_days": [
         1,
         2,
@@ -103,10 +103,10 @@
         6.0,
         7.0
       ],
-      "size_bytes": 1205551,
+      "size_bytes": 1205354,
       "staleness_ok": true,
-      "generated": "2026-07-15T00:00:00Z",
-      "next_run": "2026-07-16T00:00:00Z",
+      "generated": "2026-07-16T00:00:00Z",
+      "next_run": "2026-07-17T00:00:00Z",
       "views": [
         {
           "id": "CL",
@@ -3119,6 +3119,92 @@
       "staleness_ok": true,
       "generated": "2026-07-15T00:00:00Z",
       "next_run": "2026-07-16T00:00:00Z",
+      "views": [
+        {
+          "id": "CL",
+          "name_en": "Chile (subduction margin)",
+          "n_cells": 0
+        },
+        {
+          "id": "JP",
+          "name_en": "Japan",
+          "n_cells": 0
+        },
+        {
+          "id": "NZ",
+          "name_en": "New Zealand",
+          "n_cells": 0
+        },
+        {
+          "id": "IT",
+          "name_en": "Italy",
+          "n_cells": 0
+        },
+        {
+          "id": "US-CA",
+          "name_en": "California (USA)",
+          "n_cells": 0
+        },
+        {
+          "id": "GR",
+          "name_en": "Greece / Aegean",
+          "n_cells": 0
+        },
+        {
+          "id": "MX",
+          "name_en": "Mexico",
+          "n_cells": 0
+        },
+        {
+          "id": "PE",
+          "name_en": "Peru",
+          "n_cells": 0
+        },
+        {
+          "id": "TR",
+          "name_en": "Türkiye",
+          "n_cells": 0
+        },
+        {
+          "id": "ID",
+          "name_en": "Indonesia",
+          "n_cells": 0
+        },
+        {
+          "id": "CN",
+          "name_en": "China",
+          "n_cells": 0
+        },
+        {
+          "id": "PH",
+          "name_en": "Philippines",
+          "n_cells": 0
+        },
+        {
+          "id": "CL-N",
+          "name_en": "Northern Chile (Iquique–Antofagasta)",
+          "n_cells": 0
+        }
+      ]
+    },
+    {
+      "issued_at": "2026-07-16T00:00:00Z",
+      "region": "global",
+      "file": "forecast-global-2026-07-16.json.gz",
+      "horizons_days": [
+        1,
+        2,
+        7
+      ],
+      "magnitude_thresholds": [
+        5.0,
+        6.0,
+        7.0
+      ],
+      "size_bytes": 1205354,
+      "staleness_ok": true,
+      "generated": "2026-07-16T00:00:00Z",
+      "next_run": "2026-07-17T00:00:00Z",
       "views": [
         {
           "id": "CL",

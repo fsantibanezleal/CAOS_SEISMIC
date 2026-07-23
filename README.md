@@ -3,6 +3,7 @@
 
 [![License](https://img.shields.io/github/license/fsantibanezleal/CAOS_SEISMIC)](LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-live-2ea44f)](https://seismic.fasl-work.com)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21508362-blue)](https://doi.org/10.5281/zenodo.21508362)
 
 > **Earthquakes cannot be predicted, but their probability can be forecast — reported honestly, with
 > uncertainty, evaluated against reality, never as an alarm and never as a promise of safety.**
@@ -137,6 +138,15 @@ cd app && npm install && npm run dev
 
 The daily production job is `scripts/daily.{ps1,sh}` (scheduled ~03:00): `fetch → infer → scoped commit
 → push`. See [`docs/deploy.md`](docs/deploy.md).
+
+## Preprint
+
+The methodology and the prospective results are written up as a preprint (CC-BY-4.0):
+**"Horizon-Dependent Value of Geodetic Context in Operational Earthquake Forecasting:
+A Leakage-Free, Multi-Region Study with Pre-Registered Negative Results"**,
+concept DOI [10.5281/zenodo.21508362](https://doi.org/10.5281/zenodo.21508362)
+(source in [`manuscripts/oef-geodetic-horizon/`](manuscripts/oef-geodetic-horizon/)).
+Every number in it is backed by a committed artifact in `results/`.
 
 ## Documentation
 

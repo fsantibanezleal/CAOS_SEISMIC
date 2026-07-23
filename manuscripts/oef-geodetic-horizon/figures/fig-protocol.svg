@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="300" viewBox="0 0 640 300" font-family="Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5 Z" fill="#4a5568"/></marker>
+    <style>
+      .lbl{fill:#1a202c;font-size:12px;} .lbls{fill:#4a5568;font-size:10.5px;} .t{fill:#2d3748;font-size:12px;text-anchor:middle;}
+      .cond{fill:#ebf8ff;stroke:#2b6cb0;stroke-width:1.2;} .targ{fill:#fffaf0;stroke:#c05621;stroke-width:1.2;}
+      .ax{stroke:#4a5568;stroke-width:1.4;fill:none;marker-end:url(#a3);} .win{fill:none;stroke:#718096;stroke-width:1.2;}
+    </style>
+  </defs>
+
+  <text class="lbl" x="18" y="26" font-weight="bold">Leakage-free forecast clock (one daily issue)</text>
+
+  <!-- single issue timeline -->
+  <path class="ax" d="M40,86 L610,86"/>
+  <rect class="cond" x="40" y="66" width="330" height="20"/>
+  <rect class="targ" x="370" y="66" width="120" height="20"/>
+  <line x1="370" y1="56" x2="370" y2="120" stroke="#c05621" stroke-width="1.6"/>
+  <text class="t" x="370" y="134" fill="#c05621">issue time t</text>
+  <text class="t" x="205" y="60" fill="#2b6cb0">conditioning slice (all past, up to t)</text>
+  <text class="lbls" x="205" y="104" text-anchor="middle">model sees only past events; forecast sealed</text>
+  <text class="t" x="430" y="60" fill="#c05621">target [t, t+H)</text>
+  <text class="lbls" x="430" y="104" text-anchor="middle">scored vs the catalog as known at t</text>
+  <text class="lbls" x="560" y="82">clock advances</text>
+
+  <text class="lbls" x="40" y="150">Half-open windows tile the timeline (no boundary double-count); assert_no_leakage() before every fit; input snapshot makes each forecast byte-reproducible.</text>
+
+  <!-- pseudo-prospective back-analysis: recondition forward -->
+  <text class="lbl" x="18" y="188" font-weight="bold">Pseudo-prospective back-analysis (fit once, recondition forward)</text>
+  <line x1="40" y1="210" x2="40" y2="280" stroke="#4a5568" stroke-width="1.2"/>
+  <text class="lbls" x="46" y="208">fit at t&#8320;</text>
+  <g>
+    <rect class="cond" x="40"  y="220" width="90" height="16"/><rect class="targ" x="130" y="220" width="46" height="16"/>
+    <rect class="cond" x="40"  y="242" width="136" height="16"/><rect class="targ" x="176" y="242" width="46" height="16"/>
+    <rect class="cond" x="40"  y="264" width="182" height="16"/><rect class="targ" x="222" y="264" width="46" height="16"/>
+  </g>
+  <text class="lbls" x="286" y="232">window 1: recondition (refresh parents, hold params)</text>
+  <text class="lbls" x="286" y="254">window 2: ... score IGPE per window and per region</text>
+  <text class="lbls" x="286" y="276">window k: mean IGPE + paired-t CI, pre-registered rule</text>
+</svg>

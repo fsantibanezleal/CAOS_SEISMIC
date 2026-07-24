@@ -22,7 +22,7 @@ Geodetic Context}
   \thanks{F.\ Santib\'a\~nez-Leal is with the CAOS open-research programme,
     Santiago, Chile (e-mail: \texttt{fsantibanezleal@ug.uchile.cl};
     ORCID: 0000-0002-0150-3246).}%
-  \thanks{Preprint, 2026, version 2 (comprehensive). Code, configurations, provenance
+  \thanks{Preprint, 2026, version 2.1 (revised). Code, configurations, provenance
     manifests, and all committed daily and back-analysis artifacts are released under
     MIT at \url{https://github.com/fsantibanezleal/CAOS_SEISMIC}; a static forecast
     viewer is live at \url{https://seismic.fasl-work.com}. This is an independent
@@ -30,7 +30,7 @@ Geodetic Context}
     used for life-safety decisions.}%
 }
 
-\markboth{Preprint, 2026 (v2) --- CAOS open-research programme}{Santib\'a\~nez-Leal:
+\markboth{Preprint, 2026 (v2.1) --- CAOS open-research programme}{Santib\'a\~nez-Leal:
 Honest, Leakage-Free Operational Earthquake Forecasting}
 
 \IEEEtitleabstractindextext{%
@@ -199,7 +199,7 @@ offspring of every past event~\cite{ogata1998},
 \lambda(t,x,y\mid\mathcal H_t)=\mu(x,y)+\!\!\sum_{i:\,t_i<t}\!\! K\,e^{\alpha(M_i-M_0)}
 \Big(1+\tfrac{t-t_i}{c}\Big)^{-p} f(x-x_i,y-y_i\mid M_i),
 \end{equation}
-with Utsu productivity $k(m)=K e^{\alpha(m-M_0)}$, the Omori--Utsu kernel
+with Utsu productivity $k(m)=K e^{\alpha(m-M_0)}$ (reference magnitude $M_0$), the Omori--Utsu kernel
 $g(t)=\tfrac{p-1}{c}(1+t/c)^{-p}$, and the Ogata inverse-power spatial kernel
 $f(r\mid M_i)=\tfrac{q-1}{\pi\zeta^2}(1+r^2/\zeta^2)^{-q}$, $\zeta=De^{\gamma(M_i-M_0)}$.
 Parameters $(K,\alpha,c,p,D,\gamma,q)$ are fit by maximum likelihood on the full
@@ -218,7 +218,8 @@ smoothed null, at $M_c=5.35$, $b=1.337$.
 
 The most transparent aftershock model~\cite{reasenberg1989,page2016} conditions on the
 largest triggering event before issue time, with rate
-$\lambda(t,M)=10^{\,a+b(M_m-M)}(t+c)^{-p}$ distributed over cells by a Wells--Coppersmith
+$\lambda(t,M)=10^{\,a+b(M_m-M)}(t+c)^{-p}$ ($M_m$ the conditioning mainshock magnitude),
+distributed over cells by a Wells--Coppersmith
 rupture-length kernel~\cite{wells1994}; its constants are flagged as California-derived and
 never silently reused for Chilean subduction. It is a human-auditable cross-check, not the
 primary spatial forecaster.
@@ -313,7 +314,8 @@ null and ETAS, measured as information gain per earthquake (IGPE, nats),
 I_N(A,B)=\frac1N\sum_{i=1}^N\big(\ln\lambda_A(k_i)-\ln\lambda_B(k_i)\big)-\frac{\hat N_A-\hat N_B}{N},
 \label{eq:igpe}
 \end{equation}
-tested with the paired $t$-test $T=I_N/(s/\sqrt N)\sim t_{N-1}$ and corroborated by the
+where $k_i$ is the space--magnitude bin of the $i$th target event; the gain is tested with the
+paired $t$-test $T=I_N/(s/\sqrt N)\sim t_{N-1}$ and corroborated by the
 Wilcoxon W-test~\cite{rhoades2011}. The gain over ETAS measures genuine added skill
 precisely because both models already reproduce Omori clustering. ROC/AUC is banned as a
 skill metric: it is invariant to calibration and, on a rare per-cell-per-day task,
@@ -434,7 +436,7 @@ View & mean IGPE vs base & windows $+$ & paired-$t$ CI \\
 Chile & $-0.0001$ & $3/10$ & crosses zero \\
 Japan & $-0.0008$ & $8/13$ & crosses zero \\
 California & $+0.0077$ & $3/3$ (noise) & crosses zero \\
-New Zealand & $-0.0008$ & $0/3$ & crosses zero \\
+New Zealand & $-0.0008$ & $0/3$ & excludes zero $(-)$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -471,8 +473,10 @@ correct consistency tool. This is one 30-day global window; the method generaliz
 \centering
 \includegraphics[width=\columnwidth]{fig-horizon-igpe.pdf}
 \caption{The strain-conditioned neural challenger vs ETAS in the pseudo-prospective
-back-analysis. Per-window IGPE is scattered around zero at seven days (mean $-0.053$, only
-$4/8$ positive) but positive in every window at thirty days (mean $+0.078$). Read from
+back-analysis (the exploratory dual-horizon run, fit once). Per-window IGPE is scattered
+around zero at seven days (mean $-0.053$, only $4/8$ positive) but positive in all four
+completed thirty-day windows (mean $+0.078$); the dedicated ten-window thirty-day validation
+(Fig.~\ref{fig:region}) scores $+0.115$ over 2166 events. Read from
 \texttt{neural\_pseudoprospective.json}.}
 \label{fig:horizonigpe}
 \end{figure}
@@ -490,7 +494,7 @@ region. Read from \texttt{outlook-evidence-30d.json}.}
 \centering
 \includegraphics[width=0.86\textwidth]{fig-horizon.pdf}
 \caption{Mechanism of the horizon dependence. The calibrated neural's total forecast is
-constant across windows (18.1 events at seven days, 77.3 at thirty, ratio $\approx30/7$): it
+constant across windows ($\approx$18 events at seven days, 77.3 at thirty, ratio $\approx30/7$): it
 deploys a time-flat geodetic \emph{background}, not a triggering model. At the short horizon
 the integral is dominated by ETAS triggering, which the flat background cannot track (neural
 loses); at the long horizon the integral is dominated by the background, where a better
@@ -500,7 +504,7 @@ geodetic background wins.}
 
 The headline concerns the strain-conditioned neural challenger. Diagnosing it required first
 fixing a calibration failure: the raw model over-predicted the 30-day global rate about
-$490\times$ (98{,}932 vs 248 observed) because the training compensator constrained the
+$490\times$ (122{,}148 vs 248 observed) because the training compensator constrained the
 background only at event locations. A fit-time rate anchor fixes it: the calibrated model
 forecasts 218.9 events (ETAS 173.7, observed 248) and passes the N-test. Only the calibrated
 model is scored below.
@@ -509,16 +513,18 @@ At the one-to-seven-day operational horizon the geodetic context does not beat E
 (Fig.~\ref{fig:horizonigpe}): an eight-window back-analysis gives mean IGPE vs ETAS $-0.053$,
 positive in only $4/8$ windows, with high per-window variance (a single badly-missed
 sequence window drives $-0.80$). The ETAS-family stack of Section~\ref{sec:stack} likewise
-gains only $+0.009$ globally at seven days. The one-to-seven-day mean-rate IGPE is at or near
-a practical ceiling.
+gains only $+0.009$ to $+0.011$ globally at seven days (two back-analysis runs;
+Table~\ref{tab:stack}). The one-to-seven-day mean-rate IGPE is at or near a practical ceiling.
 
 At thirty days the same geodetic context beats ETAS robustly and regionally
 (Fig.~\ref{fig:region}): a ten-window back-analysis gives a global mean IGPE vs ETAS of
 $+0.115$ over 2166 events, positive in $9/10$ windows with a paired-$t$ lower bound of
 $+0.087$, and positive in every high-seismicity region (Chile $+0.656$, Japan $+0.192$,
-California $+1.007$, New Zealand $+1.210$). The mechanism (Fig.~\ref{fig:mechanism}) is
+California $+1.007$, New Zealand $+1.210$; these regional counts are small, e.g.\ California
+$n\!=\!11$ and New Zealand $n\!=\!19$, so the well-powered claim is the global $n\!=\!2166$).
+The mechanism (Fig.~\ref{fig:mechanism}) is
 explicit: the calibrated model's total forecast is essentially constant across windows
-(18.1 at seven days, 77.3 at thirty, ratio $\approx30/7$), so it deploys a time-flat geodetic
+($\approx$18 at seven days, 77.3 at thirty, ratio $\approx30/7$), so it deploys a time-flat geodetic
 background rather than a triggering model. That is why it loses at seven days, where ETAS
 triggering dominates the integral, and wins at thirty, where a better stationary background
 dominates it. The operational consequence is honest: the one-to-seven-day product stays ETAS,
@@ -528,9 +534,28 @@ and the geodetic context is deployed only as a longer, background-dominated outl
 \section{Discussion}
 % =====================================================================
 
-The four results cohere into one message: for global $M\!\ge\!5$ short-term forecasting, base
-tiled ETAS is at or near the practical ceiling on mean-rate IGPE, and the honest levers lie
-elsewhere. A separately conducted adversarial review of 2024--2026 frontier paths
+\begin{table}[!t]
+\caption{Decision ledger: the four findings and the pre-registered outcome each drove. Every
+cell reconciles to a committed artifact (Sections~\ref{sec:bias}--\ref{sec:geodetic}).}
+\label{tab:ledger}
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{0.27\columnwidth}p{0.40\columnwidth}p{0.21\columnwidth}@{}}
+\toprule
+Finding & Evidence (well-powered) & Decision \\
+\midrule
+ETAS skill is triggering-gated & Japan $+0.072$ nats/1\,d; low-seismicity interiors exactly $0.0$ & keep ETAS only where triggering exists \\
+ETAS-family stack gains globally, not regionally & global $+0.011$ over 751 events ($13/14$ windows); $1/4$ regions & \textbf{no-ship} \\
+Short-horizon N-test failure is over-dispersion & catalog test passes $q\!=\!0.13$ vs Poisson fails $q\!=\!10^{-4}$ ($+28\%$ cascade) & adopt catalog-based scoring \\
+Geodetic covariate is horizon-dependent & 7\,d $-0.053$; 30\,d $+0.115$ over 2166 events & ship as 30\,d outlook; 7\,d stays ETAS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The four results cohere into one message (Table~\ref{tab:ledger}): for global $M\!\ge\!5$
+short-term forecasting, base tiled ETAS is at or near the practical ceiling on mean-rate IGPE,
+and the honest levers lie elsewhere. A separately conducted adversarial review of 2024--2026 frontier paths
 (time-varying $b$, regime-gated neural routing, anisotropic finite-fault kernels,
 magnitude-head networks, multi-resolution scoring) found that none survived skeptical
 refutation as a large short-horizon gain, converging with the EarthquakeNPP
@@ -630,13 +655,13 @@ doi:10.1126/science.243.4895.1173.
 forecasts,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~106, no.~5, pp.~2290--2301, 2016,
 doi:10.1785/0120160073.
 \bibitem{spassiani2023} I.~Spassiani \emph{et al.}, ``Operational earthquake forecasting in
-Italy: Validation after 10~yr of running,'' \emph{Geophys. J. Int.}, vol.~234, no.~3,
+Italy: Validation after 10~yr of operativity,'' \emph{Geophys. J. Int.}, vol.~234, no.~3,
 pp.~2501--2518, 2023, doi:10.1093/gji/ggad256.
 \bibitem{serafini2025} F.~Serafini \emph{et al.}, ``A benchmark database of ten years of
 prospective next-day earthquake forecasts,'' \emph{Sci. Data}, vol.~12, p.~1501, 2025,
 doi:10.1038/s41597-025-05766-3.
 \bibitem{stockman2026} S.~Stockman, D.~J. Lawson, and M.~J. Werner, ``EarthquakeNPP:
-Benchmark datasets for earthquake forecasting with neural point processes,'' \emph{Trans.
+A benchmark for earthquake forecasting with neural point processes,'' \emph{Trans.
 Mach. Learn. Res.}, 2026, arXiv:2410.08226.
 \bibitem{dascher2023} K.~Dascher-Cousineau \emph{et al.}, ``Using deep learning for flexible
 and scalable earthquake forecasting,'' \emph{Geophys. Res. Lett.}, vol.~50, e2023GL103909,

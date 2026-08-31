@@ -1,0 +1,750 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage{orcidlink}
+\graphicspath{{../figures/}}
+
+\begin{document}
+
+\title{Honest, Leakage-Free Operational Earthquake Forecasting: A Multi-Region
+CSEP Testbed with Pre-Registered Negatives and the Horizon-Dependent Value of
+Geodetic Context}
+
+\author{%
+  Felipe Santib\'a\~nez-Leal~\orcidlink{0000-0002-0150-3246},~\IEEEmembership{Independent Researcher}%
+  \thanks{F.\ Santib\'a\~nez-Leal is with the CAOS open-research programme,
+    Santiago, Chile (e-mail: \texttt{fsantibanezleal@ug.uchile.cl};
+    ORCID: 0000-0002-0150-3246).}%
+  \thanks{Preprint, 2026, version 2.1 (revised). Code, configurations, provenance
+    manifests, and all committed daily and back-analysis artifacts are released under
+    MIT at \url{https://github.com/fsantibanezleal/CAOS_SEISMIC}; a static forecast
+    viewer is live at \url{https://seismic.fasl-work.com}. This is an independent
+    research and education tool; it is not an operational alarm system and must not be
+    used for life-safety decisions.}%
+}
+
+\markboth{Preprint, 2026 (v2.1) --- CAOS open-research programme}{Santib\'a\~nez-Leal:
+Honest, Leakage-Free Operational Earthquake Forecasting}
+
+\IEEEtitleabstractindextext{%
+\begin{abstract}
+Operational earthquake forecasting (OEF) issues calibrated conditional probabilities
+of future seismicity; the Epidemic-Type Aftershock Sequence (ETAS) model is its
+de-facto benchmark, and under fair, prospective, CSEP-style testing no machine-learning
+temporal point process has been shown to beat a well-fit ETAS. We describe a complete,
+honesty-first OEF system and, on it, a leakage-free, multi-region CSEP testbed built to
+answer, rather than assert, four questions. The system fits a regime-tiled space--time
+ETAS with a full hygiene pipeline (rolling magnitude of completeness, moment-magnitude
+homogenization, dual-catalog declustering, propagated uncertainty), against a mandatory
+adaptive smoothed-seismicity Poisson null and a transparent Reasenberg--Jones fallback,
+calibrated by isotonic regression with a genuine epistemic-plus-aleatory uncertainty
+triad, and it emits both gridded and catalog-based forecast representations so that
+over-dispersion is scored honestly. Skill is established only by winning CSEP comparison
+tests (information gain per earthquake, IGPE, in nats) against both baselines, under a
+strict forecast clock that engineers against five leakage modes, with pre-registered
+ship rules and shuffled-label negative controls. Four artifact-backed findings result.
+(i) ETAS adds skill over the stationary null only where there is triggering to exploit
+(Japan $+0.072$ nats at one day; low-seismicity interiors exactly $0.0$), quantifying
+the high-versus-low-seismicity bias. (ii) A convex log-score-optimal stack of
+ETAS-family variants earns a real, significant \emph{global} gain ($+0.011$ over 751
+events) that does not generalize to the canonical active margins; under the
+pre-registered rule it is a no-ship, and a temporally adaptive variant is refuted as a
+multiple-comparison artifact. (iii) The binding one-to-seven-day consistency failure is
+count over-dispersion, not spatial shape: a catalog-based number test passes a window the
+Poisson number test rejects, and the frozen-intensity forecast systematically under-counts
+by about $28\%$ because it omits within-window secondary triggering. (iv) The value of a
+GNSS-strain geodetic context covariate, added to a Hawkes-structured neural point process,
+is \emph{horizon-dependent}: it does not beat ETAS at the one-to-seven-day operational
+horizon (mean IGPE $-0.053$ over eight weekly windows) but beats it robustly at thirty days
+(global $+0.115$ over 2166 events, positive in $9/10$ windows and in every high-seismicity
+region), because the calibrated model deploys a time-flat geodetic background rather than
+triggering. We conclude that base tiled ETAS is at or near the practical ceiling for
+mean-rate one-to-seven-day IGPE over global $M\!\ge\!5$, and that the honest place for a
+geodetic covariate is a longer, background-dominated outlook.
+\end{abstract}
+
+\begin{IEEEkeywords}
+operational earthquake forecasting, ETAS, epidemic-type aftershock sequence, CSEP,
+pyCSEP, information gain, prospective evaluation, leakage, over-dispersion, catalog-based
+testing, neural temporal point process, geodetic strain, GNSS, calibration, reproducibility.
+\end{IEEEkeywords}}
+
+\maketitle
+\IEEEdisplaynotcompsoctitleabstractindextext
+\IEEEpeerreviewmaketitle
+
+% =====================================================================
+\section{Introduction}
+% =====================================================================
+
+\IEEEPARstart{E}{arthquakes} cannot be predicted deterministically: whether a small
+rupture cascades into a great earthquake depends on unmeasurably fine details of the
+crust~\cite{geller1997}. What can be done, and is done operationally, is
+\emph{forecasting}: issuing a probability strictly in $(0,1)$ for a region, a magnitude
+band, and a short horizon. Following the ICEF definition~\cite{jordan2011}, a prediction
+is a deterministic statement that an event will or will not occur, whereas a forecast
+reports a probability with uncertainty; short-term probabilities of a large event may
+vary over orders of magnitude relative to background yet typically remain small in
+absolute terms (well under a few percent per day). This distinction is not pedantic. The
+documented harm in the field is \emph{false reassurance}, so every number here is a
+conditional probability shown next to its long-term baseline, scored prospectively, and
+never rendered as an alarm.
+
+The de-facto short-term baseline is the Epidemic-Type Aftershock Sequence
+model~\cite{ogata1988,ogata1998}, a self-exciting Hawkes point process. Operational
+systems such as the USGS aftershock forecast~\cite{reasenberg1989,page2016} and
+OEF-Italy~\cite{spassiani2023} run ETAS-class models as scheduled services; a decade of
+prospective next-day forecasting over California confirms that no single model dominates,
+with the short-term-clustering models excelling during sequences and ETAS the consistent
+generalist~\cite{serafini2025}. Against this baseline, machine learning has repeatedly
+promised more and, under fair testing, repeatedly failed to deliver a prospective gain:
+the EarthquakeNPP benchmark~\cite{stockman2026} found that none of five modern neural
+point processes beat ETAS once strict chronological splits and CSEP consistency tests are
+imposed. Where learned models can help, the gains come from two ETAS gaps, ingesting
+covariates ETAS cannot easily absorb, and learning spatial anisotropy, not from network
+depth~\cite{dascher2023,zlydenko2023}.
+
+This paper makes two kinds of contribution. First, it documents a complete, honesty-first
+OEF system: the estimator stack (Section~\ref{sec:models}), its calibration and
+uncertainty, and a leakage-free, multi-region CSEP evaluation protocol
+(Section~\ref{sec:eval}) with a strict forecast clock, pre-registered ship rules, and
+shuffled-label negative controls. Second, on that testbed it reports four artifact-backed
+findings (Section~\ref{sec:results}), each with its honest negative kept on the record: the
+high-versus-low-seismicity bias of ETAS; an ETAS-family stack that gains globally but not
+regionally; the over-dispersion and secondary-cascade nature of the binding short-horizon
+consistency failure; and the horizon-dependent value of a GNSS-strain geodetic covariate.
+Every number is reconciled to a committed, reproducible artifact.
+
+% =====================================================================
+\section{Data}
+\label{sec:data}
+% =====================================================================
+
+The catalog spine is USGS ComCat (FDSN event service, public domain), homogenized to
+moment magnitude $M_w$. Where a per-network station-pair regression to $M_w$ is
+unavailable, the Scordilis~\cite{scordilis2006} global $m_b\!\to\!M_w$ and $M_s\!\to\!M_w$
+orthogonal-regression relations are used as a documented fallback with per-event
+provenance; this recovers a six-fold larger conditioning catalog (from $1.65\times10^4$
+to $9.7\times10^4$ events, $M\!\ge\!4.5$, 1990--2026) at the cost of a bounded, audited
+$b$-value inflation that the per-tile fit largely removes (a naive global $b\approx1.59$
+becomes a per-tile production $b\approx1.34$). The magnitude of completeness $M_c$ and the
+Gutenberg--Richter $b$-value are estimated on rolling windows with their
+uncertainty~\cite{wiemer2000,woessner2005}, the Aki--Utsu $b$ carrying its Shi--Bolt
+standard error~\cite{shi1982}. Declustering, where the stationary background requires it,
+uses stochastic declustering~\cite{zhuang2002} and the nearest-neighbour
+method~\cite{zaliapin2013}; the scored target, however, is the \emph{non-declustered}
+catalog, because clustering is what we forecast. The geodetic covariate is the GNSS strain
+rate from the Nevada Geodetic Laboratory MIDAS velocity field~\cite{blewitt2016}
+(20{,}168 stations), gridded to a coarse global field; strain is high on active margins
+(Japan 95, California 154, Chile 64 nstrain/yr) and low in stable interiors (Central US
+3.6, Western Europe 5.6). Plate-boundary geometry is PB2002~\cite{bird2003}. Raw catalogs,
+features, and model weights are rebuildable from the code and provenance manifests and are
+not versioned; the compact daily and back-analysis artifacts are.
+
+% =====================================================================
+\section{Models: the estimator stack}
+\label{sec:models}
+% =====================================================================
+
+Every model implements one seam, the \texttt{Forecaster} port
+\texttt{fit}$\to$\texttt{expected\_counts}, so the null, the reference, and any challenger
+are fit on the identical conditioning slice and scored on identical bins.
+
+\subsection{The public target: a bounded exceedance probability}
+
+The single number a user sees is the probability of at least one event above a target
+magnitude $M^\ast$ in a cell over a horizon $[0,T]$, a non-homogeneous Poisson exceedance
+probability
+\begin{equation}
+P(\ge 1\ \text{event}\ge M^\ast) = 1 - e^{-N_{\ge M^\ast}}, \quad
+N_{\ge M^\ast}=\!\int_0^T\!\!\!\int_A\!\lambda\,\Phi(M^\ast)\,dx\,dy\,dt,
+\end{equation}
+where the magnitude term is the Gutenberg--Richter tail fraction, \emph{bounded} by a
+per-region maximum magnitude $M_{\max}$ so an unbounded tail can never inflate the
+rare-event probability,
+\begin{equation}
+\Phi(M^\ast)=\frac{10^{-b(M^\ast-M_c)}-10^{-b(M_{\max}-M_c)}}{1-10^{-b(M_{\max}-M_c)}},
+\quad M_c\le M^\ast\le M_{\max}.
+\end{equation}
+The public formula $P=1-e^{-N}$ never changes; only the quality of the conditional
+intensity $\lambda$ improves. The full conditional magnitude distribution is forecast (not
+a single threshold), which is what enables the CSEP magnitude test and keeps the display
+region-appropriate.
+
+\subsection{The mandatory null: adaptive smoothed seismicity}
+
+A stationary Poisson estimate of where earthquakes occur, obtained by smoothing a
+declustered catalog with the Helmstetter--Kagan--Jackson adaptive power-law
+kernel~\cite{helmstetter2007},
+\begin{equation}
+\mu(x,y)=\sum_i K_{d_i}(r_i),\qquad K_d(r)=C(d)\,(r^2+d^2)^{-s},
+\end{equation}
+with bandwidth $d_i$ the distance to event $i$'s $n$-th nearest neighbour. It is both the
+spatial background that seeds ETAS and the mandatory stationary reference any
+time-dependent model must beat. The exponent $s$ and normalization $C(d)$ are pinned to
+named reference profiles, never assumed.
+
+\subsection{The primary estimator: space--time ETAS}
+
+ETAS is a self-exciting Hawkes process, a stationary background plus the summed, decaying
+offspring of every past event~\cite{ogata1998},
+\begin{equation}
+\lambda(t,x,y\mid\mathcal H_t)=\mu(x,y)+\!\!\sum_{i:\,t_i<t}\!\! K\,e^{\alpha(M_i-M_0)}
+\Big(1+\tfrac{t-t_i}{c}\Big)^{-p} f(x-x_i,y-y_i\mid M_i),
+\end{equation}
+with Utsu productivity $k(m)=K e^{\alpha(m-M_0)}$ (reference magnitude $M_0$), the Omori--Utsu kernel
+$g(t)=\tfrac{p-1}{c}(1+t/c)^{-p}$, and the Ogata inverse-power spatial kernel
+$f(r\mid M_i)=\tfrac{q-1}{\pi\zeta^2}(1+r^2/\zeta^2)^{-q}$, $\zeta=De^{\gamma(M_i-M_0)}$.
+Parameters $(K,\alpha,c,p,D,\gamma,q)$ are fit by maximum likelihood on the full
+un-declustered catalog, maximizing the point-process log-likelihood
+\begin{equation}
+\ln L=\sum_i\ln\lambda(t_i,x_i,y_i\mid\mathcal H_{t_i})-\!\int_0^T\!\!\!\int_A\!\lambda\,dx\,dy\,dt.
+\end{equation}
+Two distinct stability gates are enforced: finite branching ($\alpha<\beta$, $\beta=b\ln10$)
+and subcriticality (branching ratio $n<1$); a supercritical fit signals a mis-fit and is
+rejected. Because a single global ETAS over a $10^5$-event catalog is intractable and
+physically wrong (subduction and stable interior obey different kinematics), we fit a
+\emph{regime-tiled} ETAS: 195 ETAS tiles are fit and 265 sparse tiles fall back to their
+smoothed null, at $M_c=5.35$, $b=1.337$.
+
+\subsection{The transparent fallback: Reasenberg--Jones}
+
+The most transparent aftershock model~\cite{reasenberg1989,page2016} conditions on the
+largest triggering event before issue time, with rate
+$\lambda(t,M)=10^{\,a+b(M_m-M)}(t+c)^{-p}$ ($M_m$ the conditioning mainshock magnitude),
+distributed over cells by a Wells--Coppersmith
+rupture-length kernel~\cite{wells1994}; its constants are flagged as California-derived and
+never silently reused for Chilean subduction. It is a human-auditable cross-check, not the
+primary spatial forecaster.
+
+\subsection{The gated neural challenger with geodetic context}
+
+The stronger model is delivered in two layers, the second gated. Layer~1 is the
+region-refit tiled ETAS with the full hygiene pipeline. Layer~2 is a conditional
+spatio-temporal neural point process with a Hawkes inductive bias, in the spirit of
+RECAST~\cite{dascher2023} and FERN~\cite{zlydenko2023}: keep the additive background plus
+summed-triggering skeleton, replace the fixed kernels with learned maps, and ingest a
+gridded covariate field, here the GNSS strain-rate channel (other geophysical channels are
+honestly zero-filled). A fit-time scalar anchors the integrated one-day forecast rate to
+the training rate on the evaluation grid; without it the background head over-predicts the
+absolute rate by roughly $490\times$ (a failure we diagnose and report in
+Section~\ref{sec:geodetic}). The challenger reaches the public map only if it beats ETAS
+in our prospective CSEP harness and is calibrated; until then, ETAS ships.
+
+\subsection{Calibration and uncertainty (release blockers)}
+
+The public probability is recalibrated by isotonic regression and validated with a
+reliability diagram per horizon; an uncalibrated probability does not ship. The uncertainty
+triad (optimistic P10, expected median, pessimistic P90)~\cite{schneider2022} is a genuine
+epistemic-plus-aleatory decomposition sourced from ETAS parameter covariance, propagated
+$M_c/b$ uncertainty, model-selection uncertainty, and \emph{over-dispersion}: because
+regional seismicity has variance well above its mean, the pessimistic bound is wider than a
+naive Poisson quantile (negative-binomial behaviour~\cite{kagan2017}). A pessimistic bound
+that is merely a Poisson quantile systematically under-warns at the tail and is not
+acceptable. In the highest-stakes window, immediately after a large mainshock, the daily job
+uses an incompleteness-aware likelihood with a time-dependent $M_c(t)$, the failure mode
+behind OEF-Italy's documented under-estimation of the 2016--2017 Central Italy
+sequence~\cite{spassiani2023}.
+
+% =====================================================================
+\section{Evaluation: a leakage-free CSEP testbed}
+\label{sec:eval}
+% =====================================================================
+
+A forecast is only as honest as its prospective scoring. The only scoring framework is
+CSEP via pyCSEP~\cite{savran2022}; using standard tests, not bespoke metrics, is what lets
+a reviewer dispute the model rather than the test code.
+
+\subsection{Two representations and over-dispersion}
+
+We emit both a gridded-rate forecast (Poisson expected count per space--magnitude cell) and
+a catalog-based forecast (an ensemble of synthetic catalogs). Regional seismicity is
+over-dispersed relative to Poisson, so the Poisson grid tests over-reject during sequences;
+the catalog-based tests~\cite{savran2020} relax that assumption and are the correct primary
+path for a clustered daily forecast, always reported paired with their Poisson counterpart.
+
+\subsection{The forecast clock and five leakage modes}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig-protocol.pdf}
+\caption{The leakage-free forecast clock and the pseudo-prospective back-analysis. At each
+daily issue $t$ the model receives only the conditioning slice up to $t$, the forecast is
+sealed, and it is scored against the catalog as known at $t$; half-open windows tile the
+timeline without double-counting. The back-analysis fits once and reconditions forward
+across weekly windows (refresh parents, hold parameters), scoring IGPE per window and per
+region under a pre-registered rule.}
+\label{fig:protocol}
+\end{figure}
+
+The primary mode is pseudo-prospective~\cite{mizrahi2024}, driven by a forecast clock
+(Fig.~\ref{fig:protocol}): at each daily issue time $t$ the model is handed only the catalog
+slice up to $t$, the forecast is sealed, then the clock advances; the conditioning window is
+half-open on the left and the target $[t,t+H)$ half-open on the right, so back-to-back
+horizons tile the timeline without double-counting, and an always-on invariant asserts no
+leakage before every fit. Five leakage modes are engineered against: temporal leakage
+(the clock); catalog-revision leakage (an immutable input snapshot per issue makes each
+forecast byte-reproducible); $M_c$-inconsistency leakage (one uniform $M_{\min}$ applied to
+the model and every baseline); region/parameter snooping (pre-registered polygons, horizons,
+thresholds, grid, and declustering, frozen across the test split); and multiple-testing
+inflation (every region\,$\times$\,horizon cell reported, including failures). To keep the
+multi-region back-analysis tractable the ETAS parameters are fit on a weekly cadence and
+only the triggering conditioning is reconditioned daily, a measurement-preserving change
+validated to a 0.05\% median deviation from full-refit-every-day.
+
+\subsection{Consistency and comparison tests}
+
+Consistency (calibration) tests are built on the Poisson joint log-likelihood over
+space--magnitude bins, $L(\Omega\mid\Lambda)=\sum_i[-\lambda_i+\omega_i\ln\lambda_i-\ln(\omega_i!)]$:
+the number (N) test with Poisson-tail quantiles $\delta_1=1-F(N_\text{obs}-1\mid N_\text{fore})$
+and $\delta_2=F(N_\text{obs}\mid N_\text{fore})$, the magnitude (M), spatial (S), likelihood
+(L) and preferred conditional-likelihood (CL) tests~\cite{schorlemmer2007,zechar2010}. These
+are necessary but not sufficient: passing consistency calibrates one model but never
+establishes skill, because a trivial ``aftershocks follow mainshocks'' model also passes.
+Skill is established only by winning a comparison test against both the smoothed-seismicity
+null and ETAS, measured as information gain per earthquake (IGPE, nats),
+\begin{equation}
+I_N(A,B)=\frac1N\sum_{i=1}^N\big(\ln\lambda_A(k_i)-\ln\lambda_B(k_i)\big)-\frac{\hat N_A-\hat N_B}{N},
+\label{eq:igpe}
+\end{equation}
+where $k_i$ is the space--magnitude bin of the $i$th target event; the gain is tested with the
+paired $t$-test $T=I_N/(s/\sqrt N)\sim t_{N-1}$ and corroborated by the
+Wilcoxon W-test~\cite{rhoades2011}. The gain over ETAS measures genuine added skill
+precisely because both models already reproduce Omori clustering. ROC/AUC is banned as a
+skill metric: it is invariant to calibration and, on a rare per-cell-per-day task,
+degenerates into a region classifier (the DeVries trap~\cite{devries2018,mignan2019}). Proper
+scoring rules~\cite{gneiting2007} and a Molchan/area-skill view~\cite{zechar2008} are
+reported only as communication aids. Ship rules are pre-registered before each run, and a
+shuffled-label negative control guards against over-fitting.
+
+% =====================================================================
+\section{Related work: the honest ML-vs-ETAS verdict}
+\label{sec:related}
+% =====================================================================
+
+As of writing, no machine-learning model has been shown to reliably beat a well-fit ETAS
+for short-term forecasting under fair, prospective, CSEP-style testing, a requirement we
+gate against rather than a claim that ML can never help. The decisive evidence is
+EarthquakeNPP~\cite{stockman2026}: five modern neural point processes on California
+1971--2021 with strict chronological splits and CSEP consistency tests, none of which
+outperformed ETAS, and specifically the best neural model reached only about $68.6\%$ on the
+spatial test where forecasting value lives, versus $92.0\%$ for ETAS. The methodological fix
+was repairing a data-leakage flaw in earlier neural work (non-chronological splits inflate
+metrics via triggering); once temporal splits and the large sequences are restored the
+apparent advantage evaporates. The honest exemplars gain from ETAS gaps, not depth: RECAST
+improves on temporal ETAS only for large training catalogs~\cite{dascher2023}, and FERN's
+reported information-gain improvement came mostly from ingesting sub-$M_c$ events and learning
+fault-aligned anisotropy, with the authors' own caveats (not CSEP-tested, no uncertainty
+quantification) as release-blockers for us~\cite{zlydenko2023}. The geodetic input we study
+is grounded in long-term global rate models: GEAR1 blends smoothed seismicity with a
+strain-rate model~\cite{bird2015}, and prospective global hybrids find strain adds skill
+globally while its regional short-term contribution is weaker~\cite{bayona2022}.
+
+% =====================================================================
+\section{Results}
+\label{sec:results}
+% =====================================================================
+
+\subsection{ETAS adds skill only where there is triggering}
+\label{sec:bias}
+
+The first adversarial question is whether ETAS only looks good by over-fitting
+high-seismicity margins. A 60-day, leakage-free, per-region back-analysis
+(Table~\ref{tab:bias}, IGPE vs the Poisson null at one and seven days) answers it: ETAS adds
+skill in the densest triggering regime (Japan, $+0.072$ at one day) and collapses to exactly
+the null in low-seismicity interiors (Central US, Western Europe, Eastern Australia). A
+single-window multi-model benchmark (Table~\ref{tab:bench}) tells the same story at larger
+absolute scale and shows that the equal-weight ensemble of heterogeneous models
+under-performs ETAS, because averaging in the null and the weak Reasenberg--Jones dilutes the
+triggering signal that is the skill. Low-seismicity $0.0$ is not a failure; it is the correct
+statement that a self-exciting model has nothing to add without sequences.
+
+\begin{table}[!t]
+\caption{ETAS IGPE vs the Poisson null, 60-day leakage-free per-region back-analysis. Skill
+concentrates in the high-seismicity, triggering-rich regime.}
+\label{tab:bias}
+\centering
+\begin{tabular}{llrr}
+\toprule
+Region & Class & IGPE (1\,d) & IGPE (7\,d) \\
+\midrule
+Japan & high & $+0.072$ & $+0.062$ \\
+Chile & high & $+0.0015$ & $+0.0024$ \\
+California & high & $\sim0$ & $+0.0016$ \\
+New Zealand & high & $\sim0$ & $-0.001$ \\
+Central US & low & $0.0$ & $0.0$ \\
+Western Europe & low & $0.0$ & $0.0$ \\
+Eastern Australia & low & $0.0$ & $0.0$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\caption{Single-window multi-model benchmark, IGPE vs the Poisson null (nats), on the
+held-out tail. The equal-weight ensemble is consistently worse than ETAS.}
+\label{tab:bench}
+\centering
+\begin{tabular}{lrrrr}
+\toprule
+View & $n_\text{obs}$ & ETAS & ensemble & R--J \\
+\midrule
+Global & 248 & $+3.712$ & $+2.795$ & $-0.025$ \\
+Chile & 11 & $+0.036$ & $-0.061$ & $-0.182$ \\
+Japan & 5 & $-0.081$ & $-0.013$ & $-0.438$ \\
+New Zealand & 2 & $-0.007$ & $-0.012$ & $-0.038$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{ETAS-family stacking: a global gain that does not generalize}
+\label{sec:stack}
+
+The only prospective lever the literature supports over a single well-fit ETAS is a
+score-weighted ETAS-family ensemble, by a small and often non-significant
+margin~\cite{marzocchi2012,herrmann2023}. We build a convex, log-score-optimal stack of
+three ETAS-family variants (base tiled, short-memory, long-memory), the smoothed null
+entering only as each member's background, weights shrunk toward the base vertex, with a
+pre-registered rule requiring a positive, CI-excludes-zero gain on the global view and in at
+least two high-seismicity regions at seven days. The 14-window back-analysis
+(Table~\ref{tab:stack}) earns a real, significant global gain ($+0.011$ over 751 events,
+$13/14$ windows positive), carried by the long-memory variant capturing late-aftershock
+structure the base cutoff misses; but only $1/4$ high-seismicity regions is positive
+(California, on three events, noise). Under the pre-registered rule this is a
+\textbf{no-ship}. A temporally adaptive variant appears to rescue it ($3/4$ regions positive)
+but is refuted on scrutiny: it reduces the global gain, and the regional ``improvements'' are
+sign-flipping noise on 3--54 events (no regional CI excludes zero), a multiple-comparison
+artifact. The regional seven-day $M\!\ge\!5$ gate is under-powered; the global view is the
+only adequately powered test, and there the static stack already gives the honest answer.
+
+\begin{table}[!t]
+\caption{Pre-registered multi-region gate for the ETAS-family stack, seven-day horizon, 14
+weekly windows. Global gain is real; regional generalization fails the rule.}
+\label{tab:stack}
+\centering
+\begin{tabular}{lrrl}
+\toprule
+View & mean IGPE vs base & windows $+$ & paired-$t$ CI \\
+\midrule
+\textbf{Global} & $\mathbf{+0.0111}$ & $13/14$ & excludes zero $(+)$ \\
+Chile & $-0.0001$ & $3/10$ & crosses zero \\
+Japan & $-0.0008$ & $8/13$ & crosses zero \\
+California & $+0.0077$ & $3/3$ (noise) & crosses zero \\
+New Zealand & $-0.0008$ & $0/3$ & excludes zero $(-)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The short-horizon failure is over-dispersion, not shape}
+\label{sec:overdisp}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig-overdispersion.pdf}
+\caption{Over-dispersion-honest consistency on a 30-day global window. The frozen-intensity
+forecast predicts $N_\text{fore}=64.3$; the full ETAS branching cascade lifts the mean to
+$82.1$ ($+28\%$) with a wide count distribution, so the observed 96 is consistent. The
+Poisson number test rejects (fail, $q\!=\!10^{-4}$); the catalog-based test does not (pass,
+$q\!=\!0.13$). Read from \texttt{e13\_catalog\_based.json}.}
+\label{fig:overdisp}
+\end{figure}
+
+Why does the base ETAS N-test fail on active windows? A catalog-based number test, an ETAS
+branching-process forward simulation, gives the honest in-window count distribution
+(Fig.~\ref{fig:overdisp}). On a 30-day global window the frozen-intensity forecast predicts
+$N_\text{fore}=64.3$ (background 60.1 plus first-generation triggering 4.2), the full cascade
+lifts the mean to 82.1 (Fano factor 1.8), and the observed 96 is consistent: the Poisson
+N-test fails at quantile $10^{-4}$ while the catalog-based test passes at $0.13$. Two honest
+findings follow. The apparent under-forecast is over-dispersion plus secondary cascade, not a
+rate bias; and the frozen-intensity forecast systematically \emph{under-counts by about
+$28\%$} because it omits within-window secondary triggering, so the catalog-based test is the
+correct consistency tool. This is one 30-day global window; the method generalizes.
+
+\subsection{The horizon-dependent value of geodetic context}
+\label{sec:geodetic}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig-horizon-igpe.pdf}
+\caption{The strain-conditioned neural challenger vs ETAS in the pseudo-prospective
+back-analysis (the exploratory dual-horizon run, fit once). Per-window IGPE is scattered
+around zero at seven days (mean $-0.053$, only $4/8$ positive) but positive in all four
+completed thirty-day windows (mean $+0.078$); the dedicated ten-window thirty-day validation
+(Fig.~\ref{fig:region}) scores $+0.115$ over 2166 events. Read from
+\texttt{neural\_pseudoprospective.json}.}
+\label{fig:horizonigpe}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{fig-region-30d.pdf}
+\caption{Thirty-day IGPE of the geodetic-context neural over ETAS, per region (10 weekly
+windows). The gain is global (well-powered, $n=2166$) and positive in every high-seismicity
+region. Read from \texttt{outlook-evidence-30d.json}.}
+\label{fig:region}
+\end{figure}
+
+\begin{figure*}[!t]
+\centering
+\includegraphics[width=0.86\textwidth]{fig-horizon.pdf}
+\caption{Mechanism of the horizon dependence. The calibrated neural's total forecast is
+constant across windows ($\approx$18 events at seven days, 77.3 at thirty, ratio $\approx30/7$): it
+deploys a time-flat geodetic \emph{background}, not a triggering model. At the short horizon
+the integral is dominated by ETAS triggering, which the flat background cannot track (neural
+loses); at the long horizon the integral is dominated by the background, where a better
+geodetic background wins.}
+\label{fig:mechanism}
+\end{figure*}
+
+The headline concerns the strain-conditioned neural challenger. Diagnosing it required first
+fixing a calibration failure: the raw model over-predicted the 30-day global rate about
+$490\times$ (122{,}148 vs 248 observed) because the training compensator constrained the
+background only at event locations. A fit-time rate anchor fixes it: the calibrated model
+forecasts 218.9 events (ETAS 173.7, observed 248) and passes the N-test. Only the calibrated
+model is scored below.
+
+At the one-to-seven-day operational horizon the geodetic context does not beat ETAS
+(Fig.~\ref{fig:horizonigpe}): an eight-window back-analysis gives mean IGPE vs ETAS $-0.053$,
+positive in only $4/8$ windows, with high per-window variance (a single badly-missed
+sequence window drives $-0.80$). The ETAS-family stack of Section~\ref{sec:stack} likewise
+gains only $+0.009$ to $+0.011$ globally at seven days (two back-analysis runs;
+Table~\ref{tab:stack}). The one-to-seven-day mean-rate IGPE is at or near a practical ceiling.
+
+At thirty days the same geodetic context beats ETAS robustly and regionally
+(Fig.~\ref{fig:region}): a ten-window back-analysis gives a global mean IGPE vs ETAS of
+$+0.115$ over 2166 events, positive in $9/10$ windows with a paired-$t$ lower bound of
+$+0.087$, and positive in every high-seismicity region (Chile $+0.656$, Japan $+0.192$,
+California $+1.007$, New Zealand $+1.210$; these regional counts are small, e.g.\ California
+$n\!=\!11$ and New Zealand $n\!=\!19$, so the well-powered claim is the global $n\!=\!2166$).
+The mechanism (Fig.~\ref{fig:mechanism}) is
+explicit: the calibrated model's total forecast is essentially constant across windows
+($\approx$18 at seven days, 77.3 at thirty, ratio $\approx30/7$), so it deploys a time-flat geodetic
+background rather than a triggering model. That is why it loses at seven days, where ETAS
+triggering dominates the integral, and wins at thirty, where a better stationary background
+dominates it. The operational consequence is honest: the one-to-seven-day product stays ETAS,
+and the geodetic context is deployed only as a longer, background-dominated outlook.
+
+% =====================================================================
+\section{Discussion}
+% =====================================================================
+
+\begin{table}[!t]
+\caption{Decision ledger: the four findings and the pre-registered outcome each drove. Every
+cell reconciles to a committed artifact (Sections~\ref{sec:bias}--\ref{sec:geodetic}).}
+\label{tab:ledger}
+\centering
+\footnotesize
+\renewcommand{\arraystretch}{1.25}
+\begin{tabular}{@{}p{0.27\columnwidth}p{0.40\columnwidth}p{0.21\columnwidth}@{}}
+\toprule
+Finding & Evidence (well-powered) & Decision \\
+\midrule
+ETAS skill is triggering-gated & Japan $+0.072$ nats/1\,d; low-seismicity interiors exactly $0.0$ & keep ETAS only where triggering exists \\
+ETAS-family stack gains globally, not regionally & global $+0.011$ over 751 events ($13/14$ windows); $1/4$ regions & \textbf{no-ship} \\
+Short-horizon N-test failure is over-dispersion & catalog test passes $q\!=\!0.13$ vs Poisson fails $q\!=\!10^{-4}$ ($+28\%$ cascade) & adopt catalog-based scoring \\
+Geodetic covariate is horizon-dependent & 7\,d $-0.053$; 30\,d $+0.115$ over 2166 events & ship as 30\,d outlook; 7\,d stays ETAS \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The four results cohere into one message (Table~\ref{tab:ledger}): for global $M\!\ge\!5$
+short-term forecasting, base tiled ETAS is at or near the practical ceiling on mean-rate IGPE,
+and the honest levers lie elsewhere. A separately conducted adversarial review of 2024--2026 frontier paths
+(time-varying $b$, regime-gated neural routing, anisotropic finite-fault kernels,
+magnitude-head networks, multi-resolution scoring) found that none survived skeptical
+refutation as a large short-horizon gain, converging with the EarthquakeNPP
+conclusion~\cite{stockman2026} and our own measurements. The value is not in chasing a larger
+seven-day number but in scoring honestly (catalog-based over-dispersion tests,
+Section~\ref{sec:overdisp}), deploying a covariate at the horizon where it earns skill
+(Section~\ref{sec:geodetic}), and refusing to ship a result that does not generalize
+(Section~\ref{sec:stack}). The methodological posture is as much a contribution as any single
+number: pre-registered ship rules, shuffled-label negative controls, and the distinction
+between a well-powered global test (751--2166 events) and an under-powered regional gate
+(3--54 events) are what separate a real result from a multiple-comparison artifact, of which
+the temporally adaptive stack, which a naive read would have shipped, is the clearest example.
+
+% =====================================================================
+\section{Honest limitations}
+% =====================================================================
+
+The pseudo-prospective back-analysis spans weekly windows over a limited recent period; the
+event counts are large (2166 global events at thirty days) but the temporal span is short, so
+the results are a well-powered snapshot rather than a multi-year prospective record. The
+neural challenger's absolute calibration, though fixed for scoring, is not production-hardened,
+and it is not used in the daily one-to-seven-day product. Only one context channel (GNSS
+strain) is active; the remaining geophysical covariates are honestly zero-filled and not
+claimed. The magnitude homogenization uses literature $M_w$ relations as a documented fallback,
+with a bounded $b$-value bias the per-tile fit largely removes. The secondary-cascade
+under-count is measured on one 30-day global window. None of these is hidden: each corresponds
+to a flag or an artifact in the released code.
+
+% =====================================================================
+\section{Conclusion}
+% =====================================================================
+
+We built a complete, honesty-first operational earthquake forecasting system and, on it, a
+leakage-free multi-region CSEP testbed with pre-registered evaluation, and used it to measure
+rather than assert four things: that ETAS earns skill only where triggering exists; that an
+ETAS-family stack gains globally but not regionally; that the binding short-horizon
+consistency failure is count over-dispersion with an approximately $28\%$ secondary-cascade
+under-count; and that the value of a GNSS-strain geodetic covariate is horizon-dependent,
+absent at one to seven days and robust at thirty, because the calibrated model contributes a
+time-flat background rather than triggering. The practical recommendation is to ship calibrated
+ETAS at the operational horizon, score with catalog-based over-dispersion tests, and reserve
+the geodetic context for a longer background-dominated outlook. All code, configurations,
+provenance manifests, and committed artifacts are released openly so that every number is
+reproducible and every negative result is on the record.
+
+% =====================================================================
+\section*{Data and code availability}
+% =====================================================================
+
+Code, configurations, provenance manifests, and the committed daily and back-analysis
+artifacts, including \texttt{outlook-evidence-30d.json}, \texttt{neural\_pseudoprospective.json},
+\texttt{benchmark.json}, \texttt{e12\_multiregion.json}, \texttt{e13\_catalog\_based.json}, and
+the per-region back-analyses, are at \url{https://github.com/fsantibanezleal/CAOS_SEISMIC} under
+the MIT license; a static forecast viewer is live at \url{https://seismic.fasl-work.com}. Catalog
+data are from USGS ComCat (public domain) and the Centro Sismol\'ogico Nacional, Chile; long-term
+anchoring from ISC-GEM; mechanisms from the Global CMT project; geodetic velocities from the
+Nevada Geodetic Laboratory. The figures are regenerated deterministically from the committed
+artifacts by \texttt{manuscripts/oef-geodetic-horizon/figures/make\_figs.py}.
+
+\appendices
+\section{Per-region back-analysis detail}
+The 60-day per-region back-analysis (Table~\ref{tab:bias}) uses the CSN, ComCat, JMA and GeoNet
+catalogs for Chile, California, Japan and New Zealand respectively, with region polygons,
+horizons, thresholds, grid and declustering pre-registered and frozen across the test split;
+the low-seismicity interiors (Central US, Western Europe, Eastern Australia) are included
+specifically to expose the high-versus-low bias. Each region\,$\times$\,horizon cell, including
+the failures, is committed in \texttt{results/backanalysis-<region>-*.json}.
+
+\section{Experiment register}
+The system was built as an append-only register of experiments E1--E14, each recording a
+motivation, a change, a measured result, and a justification, so no change to the model or
+pipeline is silent. The results in Section~\ref{sec:results} correspond to E5 (per-region
+bias), E9 (multi-model benchmark), E10--E11 (neural gate and pseudo-prospective horizon), E12
+(ETAS-family stacking and its adaptive variant), E13 (over-dispersion and secondary cascade),
+and E14 (30-day geodetic validation). The full register, with the tractability engineering
+(closed-form Omori integrals, KD-tree neighbour queries, reconditioning, and vectorized neural
+scoring) that made the multi-region back-analysis feasible, is in the repository documentation.
+
+% =====================================================================
+\begin{thebibliography}{99}
+\itemsep 1pt
+
+\bibitem{geller1997} R.~J. Geller \emph{et al.}, ``Earthquakes cannot be predicted,''
+\emph{Science}, vol.~275, no.~5306, p.~1616, 1997, doi:10.1126/science.275.5306.1616.
+\bibitem{jordan2011} T.~H. Jordan \emph{et al.}, ``Operational earthquake forecasting: State
+of knowledge and guidelines for utilization,'' \emph{Ann. Geophys.}, vol.~54, no.~4, 2011,
+doi:10.4401/ag-5350.
+\bibitem{ogata1988} Y.~Ogata, ``Statistical models for earthquake occurrences and residual
+analysis for point processes,'' \emph{J. Amer. Statist. Assoc.}, vol.~83, no.~401, pp.~9--27,
+1988, doi:10.1080/01621459.1988.10478560.
+\bibitem{ogata1998} Y.~Ogata, ``Space--time point-process models for earthquake occurrences,''
+\emph{Ann. Inst. Statist. Math.}, vol.~50, no.~2, pp.~379--402, 1998, doi:10.1023/A:1003403601725.
+\bibitem{reasenberg1989} P.~A. Reasenberg and L.~M. Jones, ``Earthquake hazard after a
+mainshock in California,'' \emph{Science}, vol.~243, no.~4895, pp.~1173--1176, 1989,
+doi:10.1126/science.243.4895.1173.
+\bibitem{page2016} M.~T. Page \emph{et al.}, ``Three ingredients for improved global aftershock
+forecasts,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~106, no.~5, pp.~2290--2301, 2016,
+doi:10.1785/0120160073.
+\bibitem{spassiani2023} I.~Spassiani \emph{et al.}, ``Operational earthquake forecasting in
+Italy: Validation after 10~yr of operativity,'' \emph{Geophys. J. Int.}, vol.~234, no.~3,
+pp.~2501--2518, 2023, doi:10.1093/gji/ggad256.
+\bibitem{serafini2025} F.~Serafini \emph{et al.}, ``A benchmark database of ten years of
+prospective next-day earthquake forecasts,'' \emph{Sci. Data}, vol.~12, p.~1501, 2025,
+doi:10.1038/s41597-025-05766-3.
+\bibitem{stockman2026} S.~Stockman, D.~J. Lawson, and M.~J. Werner, ``EarthquakeNPP:
+A benchmark for earthquake forecasting with neural point processes,'' \emph{Trans.
+Mach. Learn. Res.}, 2026, arXiv:2410.08226.
+\bibitem{dascher2023} K.~Dascher-Cousineau \emph{et al.}, ``Using deep learning for flexible
+and scalable earthquake forecasting,'' \emph{Geophys. Res. Lett.}, vol.~50, e2023GL103909,
+2023, doi:10.1029/2023GL103909.
+\bibitem{zlydenko2023} O.~Zlydenko \emph{et al.}, ``A neural encoder for earthquake rate
+forecasting,'' \emph{Sci. Rep.}, vol.~13, 2023, doi:10.1038/s41598-023-38033-9.
+\bibitem{scordilis2006} E.~M. Scordilis, ``Empirical global relations converting $M_S$ and
+$m_b$ to moment magnitude,'' \emph{J. Seismol.}, vol.~10, pp.~225--236, 2006,
+doi:10.1007/s10950-006-9012-4.
+\bibitem{wiemer2000} S.~Wiemer and M.~Wyss, ``Minimum magnitude of completeness in earthquake
+catalogs,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~90, no.~4, pp.~859--869, 2000,
+doi:10.1785/0119990114.
+\bibitem{woessner2005} J.~Woessner and S.~Wiemer, ``Assessing the quality of earthquake
+catalogues,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~95, no.~2, pp.~684--698, 2005,
+doi:10.1785/0120040007.
+\bibitem{shi1982} Y.~Shi and B.~A. Bolt, ``The standard error of the magnitude-frequency
+$b$ value,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~72, no.~5, pp.~1677--1687, 1982,
+doi:10.1785/BSSA0720051677.
+\bibitem{zhuang2002} J.~Zhuang, Y.~Ogata, and D.~Vere-Jones, ``Stochastic declustering of
+space--time earthquake occurrences,'' \emph{J. Amer. Statist. Assoc.}, vol.~97, no.~458,
+pp.~369--380, 2002, doi:10.1198/016214502760046925.
+\bibitem{zaliapin2013} I.~Zaliapin and Y.~Ben-Zion, ``Earthquake clusters in southern
+California I,'' \emph{J. Geophys. Res. Solid Earth}, vol.~118, no.~6, pp.~2847--2864, 2013,
+doi:10.1002/jgrb.50179.
+\bibitem{helmstetter2007} A.~Helmstetter, Y.~Y. Kagan, and D.~D. Jackson, ``High-resolution
+time-independent grid-based forecast for $M\ge5$ earthquakes in California,'' \emph{Seismol.
+Res. Lett.}, vol.~78, no.~1, pp.~78--86, 2007, doi:10.1785/gssrl.78.1.78.
+\bibitem{wells1994} D.~L. Wells and K.~J. Coppersmith, ``New empirical relationships among
+magnitude, rupture length, rupture width, rupture area, and surface displacement,''
+\emph{Bull. Seismol. Soc. Amer.}, vol.~84, no.~4, pp.~974--1002, 1994,
+doi:10.1785/BSSA0840040974.
+\bibitem{schneider2022} M.~Schneider \emph{et al.}, ``Effective uncertainty visualization for
+aftershock forecast maps,'' \emph{Nat. Hazards Earth Syst. Sci.}, vol.~22, pp.~1499--1518,
+2022, doi:10.5194/nhess-22-1499-2022.
+\bibitem{kagan2017} Y.~Y. Kagan, ``Earthquake number forecasts testing,'' \emph{Geophys. J.
+Int.}, vol.~211, no.~1, pp.~335--345, 2017, doi:10.1093/gji/ggx300.
+\bibitem{savran2022} W.~H. Savran \emph{et al.}, ``pyCSEP: A Python toolkit for earthquake
+forecast developers,'' \emph{Seismol. Res. Lett.}, vol.~93, no.~5, pp.~2858--2870, 2022,
+doi:10.1785/0220220033.
+\bibitem{savran2020} W.~H. Savran \emph{et al.}, ``Pseudoprospective evaluation of UCERF3-ETAS
+forecasts during the 2019 Ridgecrest sequence,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~110,
+no.~4, pp.~1799--1817, 2020, doi:10.1785/0120200026.
+\bibitem{mizrahi2024} L.~Mizrahi \emph{et al.}, ``Developing, testing, and communicating
+earthquake forecasts,'' \emph{Rev. Geophys.}, vol.~62, 2024, doi:10.1029/2023RG000823.
+\bibitem{schorlemmer2007} D.~Schorlemmer \emph{et al.}, ``Earthquake likelihood model
+testing,'' \emph{Seismol. Res. Lett.}, vol.~78, no.~1, pp.~17--29, 2007,
+doi:10.1785/gssrl.78.1.17.
+\bibitem{zechar2010} J.~D. Zechar, M.~C. Gerstenberger, and D.~A. Rhoades, ``Likelihood-based
+tests for evaluating space--rate--magnitude earthquake forecasts,'' \emph{Bull. Seismol. Soc.
+Amer.}, vol.~100, no.~3, pp.~1184--1195, 2010, doi:10.1785/0120090192.
+\bibitem{rhoades2011} D.~A. Rhoades \emph{et al.}, ``Efficient testing of earthquake
+forecasting models,'' \emph{Acta Geophys.}, vol.~59, no.~4, pp.~728--747, 2011,
+doi:10.2478/s11600-011-0013-5.
+\bibitem{devries2018} P.~M.~R. DeVries \emph{et al.}, ``Deep learning of aftershock patterns
+following large earthquakes,'' \emph{Nature}, vol.~560, pp.~632--634, 2018,
+doi:10.1038/s41586-018-0438-y.
+\bibitem{mignan2019} A.~Mignan and M.~Broccardo, ``One neuron versus deep learning in
+aftershock prediction,'' \emph{Nature}, vol.~574, pp.~E1--E3, 2019,
+doi:10.1038/s41586-019-1582-8.
+\bibitem{gneiting2007} T.~Gneiting and A.~E. Raftery, ``Strictly proper scoring rules,
+prediction, and estimation,'' \emph{J. Amer. Statist. Assoc.}, vol.~102, no.~477,
+pp.~359--378, 2007, doi:10.1198/016214506000001437.
+\bibitem{zechar2008} J.~D. Zechar and T.~H. Jordan, ``Testing alarm-based earthquake
+predictions,'' \emph{Geophys. J. Int.}, vol.~172, no.~2, pp.~715--724, 2008,
+doi:10.1111/j.1365-246X.2007.03676.x.
+\bibitem{marzocchi2012} W.~Marzocchi, J.~D. Zechar, and T.~H. Jordan, ``Bayesian forecast
+evaluation and ensemble earthquake forecasting,'' \emph{Bull. Seismol. Soc. Amer.}, vol.~102,
+no.~6, pp.~2574--2584, 2012, doi:10.1785/0120110327.
+\bibitem{herrmann2023} M.~Herrmann and W.~Marzocchi, ``Maximizing the forecasting skill of an
+ensemble model,'' \emph{Geophys. J. Int.}, vol.~234, no.~1, pp.~73--87, 2023,
+doi:10.1093/gji/ggad020.
+\bibitem{bird2015} P.~Bird \emph{et al.}, ``GEAR1: A global earthquake activity rate model,''
+\emph{Bull. Seismol. Soc. Amer.}, vol.~105, no.~5, pp.~2538--2554, 2015,
+doi:10.1785/0120150058.
+\bibitem{bayona2022} J.~A. Bayona \emph{et al.}, ``Prospective evaluation of multiplicative
+hybrid earthquake forecasting models in California,'' \emph{Geophys. J. Int.}, vol.~229,
+no.~3, pp.~1736--1753, 2022, doi:10.1093/gji/ggac018.
+\bibitem{blewitt2016} G.~Blewitt \emph{et al.}, ``MIDAS robust trend estimator for accurate
+GPS station velocities,'' \emph{J. Geophys. Res. Solid Earth}, vol.~121, no.~3,
+pp.~2054--2068, 2016, doi:10.1002/2015JB012552.
+\bibitem{bird2003} P.~Bird, ``An updated digital model of plate boundaries,'' \emph{Geochem.
+Geophys. Geosyst.}, vol.~4, no.~3, 1027, 2003, doi:10.1029/2001GC000252.
+
+\end{thebibliography}
+
+\end{document}

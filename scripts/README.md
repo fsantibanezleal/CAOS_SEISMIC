@@ -124,7 +124,8 @@ checkout reuse an existing environment. See `docs/deploy.md` §4 for the rationa
 ```
 
 Each run writes `logs/job-<job>-<UTC stamp>.log` in the job checkout and holds `logs/job.lock`, so the
-daily and weekly jobs never overlap.
+daily and weekly jobs never overlap. A step whose interpreter dies abnormally (not a Python-level
+failure, which exits 1 or 2) is retried once, and the log records the retry.
 
 ## Scheduling the jobs
 

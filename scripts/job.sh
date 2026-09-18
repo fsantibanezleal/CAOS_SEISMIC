@@ -82,17 +82,30 @@ else
   log "WARN: flock is not available here; running without the job lock."
 fi
 
+# Run one step. A Python-level failure exits 1 (a handled error) or 2 (usage) and is final; any other non-zero
+# code means the interpreter itself died (a signal or native crash), and that step is retried once. A retry is
+# safe: job-sync is idempotent, and a re-run job either recomputes and commits or pushes an earlier commit.
+run_step() {
+  local attempt code
+  for attempt in 1 2; do
+    log "caos-seismic $*"
+    if invoke_caos "$@"; then return 0; else code=$?; fi
+    if [ "${code}" -eq 1 ] || [ "${code}" -eq 2 ] || [ "${attempt}" -eq 2 ]; then
+      fail "caos-seismic $* exited with code ${code}"
+    fi
+    log "WARN: caos-seismic $* died with code ${code}; retrying once."
+  done
+}
+
 log "lock acquired; HEAD $(git -C "${REPO_ROOT}" rev-parse --short HEAD)"
 if [ "${NO_PUBLISH}" -eq 0 ]; then
-  log "caos-seismic job-sync"
-  invoke_caos job-sync || fail "job-sync exited with code $?"
+  run_step job-sync
 fi
 if [ "${SYNC_ONLY}" -eq 0 ]; then
   args=("${JOB}" --region "${REGION}")
   if [ "${NO_PUBLISH}" -eq 1 ]; then args+=(--no-publish); fi
   if [ "${NO_CATCH_UP}" -eq 1 ] && [ "${JOB}" = "daily" ]; then args+=(--no-catch-up); fi
-  log "caos-seismic ${args[*]}"
-  invoke_caos "${args[@]}" || fail "caos-seismic ${args[*]} exited with code $?"
+  run_step "${args[@]}"
 fi
 log "done; HEAD $(git -C "${REPO_ROOT}" rev-parse --short HEAD)"
 

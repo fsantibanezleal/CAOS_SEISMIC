@@ -23,7 +23,8 @@
 #
 # Every run appends to logs\job-<job>-<UTC stamp>.log (gitignored; the newest -KeepLogs files are kept). The
 # lock file logs\job.lock is held open for the whole run, so the daily and the weekly job never overlap.
-# The exit code is 0 on success and 1 on any failure (Task Scheduler shows it as the last run result).
+# The exit code is 0 on success and 1 on any failure (Task Scheduler shows it as the last run result). A step
+# whose interpreter dies abnormally (not a Python-level failure) is retried once; the log records it.
 # Public-safe: no secrets, no machine-specific paths.
 
 [CmdletBinding()]
@@ -98,22 +99,33 @@ while ($null -eq $lock) {
   }
 }
 
+# Run one step. A Python-level failure exits 1 (a handled error) or 2 (usage) and is final. Any other non-zero
+# code means the interpreter itself died (for example a native crash such as 0xC000070A); that step is
+# retried once. A retry is safe: job-sync is idempotent, and a re-run job either recomputes and commits or,
+# when the dead run had already committed, pushes that commit as backlog.
+function Invoke-JobStep([string[]]$CaosArgs) {
+  $label = "caos-seismic $($CaosArgs -join ' ')"
+  for ($attempt = 1; $attempt -le 2; $attempt++) {
+    Write-JobLog $label
+    $code = Invoke-CaosToLog -LogFile $log -CaosArgs $CaosArgs
+    if ($code -eq 0) { return }
+    if ($code -eq 1 -or $code -eq 2 -or $attempt -eq 2) { throw "$label exited with code $code" }
+    Write-JobLog ("WARN: $label died with code {0} (0x{0:X8}); retrying once." -f $code)
+  }
+}
+
 $exitCode = 0
 try {
   $head = Get-JobHead
   Write-JobLog "lock acquired; HEAD $head"
   if (-not $NoPublish) {
-    Write-JobLog 'caos-seismic job-sync'
-    $code = Invoke-CaosToLog -LogFile $log -CaosArgs @('job-sync')
-    if ($code -ne 0) { throw "job-sync exited with code $code" }
+    Invoke-JobStep @('job-sync')
   }
   if (-not $SyncOnly) {
     $caosArgs = @($Job, '--region', $Region)
     if ($NoPublish) { $caosArgs += '--no-publish' }
     if ($NoCatchUp -and $Job -eq 'daily') { $caosArgs += '--no-catch-up' }
-    Write-JobLog "caos-seismic $($caosArgs -join ' ')"
-    $code = Invoke-CaosToLog -LogFile $log -CaosArgs $caosArgs
-    if ($code -ne 0) { throw "caos-seismic $($caosArgs -join ' ') exited with code $code" }
+    Invoke-JobStep $caosArgs
   }
   $head = Get-JobHead
   Write-JobLog "done; HEAD $head"

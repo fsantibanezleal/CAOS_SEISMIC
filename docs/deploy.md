@@ -43,8 +43,10 @@ geopandas, pygtide) is imported *lazily* inside the stage that needs it, with a 
 
 ## 2. The daily job
 
-The production job is `caos-seismic daily` (CLI in [`cli.py`](../src/caos_seismic/cli.py); wrapped by
-`scripts/daily.{ps1,sh}`). It runs **fetch → infer → scoped publish**:
+The production job is `caos-seismic daily` (CLI in [`cli.py`](../src/caos_seismic/cli.py)). The
+scheduler runs it through `scripts/job.{ps1,sh}` in the dedicated job checkout, right after
+`caos-seismic job-sync` (§4); `scripts/daily.{ps1,sh}` wrap it for local dry runs. It runs fetch, infer
+and a scoped publish:
 
 1. **Determine the issue dates.** Today (UTC) plus — when `publish.yaml: schedule.catch_up_missed` is
    on — any days in the last week with no committed artifact yet. The catch-up is *bounded to a week*
@@ -56,7 +58,7 @@ The production job is `caos-seismic daily` (CLI in [`cli.py`](../src/caos_seismi
    the model only the catalog slice strictly before the issue time, simulates the ensemble for
    {1d, 2d, 7d} × {P10, median, P90}, calibrates, runs the rolling CSEP consistency checks, and writes
    one compact gzipped artifact under `results/`.
-4. **Scoped publish** (unless `--no-publish`) — commit and push (§3).
+4. **Scoped publish** (unless `--no-publish`): commit and push (§3). Only the job checkout publishes.
 
 A local dry run is `caos-seismic daily --no-publish` (or `scripts/infer` for a single issue date).
 
@@ -83,17 +85,28 @@ The artifact is committed to this repo as the single source of the web app's dat
 `models/`, `.venv/`, and a working `.env` present, and a `git add -A` would leak raw data or secrets.
 
 `publish.yaml: git` defines an explicit `add_allowlist` (`results/`, `manifests/`) and the scoped
-publish in [`cli.py`](../src/caos_seismic/cli.py) (`_publish_scoped`):
+publish in [`cli.py`](../src/caos_seismic/cli.py) (`_publish_scoped`), which runs in the dedicated job
+checkout (§4.1):
 
 - resets the index, stages **only** the allowlist paths (never `git add .` / `-A`),
 - verifies nothing outside the allowlist got staged and **aborts** (resetting the index) if anything
   did,
-- commits with the configured `commit_message_prefix` and pushes `HEAD:main` to `origin`.
+- commits with the configured `commit_message_prefix` on the job checkout's detached HEAD and
+  fast-forward pushes **that same commit** to `main`; before any push it checks that every commit it is
+  about to publish is a data commit (the prefix, one parent, allowlist paths only),
+- if `main` moved during the run (a PR merged), rebases the data commit onto it first. If the push still
+  fails after retries, the commit stays in the job checkout and the next run's `job-sync` pushes it, so
+  a day is never lost.
 
-`caos-seismic check` refuses any allowlist entry that is `.`, `-A`, `--all`, or `*`, so a non-scoped
-publish cannot be configured by accident. A **pre-push hook** hard-fails on any out-of-allowlist path
-as defence in depth. The push credential is a dedicated **least-privilege deploy key / fine-grained
-PAT scoped to this repo only**, held in the local git credential store — **never committed**.
+`main` therefore gets exactly one commit per run and no other branch gets any. `caos-seismic check`
+refuses any allowlist entry that is `.`, `-A`, `--all`, or `*`, so a non-scoped publish cannot be
+configured by accident, and it reports whether the checkout is the job checkout. The push credential is
+a dedicated **least-privilege deploy key / fine-grained PAT scoped to this repo only**, held in the
+local git credential store, **never committed**.
+
+Run from a developer checkout instead, `_publish_scoped` falls back to a deprecated legacy path that
+commits on the checked-out branch and pushes a second copy to `main`. It remains only until the
+scheduled tasks run from the job checkout and will be removed; §4.1 explains why.
 
 Content updates once per day as one small commit (a few hundred KB to a few MB). Over years this grows
 the repo by tens to low-hundreds of MB — modest, because *only* the compact gzipped results and the
@@ -102,22 +115,96 @@ manifests are versioned; raw data, features, and weights never are (see
 
 ---
 
-## 4. The daily schedule (~03:00)
+## 4. The schedule and the dedicated job checkout
 
-The job fires **daily, early morning (~03:00 local)** — `publish.yaml: schedule.time_local = "03:00"`,
-`cadence: daily`. Pick the platform-native scheduler:
+The daily job fires **daily, early morning (03:00 local)**: `publish.yaml: schedule.time_local =
+"03:00"`, `cadence: daily`. The weekly 30-day outlook fires on Sundays at 04:00 local. Both run **only
+from the dedicated job checkout**, never from a developer checkout.
 
-- **Windows (the GPU workstation):** a Task Scheduler task running `scripts\daily.ps1` daily at 03:00,
-  with "run task as soon as possible after a scheduled start is missed" enabled (the laptop may
-  sleep/reboot — `catch_up_missed` handles the backfill on next wake).
-- **Linux host / VPS:** a `cron` entry or a `systemd` timer:
+### 4.1 Why a dedicated job checkout
 
-  ```cron
-  # /etc/cron.d/caos-seismic  — daily forecast at 03:00 local
-  0 3 * * *  caos  cd /opt/CAOS_SEISMIC && scripts/daily.sh >> var/daily.log 2>&1
-  ```
+The Windows task first ran the job inside the developer checkout. Its publish committed
+on whatever branch that checkout had checked out *and* pushed a second, `commit-tree` copy of the same
+files to `main`. `develop` collected a daily data commit that `main` lacked, and the other way round,
+until it stood 24 commits ahead of and 83 behind `main`. A day whose push failed (2026-09-08) reached
+`develop` but never `main`, while `main`'s `index.json` listed it. The job also reset the developer's
+index, published whatever sat in the developer's `results/`, and ran whatever code that branch held.
+Issue #49 records the evidence.
 
-  or, equivalently, a `systemd` `OnCalendar=*-*-* 03:00:00` timer wrapping `scripts/daily.sh`.
+The job checkout removes all of that:
+
+- It is a **git worktree of this repository with a detached HEAD at `origin/main`**, outside the
+  developer checkout, carrying the marker file `.caos-seismic-job`. Nothing else runs there, and the
+  CLI refuses to sync or publish in a checkout that lacks the marker or has a branch checked out.
+- **`caos-seismic job-sync`** runs in its own process before every job. It refuses local code changes
+  and non-data commits, drops the uncommitted leftovers of an interrupted run under `results/` and
+  `manifests/` (the catch-up window recomputes those days), fetches `main`, and fast-forwards to it,
+  first pushing any data commit an earlier run could not push.
+- The job then runs **main's released code**. The scripts put the checkout's own `src/` first on
+  `PYTHONPATH`, so an editable install that points at another checkout cannot substitute its code (or
+  its `results/` and `data/`).
+- It publishes one commit, fast-forward, to `main` (§3). `main` has a single writer, and the developer
+  checkout's branch never matters.
+
+### 4.2 Set it up (Windows, the GPU workstation)
+
+```powershell
+# 1) In the developer checkout: create the job checkout (default <parent>\<repo>.job) and copy the
+#    gitignored stores it needs (everything git ignores under data\ and results\).
+.\scripts\setup-job-checkout.ps1
+
+# 2) Dry run in the job checkout: compute only, no git write.
+& '<job checkout>\scripts\job.ps1' -Job daily -NoPublish -VenvPath '<developer checkout>\.venv'
+
+# 3) From an ELEVATED PowerShell: point the two scheduled tasks at the job checkout.
+& '<job checkout>\scripts\schedule-daily.ps1'   -VenvPath '<developer checkout>\.venv'
+& '<job checkout>\scripts\schedule-outlook.ps1' -VenvPath '<developer checkout>\.venv'
+```
+
+`setup-job-checkout.ps1` prints the exact paths for steps 2 and 3. `-VenvPath` reuses an existing
+environment instead of installing a second CUDA stack of several GB; `setup.ps1` and `dev.ps1` never
+use it, so they cannot re-point or delete that environment. The schedule scripts refuse to run outside
+a job checkout. The tasks run whether the user is logged on or not (S4U principal, highest run level,
+which is why registration needs an elevated shell). They wake the computer, start a missed run on the
+next wake, never start a second instance, and fire at the configured *local* time across daylight
+saving. They run at priority 4 (normal): at Task Scheduler's default 7 a job gets below-normal CPU and
+low I/O priority and crawls whenever anything else keeps the machine busy.
+
+### 4.3 Operate it
+
+- **Logs.** Every run writes `logs\job-<daily|outlook|sync>-<UTC stamp>.log` in the job checkout (the
+  newest 120 are kept): the `job-sync` and job output plus the exit code. The task's last run result
+  is 0 on success and 1 on failure.
+- **A failed push needs no manual step.** The data commit stays in the job checkout, and the next run's
+  `job-sync` pushes it; the log says so. If it conflicts with `main` (someone else changed the same
+  artifact), `job-sync` drops it and the catch-up window recomputes the day.
+- **Data stores.** `data/` and `results/checkpoints/` in the job checkout belong to the job. After
+  rebuilding a store in the developer checkout (for example the clean catalog), copy it over with
+  `setup-job-checkout.ps1 -RefreshData`.
+- **Never develop in the job checkout.** Do not switch branches or commit there: `job-sync` refuses
+  local code changes, and the publish refuses anything but data commits.
+- **Concurrency.** A lock file (`logs\job.lock`, held for the whole run) keeps the daily and weekly
+  jobs from overlapping.
+
+### 4.4 Branch flow
+
+Code goes from a `task/*` branch to `develop` to `main` through PRs, as for any product repo. Data goes
+to `main` only, from the job checkout. After a release, bring `develop` up to `main` (fast-forward when
+possible, a merge otherwise); `develop` never needs a data commit of its own.
+
+### 4.5 Linux host / VPS (portable fallback)
+
+The same design on Linux: `scripts/setup-job-checkout.sh` in the clone creates the job checkout, and
+the `systemd` units run `scripts/job.sh` there (`caos-seismic-daily.service` + `.timer`,
+`OnCalendar=*-*-* 03:00:00`, `Persistent=true`). The service header lists the install steps. A `cron`
+entry works too:
+
+```cron
+# /etc/cron.d/caos-seismic: daily forecast at 03:00 local, from the job checkout
+0 3 * * *  caos  /opt/caos-seismic.job/scripts/job.sh --job daily --venv /opt/caos-seismic/.venv
+```
+
+`job.sh` writes its own log under `logs/` and echoes to stdout.
 
 A **full re-fit / re-training** (including any GPU challenger) runs on a slower cadence or when a large
 event occurs — `publish.yaml: train_cadence` (`full_refit: weekly`, `event_triggered_magnitude: 6.5`).

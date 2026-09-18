@@ -15,7 +15,9 @@ git:
     - manifests/
   commit_message_prefix: "data: daily forecast"
   # Push credential: a dedicated least-privilege deploy key / fine-grained PAT scoped to THIS repo,
-  # in the local git credential store — never committed. A pre-push hook hard-fails on out-of-allowlist paths.
+  # in the local git credential store, never committed. Publishing runs ONLY in the dedicated job checkout
+  # (scripts/job.*; docs/deploy.md section 4): one commit per run, fast-forward pushed to publish_branch,
+  # and never a commit that touches anything outside add_allowlist.
 
 train_cadence:
   # Full re-fit / re-training (incl. GPU challenger) on a slower cadence or when a large event occurs.

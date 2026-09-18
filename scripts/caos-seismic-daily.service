@@ -2,19 +2,22 @@
 #
 # Portable VPS fallback for the Windows Task Scheduler task (scripts/schedule-daily.ps1). Triggered by
 # caos-seismic-daily.timer (OnCalendar=*-*-* 03:00:00, Persistent=true). This is a oneshot: it runs the
-# pipeline once and exits; the timer owns the schedule.
+# job once and exits; the timer owns the schedule.
 #
-# Install (user or system). Edit the two %-placeholders to your checkout, then:
+# It runs scripts/job.sh from the DEDICATED JOB CHECKOUT (a detached git worktree carrying the
+# .caos-seismic-job marker; docs/deploy.md section 4), never from a developer checkout, so main has one
+# writer. Install (system-wide on a dedicated VPS, as root):
 #
-#   # system-wide (recommended on a dedicated VPS), as root:
-#   #   1) clone the repo to e.g. /opt/caos-seismic and run scripts/setup.sh
-#   #   2) set INSTALL_DIR + RUN_USER below, copy both unit files to /etc/systemd/system/
-#   #   3) systemctl daemon-reload && systemctl enable --now caos-seismic-daily.timer
-#   #   4) verify:  systemctl list-timers caos-seismic-daily.timer
-#   #   5) test now: systemctl start caos-seismic-daily.service ; journalctl -u caos-seismic-daily -e
+#   #   1) clone the repo to e.g. /opt/caos-seismic and run scripts/setup.sh as RUN_USER
+#   #   2) as RUN_USER: /opt/caos-seismic/scripts/setup-job-checkout.sh   (creates /opt/caos-seismic.job)
+#   #   3) set WorkingDirectory, the --venv path, User/Group and ReadWritePaths below
+#   #   4) copy both unit files to /etc/systemd/system/
+#   #   5) systemctl daemon-reload && systemctl enable --now caos-seismic-daily.timer
+#   #   6) verify:  systemctl list-timers caos-seismic-daily.timer
+#   #   7) test now: systemctl start caos-seismic-daily.service ; journalctl -u caos-seismic-daily -e
 #
 # The git push credential is a least-privilege deploy key / fine-grained PAT scoped to THIS repo, stored
-# in RUN_USER's git credential store — NEVER in this unit file. No secrets here (public-safe).
+# in RUN_USER's git credential store; NEVER in this unit file. No secrets here (public-safe).
 
 [Unit]
 Description=CAOS_SEISMIC daily conditional seismic forecast (fetch + infer + scoped publish)
@@ -25,27 +28,29 @@ After=network-online.target
 [Service]
 Type=oneshot
 
-# ── EDIT THESE TWO for your host ────────────────────────────────────────────
-# Absolute path to the cloned repo (the directory that contains scripts/, .venv/, results/).
-WorkingDirectory=/opt/caos-seismic
+# ── EDIT THESE for your host ────────────────────────────────────────────────
+# The dedicated job checkout created by scripts/setup-job-checkout.sh (NOT the developer clone).
+WorkingDirectory=/opt/caos-seismic.job
 # The unprivileged account that owns the checkout + holds the git push credential.
 User=caos
 Group=caos
 # ────────────────────────────────────────────────────────────────────────────
 
-# Run the same daily.sh the Windows side runs (catch-up missed days, scoped publish).
-ExecStart=/usr/bin/env bash scripts/daily.sh --region chile
+# The same job the Windows task runs: lock, job-sync, then daily (catch-up of missed days, scoped publish).
+# --venv: the environment created by scripts/setup.sh in the developer clone.
+ExecStart=/usr/bin/env bash scripts/job.sh --job daily --region global --venv /opt/caos-seismic/.venv
 
 # Resilience: a daily job should not hang forever, and a transient network/git failure should retry.
 TimeoutStartSec=2h
 Restart=on-failure
 RestartSec=10min
 
-# Hardening (the job only needs to read the repo, write results/ + manifests/, and reach the network).
+# Hardening (the job reads the repo, writes the job checkout, and reaches the network). A worktree keeps its
+# objects and refs in the main clone's .git, so that clone must be writable too.
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/opt/caos-seismic
+ReadWritePaths=/opt/caos-seismic /opt/caos-seismic.job
 PrivateTmp=true
 ProtectControlGroups=true
 ProtectKernelModules=true

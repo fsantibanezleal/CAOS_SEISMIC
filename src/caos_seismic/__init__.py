@@ -4,4 +4,4 @@ Bounded, calibrated, short-horizon (1d/2d/7d) earthquake *forecasts* (not predic
 CSEP-style. See `caos_seismic.contracts` for the public interfaces and the artifact schema.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

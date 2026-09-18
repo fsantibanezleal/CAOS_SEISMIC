@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # _common.sh — shared helpers for the CAOS_SEISMIC bash scripts (Git Bash / Linux VPS).
-# Sourced by setup.sh, fetch.sh, build-features.sh, train.sh, infer.sh, daily.sh, dev.sh, check.sh.
+# Sourced by setup.sh, fetch.sh, build-features.sh, train.sh, infer.sh, daily.sh, dev.sh, check.sh,
+# job.sh, setup-job-checkout.sh.
 # Public-safe: no secrets, no machine-specific paths (everything is resolved relative to the repo root).
 
 set -euo pipefail
@@ -9,6 +10,11 @@ set -euo pipefail
 _SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${_SCRIPT_DIR}/.." && pwd)"
 VENV_DIR="${REPO_ROOT}/.venv"
+
+# The dedicated job checkout (scripts/setup-job-checkout.sh) carries this marker file; the CLI checks the
+# same name (cli.py JOB_MARKER) before `job-sync` or a publish. Keep the two in sync.
+JOB_MARKER=".caos-seismic-job"
+is_job_checkout() { [ -f "${REPO_ROOT}/${JOB_MARKER}" ]; }
 
 # Colour helpers (no-op if not a TTY).
 if [ -t 1 ]; then
@@ -47,10 +53,41 @@ bootstrap_python() {
   exit 1
 }
 
+# The interpreter that RUNS the pipeline (invoke_caos): the environment named by CAOS_SEISMIC_VENV when it
+# is set, else this checkout's own .venv. The job checkout sets it (job.sh --venv) to reuse an existing
+# environment. setup.sh and dev.sh keep using venv_python, so they never install into, recreate or delete
+# a shared environment.
+caos_python() {
+  if [ -n "${CAOS_SEISMIC_VENV:-}" ]; then
+    if [ -x "${CAOS_SEISMIC_VENV}/bin/python" ]; then
+      printf '%s\n' "${CAOS_SEISMIC_VENV}/bin/python"
+    elif [ -x "${CAOS_SEISMIC_VENV}/Scripts/python.exe" ]; then
+      printf '%s\n' "${CAOS_SEISMIC_VENV}/Scripts/python.exe"
+    else
+      err "CAOS_SEISMIC_VENV='${CAOS_SEISMIC_VENV}' has no bin/python or Scripts/python.exe."
+      exit 1
+    fi
+  else
+    venv_python
+  fi
+}
+
+# PYTHONPATH that makes the interpreter import THIS checkout's code (its src/ first). A shared environment's
+# editable install points at whichever checkout ran `pip install -e .`; without this a job checkout would
+# silently run another checkout's code, and with it that checkout's REPO_ROOT (its results/, data/).
+caos_pythonpath() {
+  local src="${REPO_ROOT}/src" sep=":"
+  if command -v cygpath >/dev/null 2>&1; then   # Git Bash with a Windows interpreter
+    src="$(cygpath -w "${src}")"; sep=";"
+  fi
+  printf '%s\n' "${src}${PYTHONPATH:+${sep}${PYTHONPATH}}"
+}
+
 # Invoke the package console entry point inside the venv:  caos-seismic <args...>
-# Module form, so it works even if the console-script shim is not on PATH.
+# Module form, so it works even if the console-script shim is not on PATH. Always this checkout's code.
 invoke_caos() {
-  local py
-  py="$(venv_python)"
-  ( cd "${REPO_ROOT}" && "${py}" -m caos_seismic.cli "$@" )
+  local py pp
+  py="$(caos_python)"
+  pp="$(caos_pythonpath)"
+  ( cd "${REPO_ROOT}" && PYTHONPATH="${pp}" "${py}" -m caos_seismic.cli "$@" )
 }

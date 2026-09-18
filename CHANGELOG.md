@@ -2,6 +2,11 @@
 
 All notable changes to this product. Format: `X.XX.XXX` (display, see the workspace `versioning.md`); stays `0.x` while pre-1.0. Tag every release.
 
+## [0.02.001] · 2026-09-18
+
+### Fixed
+- `scripts/job.{ps1,sh}` retry a step once when its interpreter dies abnormally. A Python-level failure (exit 1 or 2) is still final. On 2026-09-18 the workstation's Microsoft Store Python 3.12 died repeatedly in `ntdll.dll` with `0xC000070A`, and one such death stopped a job midway. With the job checkout's publish, a retry either recomputes and commits or pushes the commit the dead run already made.
+
 ## [0.02.000] · 2026-09-18
 
 ### Changed

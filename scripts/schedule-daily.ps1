@@ -19,12 +19,15 @@
 # the job checkout has its own .venv. An S4U principal at the highest run level needs an ELEVATED
 # PowerShell. -LogonType Interactive -RunLevel Limited registers a run-only-when-logged-on task without
 # elevation (useful to test the task end to end). Public-safe: no secrets are stored in the task.
+# -PublishBranch <name> (tests only) makes the registered task publish to a scratch branch, so a test
+# task can run the real job end to end without touching main.
 
 [CmdletBinding()]
 param(
   [string]$Region = 'global',
   [string]$Time,                              # HH:mm; default: from configs/publish.yaml
   [string]$VenvPath,
+  [string]$PublishBranch,                     # test only: the task publishes to this branch instead of main
   [string]$TaskName = 'CAOS_SEISMIC daily forecast',
   [ValidateSet('S4U', 'Interactive')][string]$LogonType = 'S4U',
   [ValidateSet('Highest', 'Limited')][string]$RunLevel = 'Highest',
@@ -86,6 +89,8 @@ if (-not $psExe) { throw "neither pwsh nor powershell found on PATH." }
 $jobScript = Join-Path $PSScriptRoot 'job.ps1'
 $argLine = "-NoProfile -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$jobScript`" -Job daily -Region $Region"
 if ($VenvPath) { $argLine += " -VenvPath `"$VenvPath`"" }
+if ($PublishBranch) { $argLine += " -PublishBranch `"$PublishBranch`"" }
+$target = if ($PublishBranch) { "$PublishBranch (TEST TASK)" } else { 'main' }
 
 $action  = New-ScheduledTaskAction -Execute $psExe -Argument $argLine -WorkingDirectory $repo
 $trigger = New-ScheduledTaskTrigger -Daily -At $at
@@ -116,7 +121,7 @@ Register-ScheduledTask `
   -Trigger $trigger `
   -Settings $settings `
   -Principal $principal `
-  -Description "CAOS_SEISMIC: daily fetch + infer + publish to main from the dedicated job checkout (forecasts, never predictions). Region '$Region'. Runs scripts\job.ps1 -Job daily at $Time local." | Out-Null
+  -Description "CAOS_SEISMIC: daily fetch + infer + publish to $target from the dedicated job checkout (forecasts, never predictions). Region '$Region'. Runs scripts\job.ps1 -Job daily at $Time local." | Out-Null
 
 Write-Step "Registered '$TaskName' - daily at $Time local, running $jobScript ($LogonType, $RunLevel)."
 Write-Info  "Inspect:  Get-ScheduledTask -TaskName '$TaskName' | Get-ScheduledTaskInfo"

@@ -20,6 +20,8 @@
 # -VenvPath names an existing environment to run with (e.g. the developer checkout's .venv); omit it when
 # the job checkout has its own .venv. An S4U principal at the highest run level needs an ELEVATED
 # PowerShell; -LogonType Interactive -RunLevel Limited registers without elevation (for tests). Public-safe.
+# -PublishBranch <name> (tests only) makes the registered task publish to a scratch branch, so a test
+# task can run the real job end to end without touching main.
 
 [CmdletBinding()]
 param(
@@ -28,6 +30,7 @@ param(
   [string]$Day = 'Sunday',
   [string]$Time = '04:00',                     # HH:mm local
   [string]$VenvPath,
+  [string]$PublishBranch,                     # test only: the task publishes to this branch instead of main
   [string]$TaskName = 'CAOS_SEISMIC weekly outlook',
   [ValidateSet('S4U', 'Interactive')][string]$LogonType = 'S4U',
   [ValidateSet('Highest', 'Limited')][string]$RunLevel = 'Highest',
@@ -75,6 +78,8 @@ if (-not $psExe) { throw "neither pwsh nor powershell found on PATH." }
 $jobScript = Join-Path $PSScriptRoot 'job.ps1'
 $argLine = "-NoProfile -ExecutionPolicy Bypass -NonInteractive -WindowStyle Hidden -File `"$jobScript`" -Job outlook -Region $Region"
 if ($VenvPath) { $argLine += " -VenvPath `"$VenvPath`"" }
+if ($PublishBranch) { $argLine += " -PublishBranch `"$PublishBranch`"" }
+$target = if ($PublishBranch) { "$PublishBranch (TEST TASK)" } else { 'main' }
 
 $action  = New-ScheduledTaskAction -Execute $psExe -Argument $argLine -WorkingDirectory $repo
 $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $Day -At $at
@@ -104,7 +109,7 @@ Register-ScheduledTask `
   -Trigger $trigger `
   -Settings $settings `
   -Principal $principal `
-  -Description "CAOS_SEISMIC: weekly 30-day outlook (geodetic neural background), validate, publish to main from the dedicated job checkout. Region '$Region'. Runs scripts\job.ps1 -Job outlook every $Day at $Time local." | Out-Null
+  -Description "CAOS_SEISMIC: weekly 30-day outlook (geodetic neural background), validate, publish to $target from the dedicated job checkout. Region '$Region'. Runs scripts\job.ps1 -Job outlook every $Day at $Time local." | Out-Null
 
 Write-Step "Registered '$TaskName' - $Day at $Time local, running $jobScript ($LogonType, $RunLevel)."
 Write-Info  "Inspect:  Get-ScheduledTask -TaskName '$TaskName' | Get-ScheduledTaskInfo"

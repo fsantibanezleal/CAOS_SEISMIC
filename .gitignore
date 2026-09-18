@@ -64,6 +64,7 @@ Thumbs.db
 
 # ── Dedicated job checkout (scripts/setup-job-checkout.*): its marker file and per-run logs ──────
 .caos-seismic-job
+.caos-seismic-job-branch
 logs/
 
 # ── KEEP (explicitly tracked) ─────────────────────────────────────────────

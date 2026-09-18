@@ -116,7 +116,9 @@ def repos(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     (seed / "results" / "index.json").write_text('{"latest": null}\n', encoding="utf-8")
     (seed / "manifests").mkdir()
     (seed / "manifests" / "global_fetch_manifest.json").write_text("{}\n", encoding="utf-8")
-    (seed / ".gitignore").write_text(f"checkpoints/\nlogs/\n{cli.JOB_MARKER}\n", encoding="utf-8")
+    (seed / ".gitignore").write_text(
+        f"checkpoints/\nlogs/\n{cli.JOB_MARKER}\n{cli.JOB_BRANCH_FILE}\n", encoding="utf-8"
+    )
     git(seed, "add", "-A")
     git(seed, "commit", "-q", "-m", "init")
     git(seed, "push", "-q", "origin", "HEAD:refs/heads/main")
@@ -290,6 +292,35 @@ def test_publish_branch_override_targets_a_scratch_branch(repos, monkeypatch):
 
     assert remote_tip(repos, "scratch/e2e") == head(repos.job)
     assert remote_tip(repos) == main_before
+
+
+def test_a_checkout_that_published_to_a_scratch_branch_never_syncs_to_main(repos, monkeypatch):
+    # A scratch branch cut from main's tip: its data commit would otherwise look like a main backlog.
+    main_before = remote_tip(repos)
+    git(repos.seed, "push", "-q", "origin", f"{main_before}:refs/heads/scratch/e2e")
+    monkeypatch.setenv(cli.ENV_PUBLISH_BRANCH, "scratch/e2e")
+    cli._job_sync(CFG)
+    write_run_outputs(repos.job, "2026-09-19")
+    cli._publish_scoped(CFG, region="global", n_dates=1)
+    assert (repos.job / cli.JOB_BRANCH_FILE).read_text(encoding="utf-8").strip() == "scratch/e2e"
+
+    monkeypatch.delenv(cli.ENV_PUBLISH_BRANCH)
+    with pytest.raises(typer.Exit):
+        cli._job_sync(CFG)
+    with pytest.raises(typer.Exit):
+        cli._publish_scoped(CFG, region="global", n_dates=1)
+    assert remote_tip(repos) == main_before
+
+
+def test_job_sync_ignores_the_job_checkouts_own_files_without_a_gitignore_entry(repos):
+    # An older .gitignore that does not list the job's own files (marker, binding file, logs/).
+    upstream_commit(repos, ".gitignore", "checkpoints/\n", "Merge pull request #101")
+    cli._job_sync(CFG)  # fast-forwards to the commit with the short .gitignore
+    (repos.job / "logs").mkdir(exist_ok=True)
+    (repos.job / "logs" / "job-daily-x.log").write_text("log\n", encoding="utf-8")
+    assert {cli.JOB_MARKER, cli.JOB_BRANCH_FILE, "logs/job-daily-x.log"} <= set(cli._dirty_paths())
+
+    cli._job_sync(CFG)  # they are the job's own files, not local changes: no refusal
 
 
 # ─────────────────────────────────────────────────────────────────────────────

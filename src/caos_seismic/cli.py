@@ -757,6 +757,11 @@ JOB_MARKER = ".caos-seismic-job"
 #: Test-only override of the publish branch (an end-to-end check against a scratch branch). Unset in production.
 ENV_PUBLISH_BRANCH = "CAOS_SEISMIC_PUBLISH_BRANCH"
 
+#: The publish branch a job checkout is bound to, written on its first sync or publish (gitignored). A checkout
+#: that ran a test against a scratch branch then refuses any other branch, so its test data commits can never
+#: follow into main as a "backlog".
+JOB_BRANCH_FILE = ".caos-seismic-job-branch"
+
 #: Retry policy of the network steps: the laptop may have just woken up and the network can lag behind.
 _GIT_ATTEMPTS = 4
 _GIT_RETRY_DELAY_S = 20.0
@@ -824,6 +829,21 @@ def _require_job_checkout(action: str) -> None:
         raise _fail(
             f"{action}: the job checkout has branch '{branch}' checked out; it must stay on a detached "
             "HEAD (git checkout --detach), so no branch ever receives a data commit."
+        )
+
+
+def _bind_publish_branch(s: _PublishSettings) -> None:
+    """Bind the job checkout to its publish branch on first use; refuse a different branch afterwards."""
+    path = REPO_ROOT / JOB_BRANCH_FILE
+    bound = path.read_text(encoding="utf-8").strip() if path.is_file() else ""
+    if not bound:
+        path.write_text(s.branch + "\n", encoding="utf-8")
+        return
+    if bound != s.branch:
+        raise _fail(
+            f"this job checkout is bound to '{bound}' (a test run?), not '{s.branch}': commits made for "
+            f"'{bound}' must never reach '{s.branch}'. Recreate the job checkout "
+            f"(scripts/setup-job-checkout.*), or delete {JOB_BRANCH_FILE} after checking `git log`."
         )
 
 
@@ -955,8 +975,12 @@ def _job_sync(publish_cfg: dict) -> None:
     """Implementation of `job-sync` (see the command docstring)."""
     s = _publish_settings(publish_cfg)
     _require_job_checkout("job-sync")
+    _bind_publish_branch(s)
 
-    foreign = [p for p in _dirty_paths() if not _in_allowlist(p, s.prefixes)]
+    job_local = (JOB_MARKER, JOB_BRANCH_FILE, "logs")  # the job's own files, gitignored but never "changes"
+    foreign = [
+        p for p in _dirty_paths() if not _in_allowlist(p, s.prefixes) and not _in_allowlist(p, job_local)
+    ]
     if foreign:
         raise _fail(
             f"job-sync: the job checkout has local changes outside {s.allowlist}: {foreign[:10]}. "
@@ -1034,6 +1058,7 @@ def _publish_scoped(publish_cfg: dict, *, region: str, n_dates: int) -> None:
         return
 
     _require_job_checkout("publish")
+    _bind_publish_branch(s)
     staged = _stage_allowlist(s)
     if staged:
         message = _publish_message(s.prefix, region, n_dates)

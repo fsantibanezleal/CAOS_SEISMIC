@@ -23,7 +23,10 @@ no secrets** in any script (public-safe).
 | `train` | Fit the stationary smoothed-seismicity null + space–time **ETAS** (+ Reasenberg–Jones fallback); reject fits that violate the stability gates. | `caos-seismic train --region <id>` |
 | `infer` | Run the **forecast clock** for an issue date → one compact artifact under `results/`. | `caos-seismic infer --region <id> [--issue YYYY-MM-DD]` |
 | `backanalysis` | Pseudo-prospective **CSEP** back-analysis over a date range (the clock advances day by day). | `caos-seismic backanalysis --region <id> --start … --end …` |
-| `daily` | **Production job:** fetch → infer (today + missed days) → **scoped publish** (commit + push). | (orchestrates `fetch` + `infer` + git) |
+| `daily` | **The daily job:** fetch, infer (today + missed days), **scoped publish** (commit + push). Scheduled through `job` in the job checkout; run it directly for a dry run (`-NoPublish` / `--no-publish`). | `caos-seismic daily --region <id>` |
+| `outlook` (`.ps1`) | **The weekly job:** fit the 30-day geodetic background, validate, scoped publish. Scheduled through `job -Job outlook`. | `caos-seismic outlook --region <id>` |
+| `job` | **The scheduled entry point**, only in the dedicated job checkout: lock, `job-sync`, then `daily` or `outlook`, with a log per run under `logs/`. | `caos-seismic job-sync` + `daily` / `outlook` |
+| `setup-job-checkout` | Create the dedicated job checkout (a detached worktree at `origin/main` with the `.caos-seismic-job` marker) and copy the gitignored data stores into it. | (git worktree only) |
 | `dev` | Serve the **static** web app locally for preview (Vite HMR, or a dependency-free static server). **No processing backend.** | — (static server) |
 | `check` | Environment + repo + config **sanity checks** (no network, no science deps). Exits non-zero on hard failure. | `caos-seismic check --region <id>` |
 
@@ -70,7 +73,7 @@ plain static server), `-Port`/`--port` (default `5173`). It binds to `127.0.0.1`
 
 ## `daily` — the production job (scoped, git-as-data)
 
-`daily` is the once-per-day production job (scheduled ~03:00 local, see below):
+`daily` is the once-per-day production job (scheduled 03:00 local through `job`, see below):
 
 1. **`fetch`** once — the freshest catalog covers every issue date in the batch.
 2. **`infer`** for **today plus any missed prior days** (catch-up, bounded to the last 7 days so a
@@ -78,7 +81,9 @@ plain static server), `-Port`/`--port` (default `5173`). It binds to `127.0.0.1`
    under `results/` is skipped.
 3. **Scoped publish** — stage **only** the `configs/publish.yaml` `git.add_allowlist` paths
    (`results/`, `manifests/`), **abort** if anything outside the allowlist is staged, commit with the
-   configured `commit_message_prefix`, and `git push`.
+   configured `commit_message_prefix`, and fast-forward push that commit to `main`. This happens only in
+   the dedicated job checkout (see "The job checkout" below); in a developer checkout the CLI warns and
+   uses a deprecated legacy path that also commits on the checked-out branch.
 
 ### Scoped-publish discipline (hard rules)
 
@@ -90,57 +95,90 @@ This machine also holds `data/`, `models/`, `.venv/`, and `.env`. The publish st
 - Reads the allowlist, commit prefix, remote, and branch from `configs/publish.yaml` (`git.*`).
 
 The push credential is a **least-privilege deploy key / fine-grained PAT scoped to THIS repo**, kept in
-the host's git credential store — **never** committed and **never** in these scripts. If the push fails
-(no credential / no remote configured), the commit is preserved locally and the script exits non-zero
-with an actionable message.
+the host's git credential store, **never** committed and **never** in these scripts. If the push fails,
+the commit stays in the job checkout, the run exits non-zero, and the next run pushes it.
 
 Dry run (no commit/push): `daily.ps1 -NoPublish` / `daily.sh --no-publish`. Skip catch-up:
 `-NoCatchUp` / `--no-catch-up`.
 
-## Scheduling the daily job
+## The job checkout (where the scheduled jobs run)
 
-The job is the same on both platforms; only the scheduler differs.
-
-### Windows — Task Scheduler (`schedule-daily.ps1`)
-
-Registers a task that runs `daily.ps1` **daily at the local time from `configs/publish.yaml`**
-(`schedule.time_local`, default **03:00**), configured to **run whether the user is logged on or not**,
-**wake the computer to run**, start on next wake if a fire was missed, and run on battery.
+The scheduled jobs never run in a developer checkout. They run in a **dedicated job checkout**: a git
+worktree of this repository with a detached HEAD at `origin/main`, outside the developer checkout,
+carrying the marker file `.caos-seismic-job`. `job` first runs `caos-seismic job-sync` (fast-forward to
+`main`, pushing any data commit an earlier run could not push), then the job itself, so `main` has one
+writer and the developer checkout's branch never matters. The scripts always run the code of the
+checkout they live in (its `src/` goes first on `PYTHONPATH`), and `-VenvPath` / `--venv` lets the job
+checkout reuse an existing environment. See `docs/deploy.md` §4 for the rationale and operations.
 
 ```powershell
-# from an ELEVATED PowerShell:
-.\scripts\schedule-daily.ps1                 # register (idempotent; reads the time from publish.yaml)
-.\scripts\schedule-daily.ps1 -Time 03:30     # override the time
-.\scripts\schedule-daily.ps1 -Remove         # unregister
+# In the developer checkout (Windows):
+.\scripts\setup-job-checkout.ps1                   # creates <parent>\<repo>.job + copies the data stores
+.\scripts\setup-job-checkout.ps1 -RefreshData      # re-copy the data stores after rebuilding one here
+
+# In the job checkout:
+.\scripts\job.ps1 -Job daily -NoPublish -VenvPath <env>   # dry run: compute only, no git write
+.\scripts\job.ps1 -SyncOnly -VenvPath <env>               # job-sync only
+.\scripts\job.ps1 -Job daily -VenvPath <env>              # what the daily task runs
+.\scripts\job.ps1 -Job outlook -VenvPath <env>            # what the weekly task runs
+```
+
+Each run writes `logs/job-<job>-<UTC stamp>.log` in the job checkout and holds `logs/job.lock`, so the
+daily and weekly jobs never overlap.
+
+## Scheduling the jobs
+
+The job is the same on both platforms; only the scheduler differs. Both schedulers run `job` from the
+job checkout.
+
+### Windows: Task Scheduler (`schedule-daily.ps1`, `schedule-outlook.ps1`)
+
+Run them **from the job checkout** (they refuse to run anywhere else); `setup-job-checkout.ps1` prints
+the exact commands. `schedule-daily.ps1` registers a task that runs `job.ps1 -Job daily` **daily at the
+local time from `configs/publish.yaml`** (`schedule.time_local`, default **03:00**, kept local across
+daylight saving); `schedule-outlook.ps1` registers `job.ps1 -Job outlook` weekly (default Sunday 04:00).
+Both **run whether the user is logged on or not**, **wake the computer to run**, start on next wake if a
+fire was missed, run on battery, and never start a second instance.
+
+```powershell
+# from an ELEVATED PowerShell, in the job checkout:
+.\scripts\schedule-daily.ps1   -VenvPath <env>   # register (idempotent; reads the time from publish.yaml)
+.\scripts\schedule-outlook.ps1 -VenvPath <env>
+.\scripts\schedule-daily.ps1 -Time 03:30 -VenvPath <env>   # override the time
+.\scripts\schedule-daily.ps1 -Remove                       # unregister
 
 Get-ScheduledTask -TaskName 'CAOS_SEISMIC daily forecast' | Get-ScheduledTaskInfo   # inspect
 Start-ScheduledTask  -TaskName 'CAOS_SEISMIC daily forecast'                         # run now
 ```
 
-The task uses an **S4U** principal (run whether logged on or not, no stored password, no interactive
-session) at the highest run level. Registration requires admin.
+The tasks use an **S4U** principal (run whether logged on or not, no stored password, no interactive
+session) at the highest run level, so registration requires an elevated shell.
+`-LogonType Interactive -RunLevel Limited` registers a run-only-when-logged-on task without elevation,
+which is useful to test the task end to end.
 
-### Linux VPS — systemd timer (portable fallback)
+### Linux VPS: systemd timer (portable fallback)
 
-`caos-seismic-daily.service` (oneshot, runs `daily.sh`) + `caos-seismic-daily.timer`
-(`OnCalendar=*-*-* 03:00:00`, `Persistent=true` for missed-run catch-up).
+`caos-seismic-daily.service` (oneshot, runs `job.sh --job daily` in the job checkout) +
+`caos-seismic-daily.timer` (`OnCalendar=*-*-* 03:00:00`, `Persistent=true` for missed-run catch-up).
 
 ```bash
 # 1) clone the repo (e.g. /opt/caos-seismic), run scripts/setup.sh as the run user
-# 2) set the host timezone so 03:00 is local:
+# 2) as the run user, create the job checkout (/opt/caos-seismic.job):
+/opt/caos-seismic/scripts/setup-job-checkout.sh
+# 3) set the host timezone so 03:00 is local:
 sudo timedatectl set-timezone America/Santiago
-# 3) edit WorkingDirectory + User/Group in caos-seismic-daily.service, then install both units:
+# 4) edit WorkingDirectory, --venv, User/Group and ReadWritePaths in caos-seismic-daily.service, then:
 sudo cp scripts/caos-seismic-daily.service scripts/caos-seismic-daily.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now caos-seismic-daily.timer
 systemctl list-timers caos-seismic-daily.timer        # verify next run
 sudo systemctl start caos-seismic-daily.service        # test now
-journalctl -u caos-seismic-daily -e                    # logs
+journalctl -u caos-seismic-daily -e                    # logs (also under logs/ in the job checkout)
 ```
 
-`OnCalendar` uses the host's local time zone; set it (step 2) so **03:00** matches
+`OnCalendar` uses the host's local time zone; set it (step 3) so **03:00** matches
 `schedule.time_local`. `Persistent=true` runs the job on next boot if the host was off at 03:00; the
-catch-up backfill in `daily.sh` then fills any missed issue dates.
+catch-up backfill in `caos-seismic daily` then fills any missed issue dates.
 
 ## Conventions
 

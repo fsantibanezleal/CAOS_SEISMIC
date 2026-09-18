@@ -80,7 +80,9 @@ Heavy compute is **offline**; the web app is a **pure static viewer with no proc
   `cron`, ~03:00 local). ETAS fitting is CPU seconds-to-minutes; the GPU accelerates the challenger and
   large Monte-Carlo ensembles.
 - **Publish:** the job commits the compact artifact (a few hundred KB to a few MB) to this repo. Content
-  updates once per day as one small commit. The commit is **scoped** to `results/` + `manifests/`.
+  updates once per day as one small commit. The commit is **scoped** to `results/` + `manifests/` and
+  is made in a dedicated job checkout, then fast-forward pushed to `main`, the only branch that
+  receives data.
 - **Web:** a Vite + React + TypeScript SPA (i18n EN→ES, light/dark, dark-technical palette) renders the
   committed artifact. **No server computes anything** — the "API" is static JSON assets.
 
@@ -98,7 +100,7 @@ CAOS_SEISMIC/
 │   ├── eval/                # pyCSEP wrappers (consistency + comparison tests, reliability)
 │   └── cli.py               # entry points used by scripts/
 ├── configs/                 # region (Chile), grid, completeness, declustering, ETAS, horizons
-├── scripts/                 # parallel *.ps1 + *.sh: setup, fetch, build-features, train, infer, daily, dev, check
+├── scripts/                 # parallel *.ps1 + *.sh: setup, fetch, build-features, train, infer, daily, job, dev, check, ...
 ├── app/                     # the static web app (Vite + React + TS)
 ├── docs/                    # deep technical docs: methodology (equations), model, data, evaluation, web
 ├── manifests/               # provenance (VERSIONED): what was fetched, Mc grid, decluster, model, params
@@ -136,8 +138,10 @@ scripts/infer.sh            # daily forecast clock → compact artifact in resul
 cd app && npm install && npm run dev
 ```
 
-The daily production job is `scripts/daily.{ps1,sh}` (scheduled ~03:00): `fetch → infer → scoped commit
-→ push`. See [`docs/deploy.md`](docs/deploy.md).
+The production jobs run from a dedicated job checkout through `scripts/job.{ps1,sh}`: the daily
+forecast at 03:00 local (fetch, infer, scoped commit, fast-forward push to `main`) and the weekly 30-day
+outlook. `scripts/daily.{ps1,sh}` wrap the daily job for local dry runs. See
+[`docs/deploy.md`](docs/deploy.md) §4.
 
 ## Preprint
 

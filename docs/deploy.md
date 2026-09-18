@@ -185,6 +185,11 @@ low I/O priority and crawls whenever anything else keeps the machine busy.
   local code changes, and the publish refuses anything but data commits.
 - **Concurrency.** A lock file (`logs\job.lock`, held for the whole run) keeps the daily and weekly
   jobs from overlapping.
+- **Interpreter crashes.** A step whose interpreter dies abnormally is retried once. For example, on
+  2026-09-18 the Microsoft Store Python 3.12 on the workstation died several times in `ntdll.dll` with
+  `0xC000070A`. A Python-level failure (exit 1 or 2) is final and is not retried. The retry is safe:
+  `job-sync` is idempotent, and a re-run job either recomputes and commits, or pushes the commit the
+  dead run already made.
 
 ### 4.4 Branch flow
 

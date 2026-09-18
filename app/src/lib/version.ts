@@ -2,7 +2,7 @@
 // hand per release (X.XX.XXX-style); the rest are injected at build time by
 // vite.config.ts `define`.
 
-export const APP_VERSION = "0.02.000";
+export const APP_VERSION = "0.02.001";
 
 export const APP_BUILD_TIME: string =
   typeof __APP_BUILD_TIME__ !== "undefined" ? __APP_BUILD_TIME__ : "dev";

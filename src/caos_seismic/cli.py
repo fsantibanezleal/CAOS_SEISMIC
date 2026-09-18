@@ -17,6 +17,8 @@ Subcommands (kept 1:1 with the scripts):
     train            fit the smoothed-seismicity null + space-time ETAS (+ R-J fallback)
     infer            run the daily forecast clock -> compact artifact under results/
     daily            the production job: fetch -> infer -> scoped publish (commit + push)
+    outlook          the weekly job: 30-day geodetic outlook -> validate -> scoped publish
+    job-sync         sync the dedicated job checkout to the publish branch (run before every job)
     backanalysis     pseudo-prospective CSEP back-analysis over a date range (one region/view)
     backanalysis-global  multi-view + global back-analysis: context gain vs ETAS + high/low bias
     check            environment + repo + config sanity checks (no network, no science deps required)
@@ -32,9 +34,10 @@ import platform
 import subprocess
 import sys
 import tempfile
+import time
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import NamedTuple, Optional
 
 import typer
 
@@ -326,9 +329,10 @@ def daily(
 
     Publishing is **scoped**: only the configs/publish.yaml `git.add_allowlist` paths (results/,
     manifests/) are staged — never `git add -A`/`.`. The commit aborts if anything outside the allowlist
-    is staged. The wrapper scripts (scripts/daily.*) perform the actual commit + push; this command runs
-    the pipeline and (unless --no-publish) the scoped staging + commit + push itself so the job works
-    even when invoked directly (e.g. from a systemd unit).
+    is staged. This command performs the whole job itself (the scripts only wrap it). In production it
+    runs in the dedicated job checkout (scripts/job.*, after `job-sync`), where the data commit is
+    fast-forward pushed to the publish branch; see :func:`_publish_scoped`. `--no-publish` computes only
+    (no git write), which is safe in any checkout.
     """
     reg = load_region(region)
     publish_cfg = load("publish")
@@ -387,6 +391,21 @@ def outlook(
         return
     _publish_scoped(load("publish"), region=reg.id, n_dates=1)
     _echo("outlook · published.")
+
+
+@app.command(name="job-sync")
+def job_sync() -> None:
+    """Sync the dedicated job checkout to the publish branch (scripts/job.* run it before every job).
+
+    It runs in its own process before `daily` / `outlook`, so the job then imports ONE consistent version
+    of the code. It refuses to run anywhere but the job checkout (a detached git worktree carrying the
+    marker file, see docs/deploy.md). It (1) refuses local changes outside the publish allowlist, because
+    production never runs uncommitted code; (2) discards the uncommitted outputs of an interrupted run
+    under the allowlist (the catch-up window recomputes those days); (3) fetches the publish branch; and
+    (4) fast-forwards to it or, when an earlier run committed data but could not push it, replays those
+    commits on top of it and pushes them now, so a failed push is never lost.
+    """
+    _job_sync(load("publish"))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -487,6 +506,22 @@ def check(
         _echo(f"git       · {out.stdout.strip()} (branch: {_git('branch', '--show-current', check=False).stdout.strip() or '?'})")
     except Exception as exc:  # noqa: BLE001
         warnings.append(f"git not available / not a work tree: {exc}")
+
+    # Publish mode: the dedicated job checkout (production) or a developer checkout (legacy path).
+    try:
+        if (REPO_ROOT / JOB_MARKER).is_file():
+            head_branch = _head_branch()
+            if head_branch is None:
+                _echo("job ckout · yes (marker present, detached HEAD): daily/outlook publish from here")
+            else:
+                problems.append(
+                    f"job checkout marker present but branch '{head_branch}' is checked out; "
+                    "the job checkout must stay on a detached HEAD."
+                )
+        else:
+            _echo("job ckout · no (developer checkout): publishing here uses the deprecated legacy path")
+    except Exception as exc:  # noqa: BLE001
+        warnings.append(f"could not determine the publish mode: {exc}")
 
     # Provenance hash (proves config.py + configs are coherent).
     try:
@@ -706,80 +741,349 @@ def _missed_issue_dates(region_id: str, today: date, max_back: int = 7) -> list[
     return missed
 
 
-def _publish_scoped(publish_cfg: dict, *, region: str, n_dates: int) -> None:
-    """Stage ONLY the allowlist paths, abort if anything else is staged, commit with the configured prefix, push.
+# ─────────────────────────────────────────────────────────────────────────────
+# Publishing (git-as-data). Production publishes from ONE place: the dedicated job checkout.
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# The job checkout is a git worktree of this repository with a DETACHED HEAD at the publish branch, outside
+# every developer checkout, used by nothing but the scheduled jobs (scripts/job.ps1, scripts/job.sh). It is
+# marked by JOB_MARKER. There, a run is: `job-sync` (fast-forward to the publish branch) -> compute -> commit
+# on the detached HEAD -> fast-forward push of that same commit. The publish branch gets exactly one commit
+# per run, and no developer branch ever receives a data commit.
 
-    This is the same scoped-publish discipline the wrapper scripts enforce; implemented here so the
-    `daily` command is self-sufficient when invoked directly (systemd / Task Scheduler).
-    """
-    git_cfg = publish_cfg.get("git", {})
+#: Marker file identifying the dedicated job checkout (created by scripts/setup-job-checkout.*; gitignored).
+JOB_MARKER = ".caos-seismic-job"
+
+#: Test-only override of the publish branch (an end-to-end check against a scratch branch). Unset in production.
+ENV_PUBLISH_BRANCH = "CAOS_SEISMIC_PUBLISH_BRANCH"
+
+#: Retry policy of the network steps: the laptop may have just woken up and the network can lag behind.
+_GIT_ATTEMPTS = 4
+_GIT_RETRY_DELAY_S = 20.0
+
+
+class _PublishSettings(NamedTuple):
+    allowlist: list[str]
+    prefixes: tuple[str, ...]
+    prefix: str
+    remote: str
+    branch: str
+
+
+def _publish_settings(publish_cfg: dict) -> _PublishSettings:
+    """Validated publish settings from configs/publish.yaml ``git`` (plus the test-only branch override)."""
+    git_cfg = publish_cfg.get("git", {}) or {}
     allowlist = [str(p) for p in git_cfg.get("add_allowlist", [])]
     if not allowlist:
         raise _fail("publish.yaml git.add_allowlist is empty; refusing to publish.")
     for entry in allowlist:
         if entry.strip() in {".", "-A", "--all", "*"}:
             raise _fail(f"publish.yaml allowlist has a non-scoped entry {entry!r}; refusing to publish.")
+    branch = os.environ.get(ENV_PUBLISH_BRANCH, "").strip() or str(git_cfg.get("publish_branch", "main"))
+    return _PublishSettings(
+        allowlist=allowlist,
+        prefixes=tuple(e.strip().rstrip("/") for e in allowlist),
+        prefix=str(git_cfg.get("commit_message_prefix", "data: daily forecast")),
+        remote=str(git_cfg.get("remote", "origin")),
+        branch=branch,
+    )
 
-    prefix = str(git_cfg.get("commit_message_prefix", "data: daily forecast"))
-    remote = str(git_cfg.get("remote", "origin"))
-    branch = str(git_cfg.get("publish_branch", "main"))
 
-    # Reset the index so a pre-existing staged change cannot ride along.
-    _git("reset", "-q", check=False)
-    # Stage only the allowlist.
-    for entry in allowlist:
+def _in_allowlist(path: str, prefixes: tuple[str, ...]) -> bool:
+    return any(path == p or path.startswith(p + "/") for p in prefixes)
+
+
+def _publish_message(prefix: str, region: str, n_dates: int) -> str:
+    suffix = f"{region} {date.today().isoformat()}" + (f" (+{n_dates - 1} catch-up)" if n_dates > 1 else "")
+    return f"{prefix}: {suffix}"
+
+
+def _head_branch() -> str | None:
+    """The checked-out branch name, or ``None`` when HEAD is detached."""
+    res = _git("symbolic-ref", "-q", "--short", "HEAD", check=False)
+    if res.returncode != 0:
+        return None
+    return res.stdout.strip() or None
+
+
+def _is_job_checkout() -> bool:
+    """True in the dedicated job checkout: the marker file is present and HEAD is detached."""
+    return (REPO_ROOT / JOB_MARKER).is_file() and _head_branch() is None
+
+
+def _require_job_checkout(action: str) -> None:
+    """Fail with an actionable message unless this is the dedicated job checkout."""
+    if not (REPO_ROOT / JOB_MARKER).is_file():
+        raise _fail(
+            f"{action} runs only in the dedicated job checkout (a detached git worktree carrying the "
+            f"'{JOB_MARKER}' marker; create it with scripts/setup-job-checkout.ps1 or .sh). "
+            f"{REPO_ROOT} is not one. See docs/deploy.md section 4."
+        )
+    branch = _head_branch()
+    if branch is not None:
+        raise _fail(
+            f"{action}: the job checkout has branch '{branch}' checked out; it must stay on a detached "
+            "HEAD (git checkout --detach), so no branch ever receives a data commit."
+        )
+
+
+def _dirty_paths() -> list[str]:
+    """Paths with local changes (staged, unstaged, or untracked and not ignored), repo-relative."""
+    out = _git("status", "--porcelain=v1", "-z", "--untracked-files=all", check=True).stdout
+    fields = out.split("\0")
+    paths: list[str] = []
+    i = 0
+    while i < len(fields):
+        entry = fields[i]
+        i += 1
+        if not entry:
+            continue
+        status, path = entry[:2], entry[3:]
+        paths.append(path)
+        if "R" in status or "C" in status:  # rename / copy: the next field is the source path
+            if i < len(fields) and fields[i]:
+                paths.append(fields[i])
+            i += 1
+    return paths
+
+
+def _fetch_branch(remote: str, branch: str) -> str:
+    """Fetch ``remote/branch`` with retries and return its tip. Fails (exit 1) when it stays unreachable."""
+    last = ""
+    for attempt in range(1, _GIT_ATTEMPTS + 1):
+        res = _git("fetch", "-q", remote, f"refs/heads/{branch}", check=False)
+        if res.returncode == 0:
+            return _git("rev-parse", "FETCH_HEAD", check=True).stdout.strip()
+        last = res.stderr.strip()
+        if attempt < _GIT_ATTEMPTS:
+            _echo(
+                f"git · fetch {remote}/{branch} failed (attempt {attempt}/{_GIT_ATTEMPTS}): {last}; "
+                f"retrying in {_GIT_RETRY_DELAY_S:.0f} s",
+                err=True,
+            )
+            time.sleep(_GIT_RETRY_DELAY_S)
+    raise _fail(f"cannot fetch {remote}/{branch} after {_GIT_ATTEMPTS} attempts: {last}")
+
+
+def _is_ancestor(ancestor: str, descendant: str) -> bool:
+    return _git("merge-base", "--is-ancestor", ancestor, descendant, check=False).returncode == 0
+
+
+def _unpushed_commits(base: str) -> list[str]:
+    """Commits on HEAD that ``base`` does not contain, oldest first."""
+    return _git("rev-list", "--reverse", f"{base}..HEAD", check=True).stdout.split()
+
+
+def _non_data_commits(commits: list[str], s: _PublishSettings) -> list[str]:
+    """The commits that are NOT job data commits (one parent, the publish prefix, allowlist paths only)."""
+    bad: list[str] = []
+    for sha in commits:
+        subject = _git("log", "-1", "--format=%s", sha, check=True).stdout.strip()
+        parents = _git("rev-list", "--parents", "-n", "1", sha, check=True).stdout.split()[1:]
+        changed = _git("diff-tree", "--no-commit-id", "--name-only", "-r", "-z", sha, check=True).stdout
+        files = [f for f in changed.split("\0") if f]
+        if (
+            not subject.startswith(s.prefix)
+            or len(parents) != 1
+            or not all(_in_allowlist(f, s.prefixes) for f in files)
+        ):
+            bad.append(sha)
+    return bad
+
+
+def _push_data_commits(s: _PublishSettings) -> bool:
+    """Fast-forward ``remote/branch`` to HEAD, publishing every unpushed job data commit. True on success.
+
+    Every attempt re-fetches the branch. If it moved since the job checkout synced (a PR merged during the
+    run), the data commits are first rebased on top of it: they touch only the allowlist paths, so this is
+    conflict-free unless the same artifact changed upstream, which aborts with a clear error and keeps the
+    commits for the next `job-sync`. HEAD is never pushed while it carries anything but job data commits.
+    """
+    for attempt in range(1, _GIT_ATTEMPTS + 1):
+        base = _fetch_branch(s.remote, s.branch)
+        backlog = _unpushed_commits(base)
+        if not backlog:
+            return True
+        bad = _non_data_commits(backlog, s)
+        if bad:
+            raise _fail(
+                "refusing to push: HEAD carries commits that are not job data commits "
+                f"({[c[:9] for c in bad]}). Inspect the job checkout."
+            )
+        if not _is_ancestor(base, "HEAD"):
+            rebased = _git("rebase", "-q", base, check=False)
+            if rebased.returncode != 0:
+                _git("rebase", "--abort", check=False)
+                raise _fail(
+                    f"could not replay {len(backlog)} data commit(s) on top of {s.remote}/{s.branch} "
+                    f"({(rebased.stderr or rebased.stdout).strip()}). They stay in the job checkout; the "
+                    "next `job-sync` resolves it."
+                )
+            _echo(f"publish · rebased {len(backlog)} data commit(s) onto {s.remote}/{s.branch} ({base[:9]}).")
+        push = _git("push", "-q", s.remote, f"HEAD:refs/heads/{s.branch}", check=False)
+        if push.returncode == 0:
+            head = _git("rev-parse", "HEAD", check=True).stdout.strip()
+            _echo(f"publish · pushed {len(backlog)} commit(s); {s.remote}/{s.branch} is at {head[:9]}.")
+            return True
+        _echo(
+            f"publish · push to {s.remote}/{s.branch} failed (attempt {attempt}/{_GIT_ATTEMPTS}): "
+            f"{push.stderr.strip()}",
+            err=True,
+        )
+        if attempt < _GIT_ATTEMPTS:
+            time.sleep(_GIT_RETRY_DELAY_S)
+    return False
+
+
+def _stage_allowlist(s: _PublishSettings) -> list[str]:
+    """Reset the index, stage ONLY the allowlist, verify nothing else got staged; return the staged paths."""
+    _git("reset", "-q", check=False)  # a pre-existing staged change cannot ride along
+    for entry in s.allowlist:
         _git("add", "--", entry, check=True)
-
-    # Verify nothing outside the allowlist got staged.
-    staged = _git("diff", "--cached", "--name-only", check=True).stdout.splitlines()
-    staged = [s for s in staged if s.strip()]
-    if not staged:
-        _echo("publish · nothing to commit (no new artifacts).")
-        return
-    allowed_prefixes = tuple(e.rstrip("/") for e in allowlist)
-    offenders = [s for s in staged if not any(s == p or s.startswith(p + "/") for p in allowed_prefixes)]
+    staged = [p for p in _git("diff", "--cached", "--name-only", check=True).stdout.splitlines() if p.strip()]
+    offenders = [p for p in staged if not _in_allowlist(p, s.prefixes)]
     if offenders:
         _git("reset", "-q", check=False)
         raise _fail(
             "scoped-publish guard tripped: paths outside the allowlist were staged "
             f"({offenders}). Index reset; nothing committed."
         )
+    return staged
 
-    today_iso = date.today().isoformat()
-    suffix = f"{region} {today_iso}" + (f" (+{n_dates - 1} catch-up)" if n_dates > 1 else "")
-    message = f"{prefix}: {suffix}"
-    # Commit locally too (keeps the working branch's tree clean; harmless if it later rides a PR).
+
+def _job_sync(publish_cfg: dict) -> None:
+    """Implementation of `job-sync` (see the command docstring)."""
+    s = _publish_settings(publish_cfg)
+    _require_job_checkout("job-sync")
+
+    foreign = [p for p in _dirty_paths() if not _in_allowlist(p, s.prefixes)]
+    if foreign:
+        raise _fail(
+            f"job-sync: the job checkout has local changes outside {s.allowlist}: {foreign[:10]}. "
+            "Production never runs uncommitted code; clean the job checkout and rerun."
+        )
+    # Uncommitted leftovers under the allowlist come from an interrupted run: drop them. Ignored files
+    # (e.g. results/checkpoints/) are kept: `clean` runs without -x.
+    _git("reset", "-q", check=True)
+    for entry in s.allowlist:
+        _git("checkout", "-q", "HEAD", "--", entry, check=False)  # no-op when nothing is tracked there
+    _git("clean", "-fdq", "--", *s.allowlist, check=True)
+
+    head = _git("rev-parse", "HEAD", check=True).stdout.strip()
+    base = _fetch_branch(s.remote, s.branch)
+    if head == base:
+        _echo(f"job-sync · up to date with {s.remote}/{s.branch} ({base[:9]}).")
+        return
+    if _is_ancestor(head, base):
+        _git("checkout", "-q", "--detach", base, check=True)
+        _echo(f"job-sync · fast-forwarded from {head[:9]} to {s.remote}/{s.branch} ({base[:9]}).")
+        return
+
+    # HEAD holds commits the branch lacks: data commits of an earlier run whose push failed.
+    backlog = _unpushed_commits(base)
+    bad = _non_data_commits(backlog, s)
+    if bad:
+        raise _fail(
+            f"job-sync: the job checkout holds commits that are not job data commits ({[c[:9] for c in bad]}); "
+            "refusing to publish them. Inspect the job checkout."
+        )
+    _echo(
+        f"job-sync · {len(backlog)} data commit(s) from an earlier run are not on {s.remote}/{s.branch} yet: "
+        f"{[c[:9] for c in backlog]}"
+    )
+    if not _is_ancestor(base, "HEAD"):
+        rebased = _git("rebase", "-q", base, check=False)
+        if rebased.returncode != 0:
+            _git("rebase", "--abort", check=False)
+            _echo(
+                f"job-sync · WARNING: they conflict with {s.remote}/{s.branch}; dropping them from the job "
+                "checkout (still in its HEAD reflog). The catch-up window recomputes the missed days.",
+                err=True,
+            )
+            _git("checkout", "-q", "--detach", base, check=True)
+            return
+    if _push_data_commits(s):
+        _echo("job-sync · backlog published.")
+    else:
+        _echo("job-sync · WARNING: backlog not pushed yet; the publish step retries after the run.", err=True)
+
+
+def _publish_scoped(publish_cfg: dict, *, region: str, n_dates: int) -> None:
+    """Stage ONLY the allowlist paths, abort if anything else is staged, commit with the prefix, publish.
+
+    **Job checkout (production).** The commit lands on the detached HEAD and that same commit is
+    fast-forward pushed to the publish branch (:func:`_push_data_commits`). If the push fails, the commit
+    stays in the job checkout, the command exits 1, and the next run pushes it (`job-sync`), so no day is
+    lost.
+
+    **Anywhere else (a developer checkout on a branch): the DEPRECATED legacy path**
+    (:func:`_publish_scoped_legacy`). It commits on the checked-out branch AND pushes a second,
+    commit-tree copy to the publish branch, which is how develop and main diverged. It stays only until
+    the scheduled tasks run from the job checkout (their registration needs an elevated shell); it no
+    longer falls back to pushing the developer branch when the fetch fails.
+    """
+    s = _publish_settings(publish_cfg)
+    if not (REPO_ROOT / JOB_MARKER).is_file():
+        _echo(
+            "publish · WARNING: publishing from a developer checkout (deprecated legacy path: commits on "
+            "the checked-out branch AND on the publish branch). Run the scheduled jobs from the dedicated "
+            "job checkout (scripts/setup-job-checkout.ps1, docs/deploy.md section 4).",
+            err=True,
+        )
+        _publish_scoped_legacy(s, region=region, n_dates=n_dates)
+        return
+
+    _require_job_checkout("publish")
+    staged = _stage_allowlist(s)
+    if staged:
+        message = _publish_message(s.prefix, region, n_dates)
+        _git("commit", "-q", "-m", message, check=True)
+        _echo(f"publish · committed: {message}")
+    else:
+        _echo("publish · no new artifacts to commit.")
+    if not _push_data_commits(s):
+        _echo(
+            f"publish · push to {s.remote}/{s.branch} failed after {_GIT_ATTEMPTS} attempts; the data "
+            "commit stays in the job checkout and the next run pushes it.",
+            err=True,
+        )
+        raise typer.Exit(1)
+
+
+def _publish_scoped_legacy(s: _PublishSettings, *, region: str, n_dates: int) -> None:
+    """DEPRECATED developer-checkout publish: a local commit on the checked-out branch plus a commit-tree
+    copy pushed to the publish branch. Kept verbatim except that a failed fetch now fails the run instead of
+    pushing the developer branch. Remove once the scheduled tasks run from the job checkout."""
+    staged = _stage_allowlist(s)
+    if not staged:
+        _echo("publish · nothing to commit (no new artifacts).")
+        return
+    message = _publish_message(s.prefix, region, n_dates)
     _git("commit", "-q", "-m", message, check=True)
     _echo(f"publish · committed: {message}")
 
-    push = _publish_push_to_branch(staged, message, remote=remote, branch=branch)
+    push = _publish_push_to_branch(staged, message, remote=s.remote, branch=s.branch)
     if push.returncode != 0:
         _echo(
-            f"publish · commit made locally but push to '{remote}/{branch}' failed:\n"
+            f"publish · commit made locally but push to '{s.remote}/{s.branch}' failed:\n"
             f"{push.stderr.strip()}",
             err=True,
         )
         raise typer.Exit(1)
-    _echo(f"publish · pushed to {remote} {branch}.")
+    _echo(f"publish · pushed to {s.remote} {s.branch}.")
 
 
 def _publish_push_to_branch(
     staged: list[str], message: str, *, remote: str, branch: str
 ) -> subprocess.CompletedProcess[str]:
-    """Push ONLY the scoped artifact changes onto ``remote/branch``, robust to a divergent working branch.
+    """LEGACY: push ONLY the scoped artifact changes onto ``remote/branch`` from a developer branch.
 
-    The daily job runs in a shared working directory that is usually on a *development* branch. A naive
-    ``git push HEAD:main`` is then rejected non-fast-forward (the dev branch lacks main's PR-merge commits),
-    which is exactly why the cron failed with exit 1 while still committing the forecast locally. Instead we
-    rebuild the commit on top of the **current** ``remote/branch`` tip using a scratch index + ``commit-tree``
-    (overlaying only the scoped ``staged`` paths onto that tree), then push that single, conflict-free commit.
-    Disjoint from code paths, so it never carries dev work to main and is always a clean fast-forward.
+    Rebuilds the commit on top of the current ``remote/branch`` tip with a scratch index and
+    ``commit-tree`` (overlaying only the ``staged`` paths), then pushes it. Only the paths that changed
+    against the developer branch are carried, so a day whose own push failed never reaches the publish
+    branch later (this lost the 2026-09-08 forecast). The job checkout path does not have that failure mode.
     """
-    fetched = _git("fetch", remote, branch, check=False)
-    base = _git("rev-parse", "FETCH_HEAD", check=False).stdout.strip()
-    if fetched.returncode != 0 or not base:
-        # No reachable remote branch (fresh remote / offline) — fall back to the simple push.
-        return _git("push", remote, f"HEAD:{branch}", check=False)
+    base = _fetch_branch(remote, branch)  # fails the run when unreachable: never push the developer branch
 
     idx = tempfile.NamedTemporaryFile(suffix=".idx", delete=False)
     idx.close()

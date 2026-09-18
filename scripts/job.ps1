@@ -52,6 +52,16 @@ $label = if ($SyncOnly) { 'sync' } else { $Job }
 $log = Join-Path $logDir ("job-{0}-{1}.log" -f $label, (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ'))
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 
+# HEAD of this checkout, for the log. git is judged by its exit code only: under the script-wide 'Stop'
+# preference, Windows PowerShell 5.1 would turn a git stderr line into a fatal error whenever the caller
+# redirects this script's output (the preference set here is local to the function).
+function Get-JobHead {
+  $ErrorActionPreference = 'Continue'
+  $h = & git -C $repo rev-parse --short HEAD
+  if ($LASTEXITCODE -ne 0 -or -not $h) { return '?' }
+  return "$h".Trim()
+}
+
 function Write-JobLog([string]$Message) {
   $line = '[{0}] {1}' -f (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ'), $Message
   [System.IO.File]::AppendAllText($log, $line + [Environment]::NewLine, $utf8NoBom)
@@ -90,7 +100,7 @@ while ($null -eq $lock) {
 
 $exitCode = 0
 try {
-  $head = (& git -C $repo rev-parse --short HEAD).Trim()
+  $head = Get-JobHead
   Write-JobLog "lock acquired; HEAD $head"
   if (-not $NoPublish) {
     Write-JobLog 'caos-seismic job-sync'
@@ -105,7 +115,7 @@ try {
     $code = Invoke-CaosToLog -LogFile $log -CaosArgs $caosArgs
     if ($code -ne 0) { throw "caos-seismic $($caosArgs -join ' ') exited with code $code" }
   }
-  $head = (& git -C $repo rev-parse --short HEAD).Trim()
+  $head = Get-JobHead
   Write-JobLog "done; HEAD $head"
 } catch {
   $exitCode = 1

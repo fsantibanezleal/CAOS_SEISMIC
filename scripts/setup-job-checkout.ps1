@@ -39,10 +39,21 @@ if (-not $Path) { $Path = Join-Path (Split-Path $repo -Parent) ((Split-Path $rep
 if (-not $VenvPath) { $VenvPath = Join-Path $repo '.venv' }
 $marker = Join-Path $Path $script:JobMarker
 
+# git reports progress on stderr. When the caller redirects this script's output, Windows PowerShell 5.1 turns
+# each stderr line into an error record, which the script-wide 'Stop' preference would make fatal. Judge git by
+# its exit code only (the preference set here is local to the function).
 function Invoke-RepoGit {
   param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
-  & git -C $repo @GitArgs
+  $ErrorActionPreference = 'Continue'
+  & git -C $repo @GitArgs | Out-Host
   if ($LASTEXITCODE -ne 0) { throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE." }
+}
+function Get-RepoGit {
+  param([Parameter(ValueFromRemainingArguments = $true)][string[]]$GitArgs)
+  $ErrorActionPreference = 'Continue'
+  $out = @(& git -C $repo @GitArgs)
+  if ($LASTEXITCODE -ne 0) { throw "git $($GitArgs -join ' ') failed with exit code $LASTEXITCODE." }
+  return $out
 }
 
 if (Test-Path $Path) {
@@ -56,7 +67,7 @@ if (Test-Path $Path) {
   if ($RefreshData) { throw "no job checkout at '$Path' to refresh." }
   Write-Step "Fetching $Remote/$Branch"
   Invoke-RepoGit fetch $Remote $Branch
-  $base = (& git -C $repo rev-parse FETCH_HEAD).Trim()
+  $base = "$(Get-RepoGit rev-parse FETCH_HEAD)".Trim()
   Write-Step "Adding the job worktree at $Path (detached at $Remote/$Branch, $($base.Substring(0, 9)))"
   Invoke-RepoGit worktree add --detach $Path $base
   $note = "Dedicated CAOS_SEISMIC job checkout: the scheduled jobs run here (scripts\job.ps1). " +
@@ -67,8 +78,7 @@ if (Test-Path $Path) {
 
 if ($RefreshData) {
   Write-Step "Copying the gitignored data stores from $repo"
-  $files = @(& git -C $repo ls-files --others --ignored --exclude-standard -- data results)
-  if ($LASTEXITCODE -ne 0) { throw "git ls-files failed with exit code $LASTEXITCODE." }
+  $files = Get-RepoGit ls-files --others --ignored --exclude-standard -- data results
   foreach ($rel in $files) {
     if (-not $rel) { continue }
     $dst = Join-Path $Path $rel

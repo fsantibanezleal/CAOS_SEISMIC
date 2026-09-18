@@ -62,10 +62,10 @@
   <!-- bridge -->
   <rect class="bx bx-hi" x="326" y="170" width="226" height="150" rx="10"/>
   <text class="ttl" x="338" y="192">git-as-data publish</text>
-  <text class="sub" x="338" y="207">scoped, robust to the work branch</text>
+  <text class="sub" x="338" y="207">scoped, from the job checkout</text>
   <rect class="bx" x="338" y="218" width="202" height="40" rx="6"/>
   <text class="cd mono" x="348" y="234">_publish_scoped()</text>
-  <text class="mu" x="348" y="249">commit-tree onto origin/main</text>
+  <text class="mu" x="348" y="249">fast-forward push to main</text>
   <rect class="bx" x="338" y="264" width="202" height="44" rx="6"/>
   <text class="it" x="348" y="281">Pages workflow copies</text>
   <text class="cd mono" x="348" y="296">results/* → dist/data</text>

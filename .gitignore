@@ -62,6 +62,11 @@ Thumbs.db
 .train*.py
 .infer.log
 
+# ── Dedicated job checkout (scripts/setup-job-checkout.*): its marker file and per-run logs ──────
+.caos-seismic-job
+.caos-seismic-job-branch
+logs/
+
 # ── KEEP (explicitly tracked) ─────────────────────────────────────────────
 # configs/, manifests/, docs/, src/, scripts/, app/src/, and the compact
 # daily forecast artifacts under results/ are versioned on purpose.

@@ -520,7 +520,7 @@ only at the horizon where it earns skill.
 **Product.** A new `/outlook` route renders the 30-day expected-count field (deck.gl heatmap, 119,640
 cells, n30=77.7 vs ETAS 64.3) + the validation table, with explicit honest framing. The generation is
 productionised as `inference.outlook` + a weekly `caos-seismic outlook` CLI job (the geodetic background is
-time-flat, so weekly — not daily — refit), published via the same robust commit-tree path as the daily job.
+time-flat, so weekly, not daily, refit), published through the same scoped publish as the daily job.
 Screenshot-verified before deploy (real field map + evidence render, no console errors).
 
 **Robustness (a real OOM, fixed at the root).** The first full run crashed with a numpy `MemoryError`: the

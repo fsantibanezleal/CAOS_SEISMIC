@@ -4,12 +4,14 @@
 # A thin wrapper over `caos-seismic daily`, which performs fetch + infer (today + any MISSED prior days)
 # AND the scoped git publish (stage ONLY configs/publish.yaml `git.add_allowlist` = results/ + manifests/,
 # abort if anything outside the allowlist is staged, commit with the configured prefix, push) ENTIRELY in
-# Python -- the single, robust source of truth. The Windows Task Scheduler task (scripts\schedule-daily.ps1)
-# and the systemd timer fire this once per day (~03:00 local, configs/publish.yaml `schedule.time_local`).
+# Python -- the single, robust source of truth. The scheduled task does NOT call this script: it runs
+# scripts\job.ps1 -Job daily from the dedicated job checkout (scripts\setup-job-checkout.ps1), which syncs
+# that checkout first and is the only place that publishes (docs\deploy.md section 4). Use this script for
+# a local dry run.
 #
-#   .\scripts\daily.ps1                  # full job (fetch + infer + publish), region global
 #   .\scripts\daily.ps1 -NoPublish       # fetch + infer only (local dry run, no commit/push)
 #   .\scripts\daily.ps1 -NoCatchUp       # only today's issue date (skip missed-day backfill)
+#   .\scripts\daily.ps1                  # full job, including the publish (meant for the job checkout)
 #
 # Scoped-publish discipline lives in the CLI (cli.py `_publish_scoped`): NEVER `git add -A`/`.`, abort on
 # any out-of-allowlist staged path. Public-safe: no secrets, no machine-specific paths. The push

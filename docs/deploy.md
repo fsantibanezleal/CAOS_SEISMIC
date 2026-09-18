@@ -167,7 +167,8 @@ use it, so they cannot re-point or delete that environment. The schedule scripts
 a job checkout. The tasks run whether the user is logged on or not (S4U principal, highest run level,
 which is why registration needs an elevated shell). They wake the computer, start a missed run on the
 next wake, never start a second instance, and fire at the configured *local* time across daylight
-saving.
+saving. They run at priority 4 (normal): at Task Scheduler's default 7 a job gets below-normal CPU and
+low I/O priority and crawls whenever anything else keeps the machine busy.
 
 ### 4.3 Operate it
 

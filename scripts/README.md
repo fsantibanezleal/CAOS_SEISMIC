@@ -138,7 +138,8 @@ the exact commands. `schedule-daily.ps1` registers a task that runs `job.ps1 -Jo
 local time from `configs/publish.yaml`** (`schedule.time_local`, default **03:00**, kept local across
 daylight saving); `schedule-outlook.ps1` registers `job.ps1 -Job outlook` weekly (default Sunday 04:00).
 Both **run whether the user is logged on or not**, **wake the computer to run**, start on next wake if a
-fire was missed, run on battery, and never start a second instance.
+fire was missed, run on battery, never start a second instance, and run at priority 4 (normal; the
+Task Scheduler default of 7 starves the job's CPU and I/O on a busy machine).
 
 ```powershell
 # from an ELEVATED PowerShell, in the job checkout:

@@ -87,6 +87,8 @@ $trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek $Day -At $at
 $trigger.StartBoundary = $at.ToString('yyyy-MM-ddTHH:mm:ss')
 
 # Settings: wake to run, start-when-available (catch-up if the machine was off), run on battery, 3h cap.
+# Priority 4 (normal): Task Scheduler's default 7 runs the job at below-normal CPU and low I/O priority,
+# which starves it (minutes per git call) whenever anything else keeps the machine busy.
 $settings = New-ScheduledTaskSettingsSet `
   -WakeToRun `
   -StartWhenAvailable `
@@ -94,7 +96,8 @@ $settings = New-ScheduledTaskSettingsSet `
   -DontStopIfGoingOnBatteries `
   -ExecutionTimeLimit (New-TimeSpan -Hours 3) `
   -RestartCount 1 -RestartInterval (New-TimeSpan -Minutes 30) `
-  -MultipleInstances IgnoreNew
+  -MultipleInstances IgnoreNew `
+  -Priority 4
 
 $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType $LogonType -RunLevel $RunLevel
 

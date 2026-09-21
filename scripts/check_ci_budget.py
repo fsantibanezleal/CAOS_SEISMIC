@@ -21,8 +21,9 @@ from pathlib import Path
 ROOT = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
 TRUNKS = {"develop", "main", "master"}
 STACK_INSTALL = re.compile(
-    r"requirements-precompute|data-pipeline/requirements|download\.pytorch\.org|"
-    r"(pip|uv)\s+(pip\s+)?install\b[^\n#]*\b(torch|torchvision|tensorflow|jax|jaxlib|transformers|lightning)\b"
+    r"download\.pytorch\.org|(pip|uv)\s+(pip\s+)?install\b[^\n#]*("
+    r"requirements-precompute|data-pipeline/requirements|"
+    r"\b(torch|torchvision|tensorflow|jax|jaxlib|transformers|lightning)\b)"
 )
 PIPELINE_RUN = re.compile(
     r"data-pipeline/\S+\.py|\brun_all\b|\bprecompute\b|\bbenchmark\b|stages\.train|--epochs\b|"

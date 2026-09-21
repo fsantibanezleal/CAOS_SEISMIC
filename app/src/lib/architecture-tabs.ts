@@ -44,12 +44,12 @@ export const ARCH_TABS: ArchTab[] = [
       en: [
         "OFFLINE / COMPUTE (on the GPU workstation): the DAILY job `caos-seismic daily` fetches the ISC/USGS catalog, fits the regime-tiled ETAS, and bakes the 1–7 day forecast field. The WEEKLY job `caos-seismic outlook` fits the strain-conditioned neural and bakes the 30-day geodetic background field.",
         "WEB (live in the browser): there is NO live inference. The SPA is a pure REPLAY of the committed artifacts — it loads the gzip-compressed field and renders it with deck.gl + MapLibre. Zero server, zero in-browser compute.",
-        "THE BRIDGE — git-as-data: each job commits only results/ to main via a robust commit-tree publish; the GitHub Pages workflow copies the fresh artifacts into the served bundle, so the live site is always current.",
+        "THE BRIDGE: git-as-data. Each job runs in a dedicated job checkout (a detached worktree of main) and commits only results/ and manifests/; that same commit is fast-forward pushed to main, so main has a single writer. The GitHub Pages workflow copies the fresh artifacts into the served bundle, so the live site is always current.",
       ],
       es: [
         "OFFLINE / CÓMPUTO (en la estación GPU): el job DIARIO `caos-seismic daily` baja el catálogo ISC/USGS, ajusta el ETAS por-régimen y hornea el campo de pronóstico de 1–7 días. El job SEMANAL `caos-seismic outlook` ajusta el neural condicionado por strain y hornea el campo background geodésico de 30 días.",
         "WEB (live en el navegador): NO hay inferencia live. La SPA es una REPRODUCCIÓN pura de los artefactos commiteados — carga el campo comprimido en gzip y lo renderiza con deck.gl + MapLibre. Cero servidor, cero cómputo en el navegador.",
-        "EL PUENTE — git-as-data: cada job commitea solo results/ a main vía un publish robusto con commit-tree; el workflow de GitHub Pages copia los artefactos frescos al bundle servido, así el sitio en vivo siempre está al día.",
+        "EL PUENTE: git-as-data. Cada job corre en un checkout dedicado (un worktree de main con HEAD desacoplado) y hace commit solo de results/ y manifests/; ese mismo commit se sube a main como fast-forward, así main tiene un único escritor. El workflow de GitHub Pages copia los artefactos frescos al bundle servido, así el sitio en vivo siempre está al día.",
       ],
     },
   },

@@ -9,17 +9,17 @@ import { MethodologyEmployed } from "@/components/methodology/MethodologyEmploye
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Route 3 — Methodology (web-app-spec.md §4 / synthesis/methodology.md).
+ * Route 3: Methodology (web-app-spec.md §4 / synthesis/methodology.md).
  *
  * A three-top-tab shell built on the `Tabs` primitive:
  *
- *  1. "Theoretical approaches"  → <MethodologyTheory/>     — the classical, citable equations.
- *  2. "Analytical / ML methods" → <MethodologyAnalytical/> — point processes + the honest
+ *  1. "Theoretical approaches"  → <MethodologyTheory/>    : the classical, citable equations.
+ *  2. "Analytical / ML methods" → <MethodologyAnalytical/>: point processes + the honest
  *                                                            ML-vs-ETAS verdict.
- *  3. "Data & features"         → <MethodologyData/>       — the catalogs + enrichers (Sources)
+ *  3. "Data & features"         → <MethodologyData/>      : the catalogs + enrichers (Sources)
  *                                                            and the catalog-derived + context
  *                                                            features the model ingests.
- *  4. "The version employed"    → <MethodologyEmployed/>   — the v0 ETAS-class model that ships.
+ *  4. "The version employed"    → <MethodologyEmployed/>  : the v0 ETAS-class model that ships.
  *
  * The three components carry the deep per-topic content (rendered with react-katex equations,
  * real citations, and the content primitives); this file only owns the tab shell, the page

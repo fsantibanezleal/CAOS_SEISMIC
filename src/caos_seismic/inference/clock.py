@@ -1,4 +1,4 @@
-"""The forecast clock — make temporal leakage *structurally* impossible.
+"""The forecast clock, make temporal leakage *structurally* impossible.
 
 A daily inference must condition only on what was knowable strictly before the issue time
 ``t_issue``. The cardinal sin of seismicity forecasting evaluation is *temporal leakage*: letting
@@ -7,19 +7,19 @@ prospective CSEP scoring meaningless (model-design.md §9; web-app-spec.md §6 "
 
 The defence here is the same one the evaluation harness uses, so the live product and the
 back-analysis run identical code: a forecaster is *handed* a catalog that has already been sliced
-to ``time < t_issue``. The slice is causal by construction — it is not a discipline the caller has
+to ``time < t_issue``. The slice is causal by construction, it is not a discipline the caller has
 to remember to apply.
 
 Definitions used consistently across the package:
 
-* **conditioning window** ``(-inf, t_issue)`` — events with ``time < t_issue`` (strict). This is
+* **conditioning window** ``(-inf, t_issue)``: events with ``time < t_issue`` (strict). This is
   what ``fit`` / ``expected_counts`` may see.
-* **target window** ``[t_issue, t_issue + horizon)`` — events scored against the forecast. Never
+* **target window** ``[t_issue, t_issue + horizon)``: events scored against the forecast. Never
   visible to the forecaster; only the evaluator sees it, and only after the forecast is sealed.
 
 The boundary is **half-open on the left** (``< t_issue`` conditions, ``>= t_issue`` is target) so an
 event whose origin time equals ``t_issue`` to the nanosecond is treated as *future*, never as
-conditioning data — the conservative choice for honest forecasting.
+conditioning data, the conservative choice for honest forecasting.
 """
 
 from __future__ import annotations
@@ -90,7 +90,7 @@ def target_slice(
 def assert_no_leakage(conditioning: pd.DataFrame, t_issue: pd.Timestamp | str) -> None:
     """Raise :class:`AssertionError` if any conditioning event is at/after ``t_issue``.
 
-    A cheap, always-on invariant the daily job calls right before fitting — defence in depth on top
+    A cheap, always-on invariant the daily job calls right before fitting, defence in depth on top
     of :func:`conditioning_slice`, so a future refactor that bypasses the slice still trips a guard.
     """
     if conditioning.empty:
@@ -109,7 +109,7 @@ class ForecastClock:
 
     Iterating the clock yields ``(t_issue, conditioning_catalog)`` pairs. Each conditioning catalog
     is produced by :func:`conditioning_slice`, so a forecaster driven by the clock can never see the
-    target window — mirroring the real daily product and the pseudo-prospective evaluation
+    target window, mirroring the real daily product and the pseudo-prospective evaluation
     (model-design.md §9; web-app-spec.md §6).
 
     Parameters

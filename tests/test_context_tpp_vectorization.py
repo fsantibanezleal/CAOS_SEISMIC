@@ -3,7 +3,7 @@
 `ContextTPPForecaster.expected_counts` was a 119k-cell × 12-step Python loop calling the net per cell
 (~1.4 M forward passes, ~50 min on the global grid). It is now a single net pass over the parents plus a
 chunked distance matrix (`_triggering_field`). This test pins the two to float32 round-off so the speed-up
-can never silently change a forecast — the regression guard for the optimization in docs/experiments.md E11.
+can never silently change a forecast, the regression guard for the optimization in docs/experiments.md E11.
 """
 
 from __future__ import annotations

@@ -15,9 +15,9 @@ import { APP_BRANCH, APP_BUILD_TIME, APP_COMMIT_SHA, APP_VERSION } from "@/lib/v
  * external icon-links + dedicated theme/language toggles) and a footer (attribution /
  * credits + the always-on honest disclaimer + build provenance).
  *
- * Visual pattern mirrors the sister LDA-HSI app — lucide-react icons (never unicode
+ * Visual pattern mirrors the sister LDA-HSI app: lucide-react icons (never unicode
  * glyphs), an icon-button hover-opacity treatment, accent-soft active nav, and a vertical
- * separator before the toggles — but is implemented with this product's plain-CSS classes
+ * separator before the toggles: but is implemented with this product's plain-CSS classes
  * in src/styles/globals.css (no Tailwind). The brand mark is a seismic `Activity` glyph in
  * the accent colour.
  *

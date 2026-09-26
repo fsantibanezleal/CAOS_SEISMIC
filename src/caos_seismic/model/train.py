@@ -1,4 +1,4 @@
-"""Stage entry point — fit the model family and run a self-consistency CSEP check.
+"""Stage entry point, fit the model family and run a self-consistency CSEP check.
 
 This is the module the ``caos-seismic train`` command delegates to. "Training" for this product is
 deliberately light: ETAS is *conditioned* per issue date at inference time (the forecast clock hands
@@ -6,18 +6,18 @@ it the lawful past), so there is no long offline gradient-descent run to checkpo
 does instead is the **fit + validate** step the methodology mandates before a model may issue public
 forecasts:
 
-1. **Fit the null** — the adaptive smoothed-seismicity background on the **declustered** catalog
+1. **Fit the null**: the adaptive smoothed-seismicity background on the **declustered** catalog
    (the mandatory Poisson reference; :class:`~caos_seismic.model.smoothed.SmoothedSeismicityForecaster`).
-2. **Fit ETAS** — space-time ETAS by MLE on the **full un-declustered** catalog before the training
+2. **Fit ETAS**: space-time ETAS by MLE on the **full un-declustered** catalog before the training
    cutoff (:class:`~caos_seismic.model.etas.ETASForecaster`), enforcing *both* stability gates
    (``alpha < beta`` and branching ratio ``n < 1``; configs/etas.yaml). A fit that violates either
-   gate raises :class:`~caos_seismic.model.etas.ETASStabilityError` — the model is **rejected**, not
+   gate raises :class:`~caos_seismic.model.etas.ETASStabilityError`, the model is **rejected**, not
    silently clamped, and the R-J fallback carries the region until a clean fit lands.
-3. **Self-consistency CSEP check** — score the fitted models on a held-out tail window with the
+3. **Self-consistency CSEP check**: score the fitted models on a held-out tail window with the
    leakage-free forecast clock: the consistency **N-test** (Poisson tails) and the **comparison
    test** (information gain per earthquake in nats, with the paired T-test) of ETAS vs the
    smoothed-seismicity null. This is a *fit diagnostic* (in-sample tail), not the published
-   pseudo-prospective evidence — that is :mod:`caos_seismic.eval.backanalysis`. Skill is established
+   pseudo-prospective evidence, that is :mod:`caos_seismic.eval.backanalysis`. Skill is established
    only by the back-analysis comparison tests; this step just refuses to ship a model that cannot
    even out-score its own null on a recent window.
 
@@ -58,7 +58,7 @@ def _resolve_catalog(region: Region, catalog: pd.DataFrame | None) -> pd.DataFra
 
 
 def _background_catalog(full: pd.DataFrame, b_value: float) -> pd.DataFrame:
-    """Declustered (background) view of the catalog — Gardner–Knopoff mainshocks, the dual-catalog rule.
+    """Declustered (background) view of the catalog, Gardner–Knopoff mainshocks, the dual-catalog rule.
 
     Falls back transparently to the full catalog if the declustering primitive cannot run (e.g. a
     degenerate tiny catalog), so training still proceeds; the manifest records the degradation.
@@ -87,7 +87,7 @@ def run_train(
     region:
         A :class:`Region` or region id.
     catalog:
-        Optional in-memory cleaned catalog (skips the store load — used offline / by tests).
+        Optional in-memory cleaned catalog (skips the store load, used offline / by tests).
     train_cutoff:
         The training/holdout split time. Models are conditioned on events ``< cutoff`` and scored on
         ``[cutoff, cutoff + holdout_days)``. Default: ``holdout_days`` before the last event so the
@@ -151,7 +151,7 @@ def run_train(
     reject_super = bool(etas_cfg.get("stability", {}).get("reject_supercritical", True))
     try:
         # Regime-aware TILED ETAS: fit ETAS per tectonic tile and aggregate into the global field. This
-        # is the tractable, physically-honest primary at global scope — a single monolithic ETAS over a
+        # is the tractable, physically-honest primary at global scope: a single monolithic ETAS over a
         # worldwide 10^5-event catalog is both O(N^2) and wrong (subduction ≠ stable interior). Each tile
         # enforces both stability gates and falls back to its smoothed null on violation.
         from .tiled import TiledForecaster
@@ -284,7 +284,7 @@ def _self_consistency_check(
     m_star = min(thresholds)  # the most populated band → the most informative consistency check
 
     # Use the multi-resolution grid (coarse worldwide baseline + fine coverage tiles around recent
-    # seismicity), NEVER the dense 0.1° grid — over the GLOBAL bbox that is ~6.5M cells and would hang
+    # seismicity), NEVER the dense 0.1° grid: over the GLOBAL bbox that is ~6.5M cells and would hang
     # just materializing the Cell list. build_global_fit_cells is also correct for a bounded view.
     cond = conditioning_slice(full, cutoff)
     cells = build_global_fit_cells(region, load("grid"), cond)
@@ -324,7 +324,7 @@ def _self_consistency_check(
         "igpe_vs_null": round(float(igpe), 6),
         "gate_passed": gate_passed,
         "pycsep_used": csep.pycsep_available(),
-        "note": "in-sample tail diagnostic — public skill is established by eval.backanalysis only",
+        "note": "in-sample tail diagnostic, public skill is established by eval.backanalysis only",
     }
 
 

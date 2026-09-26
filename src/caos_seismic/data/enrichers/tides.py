@@ -1,4 +1,4 @@
-"""Tidal-stress enricher — solid-Earth (+ ocean-loading) tidal Coulomb stress as a computed covariate.
+"""Tidal-stress enricher, solid-Earth (+ ocean-loading) tidal Coulomb stress as a computed covariate.
 
 Unlike the other enrichers this is **computed**, not downloaded: there is no tidal catalog to fetch.
 We evaluate the time-varying tidal strain at a cell, resolve it onto a fault plane as a Coulomb
@@ -6,7 +6,7 @@ failure-stress change, and emit a small set of regularized covariates (data-and-
 
 Honest framing (kept first-class). Tidal stresses are tiny (~0.1-10 kPa) next to earthquake stress
 drops (~1-10 MPa), and the empirical tidal-triggering signal is small (~0.5% to factor-3 across
-regimes). This feature is a **physically-motivated, regularized covariate that may shrink to ~0** —
+regimes). This feature is a **physically-motivated, regularized covariate that may shrink to ~0**, 
 it must clear a CSEP prospective information-gain gate (with-vs-without, declustered, out-of-sample)
 before it touches any public number; never claim improvement from in-sample Schuster p-values.
 
@@ -15,17 +15,17 @@ Per-cell (and per-time) features
 ``tidal_dCFS_kpa``        tidal Coulomb failure-stress change ΔCFS = Δτ + μ·Δσ_n at the issue time
                           (kPa) on a representative fault for the cell.
 ``tidal_stress_rate_kpa_per_hr``
-                          time-derivative of ΔCFS (kPa/hr) — the stressing rate, which the tidal-
+                          time-derivative of ΔCFS (kPa/hr), the stressing rate, which the tidal-
                           triggering literature ties to triggering more than the level itself.
 ``tidal_phase_sin`` / ``tidal_phase_cos``
                           sine/cosine of the dominant semidiurnal tidal phase (a circular covariate,
                           so a linear model can use it without a discontinuity at the wrap).
 ``tidal_mf_envelope``     amplitude of the fortnightly Mf (14.77 d) tidal envelope at the issue time,
-                          normalized to [0, 1] — the slow modulation most often linked to triggering.
+                          normalized to [0, 1], the slow modulation most often linked to triggering.
 
 Heavy dep: ``pygtide`` (ETERNA PREDICT 3.4 body tide) is imported lazily; an ocean-loading model
 (SPOTL/TPXO) is configured out of band and folded in via :meth:`TidesEnricher.set_ocean_loader`.
-Without ``pygtide`` installed, the module still imports — the heavy import happens only inside the
+Without ``pygtide`` installed, the module still imports, the heavy import happens only inside the
 computation, with a clear, actionable error.
 """
 
@@ -82,7 +82,7 @@ class FaultGeometry:
 
 
 def download(**_: Any) -> Provenance:
-    """No download — tides are computed. Returns the tool/citation provenance for the credits page.
+    """No download, tides are computed. Returns the tool/citation provenance for the credits page.
 
     Kept API-compatible with the other enrichers (each exposes ``download()``). The body tide is
     computed by pygtide (ETERNA PREDICT 3.4); ocean loading by SPOTL with a TPXO/GOT/FES ocean-tide
@@ -93,7 +93,7 @@ def download(**_: Any) -> Provenance:
         title="Tidal Coulomb stress (computed: pygtide body tide + ocean loading)",
         version="pygtide/ETERNA PREDICT 3.4 (+ SPOTL/TPXO ocean loading, out-of-band)",
         source_url="https://github.com/hydrogeoscience/pygtide",
-        license="pygtide & SPOTL open tools; TPXO has academic-use terms — record and honor them.",
+        license="pygtide & SPOTL open tools; TPXO has academic-use terms, record and honor them.",
         attribution="pygtide (ETERNA PREDICT 3.4, Wenzel 1996); SPOTL (Agnew); TPXO ocean-tide model",
         citation=(
             "Wenzel, H.-G. (1996). The nanogal software: Earth tide data processing package ETERNA "
@@ -105,7 +105,7 @@ def download(**_: Any) -> Provenance:
         notes=(
             "Computed feature, not a download. Regularized covariate that may shrink to ~0; must "
             "pass a CSEP prospective information-gain gate before touching any public number. "
-            "Ocean loading DOMINATES at coastal/subduction margins (Chile) — skipping it is the "
+            "Ocean loading DOMINATES at coastal/subduction margins (Chile), skipping it is the "
             "single biggest modeling error for the tidal channel."
         ),
     )
@@ -170,7 +170,7 @@ class TidesEnricher:
         The semidiurnal phase and fortnightly Mf envelope are **analytic** (computed from the issue
         time alone) and are always returned. The ΔCFS / stressing-rate columns need pygtide; if it is
         not installed they degrade to ``None`` (with a one-time warning) so a partial tidal channel
-        is still available — set ``strict=True`` to raise the actionable ImportError instead.
+        is still available, set ``strict=True`` to raise the actionable ImportError instead.
         """
         t = _to_utc(t_issue) if t_issue is not None else pd.Timestamp.now(tz="UTC")
         geom = fault or self.fault
@@ -190,7 +190,7 @@ class TidesEnricher:
         try:
             dtau, dsigma = self._tidal_stress_components(lat, lon, t, geom)
             dcfs = dtau + self.friction * dsigma
-            # Stressing rate by a centered finite difference (±30 min) — cheap and robust.
+            # Stressing rate by a centered finite difference (±30 min): cheap and robust.
             dt = pd.Timedelta(minutes=30)
             dtau_p, dsig_p = self._tidal_stress_components(lat, lon, t + dt, geom)
             dtau_m, dsig_m = self._tidal_stress_components(lat, lon, t - dt, geom)
@@ -225,7 +225,7 @@ class TidesEnricher:
         """Solid-Earth body-tide shear/normal stress (kPa) on the receiver fault, via pygtide.
 
         pygtide returns tidal **areal/volumetric strain** components; we map strain → stress with the
-        isotropic-elastic relation and resolve onto the fault plane. pygtide is imported lazily — if
+        isotropic-elastic relation and resolve onto the fault plane. pygtide is imported lazily, if
         it is missing the method raises an actionable error (the rest of the feature, the analytic
         phase/Mf envelope, does not need it).
         """
@@ -280,7 +280,7 @@ _EPOCH = pd.Timestamp("2000-01-01T12:00:00Z")
 
 
 def _semidiurnal_phase(t: pd.Timestamp) -> tuple[float, float]:
-    """Sine/cosine of the dominant semidiurnal (M2) phase at ``t`` — a continuous circular covariate."""
+    """Sine/cosine of the dominant semidiurnal (M2) phase at ``t``, a continuous circular covariate."""
     hours = (_to_utc(t) - _EPOCH).total_seconds() / 3600.0
     phase = 2.0 * math.pi * (hours % M2_PERIOD_HOURS) / M2_PERIOD_HOURS
     return math.sin(phase), math.cos(phase)
@@ -330,7 +330,7 @@ def features_at(lat: float, lon: float, **kwargs: Any) -> EnricherResult:
 
     Pass ``t_issue=`` for a reproducible seal time. The fortnightly-Mf and semidiurnal-phase features
     are returned even when pygtide is absent (they are analytic); the ΔCFS/stressing-rate features
-    require pygtide and degrade to ``None`` (with a one-time warning) if it is missing — pass
+    require pygtide and degrade to ``None`` (with a one-time warning) if it is missing, pass
     ``strict=True`` to raise the actionable ImportError instead.
     """
     global _DEFAULT_ENRICHER
@@ -340,7 +340,7 @@ def features_at(lat: float, lon: float, **kwargs: Any) -> EnricherResult:
 
 
 def phase_features_at(lat: float, lon: float, *, t_issue: Any = None) -> EnricherResult:
-    """Analytic-only tidal phase + Mf envelope (no pygtide needed) — the always-available subset.
+    """Analytic-only tidal phase + Mf envelope (no pygtide needed), the always-available subset.
 
     Useful when pygtide/ocean-loading is not installed but the (cheap, exact) tidal-phase and
     fortnightly-envelope circular covariates are still wanted as honest near-null channels.

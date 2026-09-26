@@ -1,4 +1,4 @@
-"""E13 — ETAS branching-process count simulation (the over-dispersion-honest catalog-based N-test).
+"""E13, ETAS branching-process count simulation (the over-dispersion-honest catalog-based N-test).
 
 Pins the properties that make the simulated count distribution a correct null:
 

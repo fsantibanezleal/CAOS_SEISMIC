@@ -1,10 +1,10 @@
-"""Covariate-field providers — wire the real geophysical enrichers behind the context-TPP's
+"""Covariate-field providers, wire the real geophysical enrichers behind the context-TPP's
 ``CovariateFieldProvider`` seam (``model/context_tpp.CovariateFieldProvider``).
 
 A provider is a ``(region, t_issue) -> CovariateField`` callable. The context-conditioned neural TPP
 ingests that gridded multi-channel field as the CNN's "image". When no provider is wired the model runs
 on a zeros field (catalog/seismicity context only, honestly flagged). This module assembles the field
-from the cached enricher outputs — starting with **GNSS strain rate** (the covariate with the strongest
+from the cached enricher outputs, starting with **GNSS strain rate** (the covariate with the strongest
 established time-independent forecasting value; Bird et al. 2010, GEAR1 Strader et al. 2018), which the
 research identifies as the one external channel with demonstrated GLOBAL (not regional) prospective skill.
 
@@ -27,7 +27,7 @@ def make_strain_provider(cell_deg: float = 1.0):
     """Return a provider that fills the ``gnss_strain_rate`` channel from the cached NGL MIDAS field.
 
     Requires the MIDAS table to be cached (``data.enrichers.gnss.download()``); raises a clear error
-    otherwise. The other geophysical channels stay zero-filled + flagged missing — the field is honest
+    otherwise. The other geophysical channels stay zero-filled + flagged missing, the field is honest
     about what is and is not wired. Channel values are standardized per-channel at training time, so the
     raw nanostrain/yr units (and the occasional noisy-station outlier) are absorbed by the model.
     """

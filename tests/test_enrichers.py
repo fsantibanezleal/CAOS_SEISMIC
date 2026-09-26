@@ -1,17 +1,17 @@
-"""Unit tests for the global geophysical enrichers — NO network, core deps only.
+"""Unit tests for the global geophysical enrichers, NO network, core deps only.
 
 These pin the enricher *contract* without downloading anything or importing heavy geospatial deps:
 
-1. **Registry integrity** — every enricher in :data:`caos_seismic.data.enrichers.ENRICHERS` exposes
+1. **Registry integrity**: every enricher in :data:`caos_seismic.data.enrichers.ENRICHERS` exposes
    ``download`` / ``features_at`` / ``FEATURE_NAMES`` and the registry's flattened feature names are
    unique.
-2. **Lazy-import discipline** — importing the enrichers subpackage and the feature bridge does NOT
+2. **Lazy-import discipline**: importing the enrichers subpackage and the feature bridge does NOT
    pull any heavy geospatial dependency into ``sys.modules`` (the hard package rule).
-3. **Tides analytic path** — the semidiurnal phase + fortnightly Mf envelope are returned without
+3. **Tides analytic path**: the semidiurnal phase + fortnightly Mf envelope are returned without
    pygtide (analytic), in their valid ranges, and the ΔCFS columns degrade to ``None``.
-4. **Plates ASCII parser** — a tiny synthetic ``PB2002_steps.dat`` yields the expected
+4. **Plates ASCII parser**: a tiny synthetic ``PB2002_steps.dat`` yields the expected
    distance / convergent-type / relative-velocity covariates.
-5. **`build_context_features` join** — the grid → context-matrix machinery assembles ``key/lat/lon``
+5. **`build_context_features` join**: the grid → context-matrix machinery assembles ``key/lat/lon``
    + each enricher's columns, accepts both ``list[Cell]`` and a lat/lon DataFrame, and tolerates an
    enricher raising (records NaN, never corrupts the matrix). A lightweight stub enricher keeps the
    test off the heavy deps.
@@ -54,7 +54,7 @@ def test_registry_contract_and_unique_feature_names():
 
 def test_no_heavy_deps_imported_at_module_load():
     # Run in a CLEAN subprocess: the package's lazy-import discipline is a property of importing the
-    # package, not of the current pytest session's sys.modules — which an earlier test that fits a
+    # package, not of the current pytest session's sys.modules: which an earlier test that fits a
     # neural model (importing torch) would otherwise pollute, making this guard order-dependent.
     import subprocess
     import sys as _sys
@@ -95,7 +95,7 @@ def test_tides_features_at_degrades_without_pygtide():
     from caos_seismic.data.enrichers import tides
 
     if "pygtide" in sys.modules or _module_available("pygtide"):
-        pytest.skip("pygtide installed — graceful-degradation path not exercised")
+        pytest.skip("pygtide installed, graceful-degradation path not exercised")
     f = tides.features_at(-33.0, -71.0, t_issue="2026-06-16T00:00:00Z")
     assert f["tidal_phase_sin"] is not None and f["tidal_mf_envelope"] is not None
     assert f["tidal_dCFS_kpa"] is None  # degraded, not raised
@@ -105,7 +105,7 @@ def test_tides_strict_raises_without_pygtide():
     from caos_seismic.data.enrichers import tides
 
     if _module_available("pygtide"):
-        pytest.skip("pygtide installed — strict ImportError path not exercised")
+        pytest.skip("pygtide installed, strict ImportError path not exercised")
     with pytest.raises(ImportError) as exc:
         tides.TidesEnricher().features_at(-33.0, -71.0, t_issue="2026-06-16T00:00:00Z", strict=True)
     assert "pygtide" in str(exc.value)
@@ -161,7 +161,7 @@ class _StubEnricher:
 
 
 class _BoomEnricher:
-    """An enricher that always raises — to prove a failure becomes NaN, never a corrupt matrix."""
+    """An enricher that always raises, to prove a failure becomes NaN, never a corrupt matrix."""
 
     FEATURE_NAMES = ("boom_x",)
 

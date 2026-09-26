@@ -7,7 +7,7 @@
 > most honest deployment for a daily forecast: cost scales with *bytes served*, not compute, and every
 > published number is a versioned git object anyone can audit.
 
-The architecture has three boxes — **compute → git → web** — rendered in
+The architecture has three boxes, **compute → git → web**, rendered in
 [`diagrams/architecture.svg`](diagrams/architecture.svg):
 
 ```
@@ -21,13 +21,13 @@ The architecture has three boxes — **compute → git → web** — rendered in
 
 ---
 
-## 1. Compute — a local GPU workstation
+## 1. Compute: a local GPU workstation
 
 A single modest host is sufficient because **the heavy compute is offline and the ETAS fit is
 seconds-to-minutes of CPU, no GPU** (INLAbru-class daily fits land well under a minute for hundreds of
 events). The GPU is there only to accelerate two optional things:
 
-- the **gated neural challenger** (when/if one is trained — it produces frozen weights occasionally,
+- the **gated neural challenger** (when/if one is trained: it produces frozen weights occasionally,
   and even then the daily job only runs *forward inference*), and
 - **large Monte-Carlo ensembles** ($\ge 10{,}000$ synthetic catalogs/day; `forecast.yaml:
   ensemble.n_synthetic_catalogs`).
@@ -37,7 +37,7 @@ scikit-learn) plus the science extra (`obspy`, `pycsep`, …) installed into a r
 `scripts/setup`. The daily job needs outbound HTTPS to the FDSN services and push access to this repo.
 The package is importable on the **core deps alone**; every heavy dependency (obspy, pycsep,
 geopandas, pygtide) is imported *lazily* inside the stage that needs it, with a clear error if missing
-— so a partial environment degrades to an actionable message, never an import-time crash.
+, so a partial environment degrades to an actionable message, never an import-time crash.
 
 ---
 
@@ -48,8 +48,8 @@ scheduler runs it through `scripts/job.{ps1,sh}` in the dedicated job checkout, 
 `caos-seismic job-sync` (§4); `scripts/daily.{ps1,sh}` wrap it for local dry runs. It runs fetch, infer
 and a scoped publish:
 
-1. **Determine the issue dates.** Today (UTC) plus — when `publish.yaml: schedule.catch_up_missed` is
-   on — any days in the last week with no committed artifact yet. The catch-up is *bounded to a week*
+1. **Determine the issue dates.** Today (UTC) plus: when `publish.yaml: schedule.catch_up_missed` is
+   on, any days in the last week with no committed artifact yet. The catch-up is *bounded to a week*
    so a long-dormant laptop never tries to backfill months (those would not be honest
    pseudo-prospective forecasts: the catalog has since been revised).
 2. **Fetch once.** A ComCat `updatedafter` incremental delta plus the regional network, merged into the
@@ -70,7 +70,7 @@ input-catalog sanity (no event-count z-score above `max_event_count_zscore`, no 
 event near the threshold via `forbid_duplicate_near_threshold`), a rolling-window **N-test drift
 monitor on the forecaster itself** (`ntest_drift_window_days`) as an early warning of model/catalog
 breakage, and artifact integrity. On an FDSN outage / rate-limit or a failed run, the product serves
-**"unavailable" with a staleness banner — never silently a stale or corrupted artifact.** The artifact
+**"unavailable" with a staleness banner, never silently a stale or corrupted artifact.** The artifact
 carries a `staleness: {generated, next_run, ok}` block (see
 [`contracts.py: Staleness`](../src/caos_seismic/contracts.py)); when `ok` is false the SPA degrades
 visibly (banner + desaturation/hatch). All FDSN access is wrapped in retry/backoff (HTTP 413 is treated
@@ -78,10 +78,10 @@ as "tile smaller").
 
 ---
 
-## 3. Publish — git-as-data, scoped commits only
+## 3. Publish: git-as-data, scoped commits only
 
 The artifact is committed to this repo as the single source of the web app's data. The commit is
-**strictly scoped** — this is the load-bearing safety rule, because the build host also has `data/`,
+**strictly scoped**, this is the load-bearing safety rule, because the build host also has `data/`,
 `models/`, `.venv/`, and a working `.env` present, and a `git add -A` would leak raw data or secrets.
 
 `publish.yaml: git` defines an explicit `add_allowlist` (`results/`, `manifests/`) and the scoped
@@ -109,7 +109,7 @@ commits on the checked-out branch and pushes a second copy to `main`. It remains
 scheduled tasks run from the job checkout and will be removed; §4.1 explains why.
 
 Content updates once per day as one small commit (a few hundred KB to a few MB). Over years this grows
-the repo by tens to low-hundreds of MB — modest, because *only* the compact gzipped results and the
+the repo by tens to low-hundreds of MB, modest, because *only* the compact gzipped results and the
 manifests are versioned; raw data, features, and weights never are (see
 [`data-and-pipelines.md`](data-and-pipelines.md) §4).
 
@@ -212,15 +212,15 @@ entry works too:
 `job.sh` writes its own log under `logs/` and echoes to stdout.
 
 A **full re-fit / re-training** (including any GPU challenger) runs on a slower cadence or when a large
-event occurs — `publish.yaml: train_cadence` (`full_refit: weekly`, `event_triggered_magnitude: 6.5`).
+event occurs, `publish.yaml: train_cadence` (`full_refit: weekly`, `event_triggered_magnitude: 6.5`).
 The daily job only conditions on / forward-infers from the latest fit; it does not re-train every day.
 
 ---
 
-## 5. Web — a pure static viewer
+## 5. Web: a pure static viewer
 
 The web app under `app/` is a **Vite + React + TypeScript SPA** (i18n EN→ES, light/dark, the
-dark-technical palette) that renders the committed artifact. **No server computes anything** — the
+dark-technical palette) that renders the committed artifact. **No server computes anything**, the
 "API" is static JSON assets:
 
 - the client fetches `results/index.json` first (latest pointer + rolling CSEP calibration + a
@@ -233,8 +233,8 @@ dark-technical palette) that renders the committed artifact. **No server compute
 
 The TypeScript types in [`app/src/data/types.ts`](../app/src/data/types.ts) mirror the Python
 `ForecastArtifact` byte-for-byte (same field names, the `expected → p` rename aside), so the contract
-cannot drift. Host the built SPA on any static host — **GitHub Pages** (served straight from this repo)
-or **Netlify** — fronted by a CDN cache. Because every request reads a precomputed artifact, the
+cannot drift. Host the built SPA on any static host, **GitHub Pages** (served straight from this repo)
+or **Netlify**, fronted by a CDN cache. Because every request reads a precomputed artifact, the
 runtime is stateless and read-only, and the deployment has no database, no secrets, and no compute to
 scale.
 
@@ -246,6 +246,6 @@ Every daily run is byte-reproducible from `manifests/` + `configs/` + code: the 
 config hash, the code git SHA, the immutable input-catalog snapshot id, the $M_c$ grid version, the
 declustering choice, and the model + params (`build_manifest()` in
 [`inference/provenance.py`](../src/caos_seismic/inference/provenance.py)). A reviewer can check out the
-recorded SHA, re-run the pipeline, and reproduce the committed artifact — or audit a months-old
+recorded SHA, re-run the pipeline, and reproduce the committed artifact, or audit a months-old
 forecast against the catalog *as it was at issue time*. That auditability is the reason the deployment
 is git-as-data rather than an opaque service.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# fetch.sh — pull the recent + historical catalog (ComCat spine + regional/anchor sources).
+# fetch.sh: pull the recent + historical catalog (ComCat spine + regional/anchor sources).
 #
 #   scripts/fetch.sh                              # default region (chile), configured fetch window
 #   scripts/fetch.sh --region chile --days 30     # only the last 30 days

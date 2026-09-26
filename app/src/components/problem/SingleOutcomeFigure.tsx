@@ -2,13 +2,13 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
- * Figure (c) — "a single outcome neither validates nor invalidates a probabilistic forecast",
+ * Figure (c): "a single outcome neither validates nor invalidates a probabilistic forecast",
  * built on the 2019 Ridgecrest worked example (Savran et al. 2020).
  *
  * After the 4 July 2019 M6.4, UCERF3-ETAS gave ~3% chance of a larger event in the first week;
  * the M7.1 struck ~34 h later. The figure draws a unit probability bar split into the forecast
  * 3% "larger-event" slice and the 97% "no-larger-event" slice, then marks that the realised
- * outcome fell in the small slice — which is exactly what a well-calibrated ~3% forecast permits
+ * outcome fell in the small slice: which is exactly what a well-calibrated ~3% forecast permits
  * (3% != 0%). The honest reading is rendered as the takeaway: skill is judged over MANY forecasts
  * by calibration, never by one hit or miss.
  *

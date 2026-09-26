@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# _common.sh — shared helpers for the CAOS_SEISMIC bash scripts (Git Bash / Linux VPS).
+# _common.sh: shared helpers for the CAOS_SEISMIC bash scripts (Git Bash / Linux VPS).
 # Sourced by setup.sh, fetch.sh, build-features.sh, train.sh, infer.sh, daily.sh, dev.sh, check.sh,
 # job.sh, setup-job-checkout.sh.
 # Public-safe: no secrets, no machine-specific paths (everything is resolved relative to the repo root).

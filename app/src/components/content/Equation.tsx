@@ -7,7 +7,7 @@ import "katex/dist/katex.min.css";
  * CSEP information gain). KaTeX CSS is imported here once; importing it in this module keeps
  * the dependency local to the (code-split) content components.
  *
- * `BlockEquation` adds an optional caption line under the display math — used to attach the
+ * `BlockEquation` adds an optional caption line under the display math: used to attach the
  * one-line "what this encodes / which reference" note the methodology page needs.
  */
 

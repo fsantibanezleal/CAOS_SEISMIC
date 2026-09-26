@@ -1,4 +1,4 @@
-"""Unit tests for the linear-opinion-pool EnsembleForecaster (pure combination logic — no fitting)."""
+"""Unit tests for the linear-opinion-pool EnsembleForecaster (pure combination logic, no fitting)."""
 
 from __future__ import annotations
 

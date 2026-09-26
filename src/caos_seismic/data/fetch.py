@@ -1,25 +1,25 @@
-"""Stage A — catalog fetch.
+"""Stage A, catalog fetch.
 
 The **spine** is USGS ComCat over the raw FDSN ``event`` web service, accessed with ``requests``
-and ``pandas`` *only* — ObsPy is **not** required for the spine (the public daily job must run on
+and ``pandas`` *only*, ObsPy is **not** required for the spine (the public daily job must run on
 the core deps alone). The implementation follows ``docs/data-and-pipelines.md`` §1–§2:
 
 * ``GET /count`` first (cheap) to decide whether to tile (USGS, 2024, *FDSN event web service*).
 * The service returns **HTTP 400** when a single request would exceed the **20,000-event cap**;
   we tile the time window (bisection) until each tile is under the cap and stitch the results.
-* ``updatedafter`` produces daily incremental deltas — only events whose origin/magnitude was
+* ``updatedafter`` produces daily incremental deltas: only events whose origin/magnitude was
   updated since the last successful run (ComCat continuously revises and retracts events).
 * A polite ``User-Agent`` (a contact string) is sent on every request, read from the environment.
 * Retry with exponential backoff on transient/over-large responses: 204 (no data → empty),
   400/413 (too large → tile smaller), 429/503 (slow down).
 
 GeoJSON is parsed into a DataFrame matching :data:`caos_seismic.contracts.CATALOG_COLUMNS`,
-**keeping** ``mag_type`` (``magType``) — mixing mb/Ms/Mw silently distorts the Gutenberg–Richter
+**keeping** ``mag_type`` (``magType``), mixing mb/Ms/Mw silently distorts the Gutenberg–Richter
 tail, and the Mw homogenization in :mod:`caos_seismic.data.clean` depends on it.
 
 Optional helpers (``fetch_fdsn_obspy``, ``download_isc_gem``, ``download_gcmt_ndk``) cover the
 regional networks (CSN via EarthScope/IRIS, ISC, EMSC) and the long-term anchors (ISC-GEM, GCMT).
-They lazily import ObsPy and raise an actionable error if it is missing — they are *not* on the
+They lazily import ObsPy and raise an actionable error if it is missing, they are *not* on the
 daily critical path.
 
 References
@@ -62,7 +62,7 @@ FDSN_EVENT_CAP = 20_000
 #: (ComCat updates continuously) cannot tip a tile over the limit mid-pull.
 DEFAULT_TILE_TARGET = 15_000
 
-#: Whole-Earth bbox — the GLOBAL field the model trains on (any country is a VIEW into this).
+#: Whole-Earth bbox, the GLOBAL field the model trains on (any country is a VIEW into this).
 GLOBAL_BBOX = BBox(lat_min=-90.0, lat_max=90.0, lon_min=-180.0, lon_max=180.0)
 
 #: Default worldwide completeness floor for the global pull. The historical global catalog only gets
@@ -174,7 +174,7 @@ def _request(
             return None
         if status in _TOO_LARGE_STATUSES:
             # 400/413 here means the window exceeds the 20k cap → caller bisects the window.
-            raise ComCatError(f"FDSN {status} (over-large request — tile smaller): {resp.url}")
+            raise ComCatError(f"FDSN {status} (over-large request, tile smaller): {resp.url}")
         if status in _RETRY_STATUSES:
             logger.warning("FDSN %d; backing off (attempt %d/%d)", status, attempt + 1, max_retries)
             if attempt < max_retries:
@@ -290,7 +290,7 @@ def _time_tiles(
     ``/count`` drives the split decision; if a window is still flagged over-large at query time
     (the catalog grew between count and query), :func:`fetch_comcat` bisects again as a fallback.
     """
-    if _depth > 40:  # ~1e12 splits — pathological; bail rather than spin
+    if _depth > 40:  # ~1e12 splits, pathological; bail rather than spin
         raise ComCatError("time tiling exceeded max depth; window too dense to split")
 
     n = fetch_comcat_count(
@@ -415,7 +415,7 @@ def _features_to_frame(features: Sequence[dict[str, Any]], *, source: str) -> pd
 
     GeoJSON layout (USGS FDSN): ``feature['id']`` is the stable ComCat id; ``properties.time`` is
     epoch **milliseconds** UTC; ``geometry.coordinates`` is ``[lon, lat, depth_km]``;
-    ``properties.mag`` / ``properties.magType`` carry the native magnitude and its type — both are
+    ``properties.mag`` / ``properties.magType`` carry the native magnitude and its type, both are
     kept (``magType`` is never dropped).
     """
     cols = list(CATALOG_COLUMNS)
@@ -479,7 +479,7 @@ def _to_ts(t: str | datetime | pd.Timestamp) -> pd.Timestamp:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CLI entry point — the thin `caos-seismic fetch` delegation
+# CLI entry point: the thin `caos-seismic fetch` delegation
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -500,7 +500,7 @@ def run_fetch(
     bbox to a configured ``--focus`` sub-region (e.g. ``north`` for Chile, read from
     ``configs/region.<id>.yaml: focus_<key>``), runs the tiled ComCat spine pull, writes the raw
     Parquet store + a ``stage="fetch"`` provenance manifest, and returns a small JSON-able summary
-    (the CLI prints it). The ComCat spine needs only ``requests`` + ``pandas`` — no science deps.
+    (the CLI prints it). The ComCat spine needs only ``requests`` + ``pandas``, no science deps.
 
     ``min_magnitude`` overrides the configured completeness floor; ``updatedafter`` (ISO-8601 UTC)
     switches to the incremental delta path (only revised/new events) for the daily job.
@@ -596,7 +596,7 @@ def fetch_region_comcat(
     query params, retrieved-at timestamp, row counts, and config/code provenance.
 
     Returns ``(catalog_df, manifest)``. With ``updatedafter`` set, performs an incremental delta
-    pull (only revised/new events) — the caller merges it into the existing raw store.
+    pull (only revised/new events), the caller merges it into the existing raw store.
     """
     region_obj = region if isinstance(region, Region) else load_region(region)
     if endtime is None:
@@ -688,12 +688,12 @@ def _value_counts(df: pd.DataFrame, col: str) -> dict[str, int]:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# GLOBAL ComCat fetch — worldwide spine, tiled by latitude band × time around the 20k cap
+# GLOBAL ComCat fetch: worldwide spine, tiled by latitude band × time around the 20k cap
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # Core thesis of the product: GLOBAL context conditions short-term LOCAL forecasts. The model trains
 # on worldwide seismicity; any country is a *view* into one global field. So the spine must be a real,
-# multi-decade, whole-Earth pull — not a region box. The worldwide event density (the circum-Pacific
+# multi-decade, whole-Earth pull: not a region box. The worldwide event density (the circum-Pacific
 # belt) makes a single global window blow past the 20,000-event/request cap by orders of magnitude, so
 # we tile in TWO axes: first by latitude band (coarse, density-aware), then by time within each band
 # (the recursive ``/count``-driven bisection already used for the region spine). The same
@@ -726,7 +726,7 @@ def fetch_comcat_global(
     starttime, endtime:
         The global pull window (e.g. ``"1990-01-01"`` → now for a multi-decade spine).
     minmagnitude:
-        Worldwide completeness floor (default :data:`DEFAULT_GLOBAL_MIN_MAGNITUDE` = 4.5 — below it the
+        Worldwide completeness floor (default :data:`DEFAULT_GLOBAL_MIN_MAGNITUDE` = 4.5, below it the
         historical global catalog is neither complete nor homogeneous and the volume explodes). Pass a
         lower value for a recent, smaller window where you specifically want the small events.
     updatedafter:
@@ -882,13 +882,13 @@ def run_fetch_global(
     write_raw: bool = True,
     session: requests.Session | None = None,
 ) -> dict[str, Any]:
-    """Stage (A) GLOBAL entry point — what ``caos-seismic fetch --global`` calls.
+    """Stage (A) GLOBAL entry point, what ``caos-seismic fetch --global`` calls.
 
     Picks the window (``--days N`` ⇒ last N days; else ``--start`` or the multi-decade default
     ``"1990-01-01"``), runs the worldwide tiled ComCat pull, writes the raw global store + a
     ``region_id="global"`` fetch manifest, and returns a small JSON-able summary the CLI prints.
 
-    ``--updatedafter`` (ISO-8601 UTC) takes precedence for the **daily incremental** global delta — it
+    ``--updatedafter`` (ISO-8601 UTC) takes precedence for the **daily incremental** global delta, it
     is the cheap path the production job uses every day; pair it with the existing base global store.
     """
     endtime = pd.Timestamp.now(tz="UTC")
@@ -921,7 +921,7 @@ def run_fetch_global(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Optional helpers (regional networks + long-term anchors) — lazy heavy imports
+# Optional helpers (regional networks + long-term anchors): lazy heavy imports
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -972,7 +972,7 @@ def fetch_fdsn_obspy(
     lazily; an actionable error is raised if it is missing. The result matches
     :data:`caos_seismic.contracts.CATALOG_COLUMNS` so it can be deduped against the ComCat spine.
 
-    Note: ``get_events()`` has no bulk analogue — loop time windows and respect each provider's
+    Note: ``get_events()`` has no bulk analogue, loop time windows and respect each provider's
     20k cap. This helper does a single window; callers tile if needed.
     """
     Client = _require_obspy()
@@ -1010,7 +1010,7 @@ def fetch_region_fdsn(
     window_days: float = 90.0,
     source: str | None = None,
 ) -> pd.DataFrame:
-    """Per-VIEW regional FDSN pull for a country view — the local-network catalog (low, stable Mc).
+    """Per-VIEW regional FDSN pull for a country view, the local-network catalog (low, stable Mc).
 
     The product trains globally but each country is a *view*; the short-horizon skill of a view scales
     with how low and stable its local Mc is, so each view is driven by its **regional network**
@@ -1182,7 +1182,7 @@ def download_isc_gem(dest: Path, *, url: str | None = None, session: requests.Se
     """Download the ISC-GEM Global Instrumental Catalogue CSV to ``dest`` (gitignored raw store).
 
     ISC-GEM v12.1 (DOI ``10.31905/d808b825``) is the Mw-homogenized long-term anchor for the
-    b-value and the ML/mb→Mw conversion overlap. **License: CC-BY-SA 3.0** — a *redistributed*
+    b-value and the ML/mb→Mw conversion overlap. **License: CC-BY-SA 3.0**, a *redistributed*
     derived catalog must keep the license and attribution. This helper only downloads the raw file
     to the gitignored store; it does not redistribute.
 
@@ -1192,7 +1192,7 @@ def download_isc_gem(dest: Path, *, url: str | None = None, session: requests.Se
     if url is None:
         raise ValueError(
             "download_isc_gem requires an explicit `url` to the current ISC-GEM CSV "
-            "(obtain it from https://www.isc.ac.uk/iscgem/ download.php — versioned per release). "
+            "(obtain it from https://www.isc.ac.uk/iscgem/ download.php, versioned per release). "
             "ISC-GEM is CC-BY-SA 3.0: keep license + attribution on any redistributed derivative."
         )
     dest.parent.mkdir(parents=True, exist_ok=True)
@@ -1220,10 +1220,10 @@ def read_isc_gem_csv(path: Path, *, source: str = "isc_gem") -> pd.DataFrame:
     """Parse the ISC-GEM Global Instrumental Catalogue main CSV into the CATALOG_COLUMNS frame.
 
     ISC-GEM (1904–present, **Mw-homogenized**, relocated) is the long-term homogeneous anchor for the
-    global b-value, large-event recurrence, and — crucially — the ``native → Mw`` TLS conversion overlap
+    global b-value, large-event recurrence, and, crucially, the ``native → Mw`` TLS conversion overlap
     in :mod:`caos_seismic.data.clean`. Every magnitude here is already Mw, so ``mag_type = "Mw"`` and
     ``mw == mag``. Core deps only (``pandas``); the file is a ``#``-commented CSV whose last comment line
-    is the column header. **License: CC-BY-SA 3.0** — keep attribution on any redistributed derivative.
+    is the column header. **License: CC-BY-SA 3.0**, keep attribution on any redistributed derivative.
 
     Robust to ISC-GEM's quirks: leading ``#`` comment block, a header carried as the final comment line,
     columns identified by *name* (order varies across versions), and whitespace padding.
@@ -1245,7 +1245,7 @@ def read_isc_gem_csv(path: Path, *, source: str = "isc_gem") -> pd.DataFrame:
     if header is None or not data_lines:
         raise ComCatError(
             f"could not locate an ISC-GEM data header (lat/lon/mw) in {path}; the file format may have "
-            "changed — inspect the CSV header comment block."
+            "changed, inspect the CSV header comment block."
         )
 
     from io import StringIO
@@ -1304,7 +1304,7 @@ def read_isc_gem_csv(path: Path, *, source: str = "isc_gem") -> pd.DataFrame:
 def download_gcmt_ndk(dest: Path, *, url: str | None = None, session: requests.Session | None = None) -> Path:
     """Download a GCMT ``.ndk`` moment-tensor file to ``dest`` (gitignored raw store).
 
-    GCMT centroid moment tensors (Mw, nodal planes, P/T axes) for M≳5 since 1976 — the mechanism
+    GCMT centroid moment tensors (Mw, nodal planes, P/T axes) for M≳5 since 1976, the mechanism
     enricher and a Mw anchor for homogenization. Parse with ObsPy (``obspy.read_events``, module
     ``obspy.io.ndk``) via :func:`read_gcmt_ndk`. Free for research with citation (Dziewonski et
     al. 1981; Ekström et al. 2012). Pass the exact monthly/aggregate ``.ndk`` URL from

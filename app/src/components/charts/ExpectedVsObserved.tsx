@@ -4,7 +4,7 @@ import { useId } from "react";
  * Expected-vs-observed event-count time series (evaluation-plan.md §9; web-app-spec.md §6).
  *
  * Grouped bars per period: the model's expected count next to the observed count, so an
- * aftershock-sequence spike (observed ≫ expected) is visible — the motivation for the
+ * aftershock-sequence spike (observed ≫ expected) is visible: the motivation for the
  * over-dispersion-honest catalog-based tests. Hand-rolled SVG, theme-driven, no library, and
  * works with no WebGL.
  */

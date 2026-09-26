@@ -1,15 +1,15 @@
-"""Pure unit smoke tests — NO network, core deps only (numpy/pandas/scipy/pydantic/h3).
+"""Pure unit smoke tests, NO network, core deps only (numpy/pandas/scipy/pydantic/h3).
 
 These are the fast invariants every build must keep green. They deliberately avoid the data fetch
 (no ComCat call), heavy science deps (no obspy/pycsep), and any committed output: each test builds
 its own tiny in-memory fixture. Three properties are pinned:
 
-1. **Catalog schema contract** — :func:`caos_seismic.contracts.validate_catalog` accepts a frame with
+1. **Catalog schema contract**: :func:`caos_seismic.contracts.validate_catalog` accepts a frame with
    the required columns and rejects one missing any of them.
-2. **The exceedance formula never changes** — ``P(>=1 event) = 1 - e^{-N}`` (methodology §1.10), as
+2. **The exceedance formula never changes**: ``P(>=1 event) = 1 - e^{-N}`` (methodology §1.10), as
    implemented by :func:`caos_seismic.model._common.poisson_p_at_least_one`, including its boundary
    behaviour (N=0 -> 0, large N -> ~1, negative N clipped to 0).
-3. **ForecastArtifact round-trip** — a tiny artifact built against the contract serializes to the
+3. **ForecastArtifact round-trip**: a tiny artifact built against the contract serializes to the
    compact on-disk form (H3 aggregate + quantize + gzip) and loads back with its structure and
    (de-quantized) rates intact, via :mod:`caos_seismic.inference.artifact`.
 """
@@ -35,7 +35,7 @@ from caos_seismic.model._common import poisson_p_at_least_one
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Fixtures (tiny, in-memory — no IO, no network)
+# Fixtures (tiny, in-memory: no IO, no network)
 # ─────────────────────────────────────────────────────────────────────────────
 
 

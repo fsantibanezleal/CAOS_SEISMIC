@@ -3,7 +3,7 @@
 //
 // These mirror the reference list in the build spec (web-app-spec.md §10) and the
 // synthesis docs. They are language-neutral bibliographic facts, so they live here as data
-// (not in the i18n bundles) — the surrounding prose is what gets translated, the DOI/author
+// (not in the i18n bundles), the surrounding prose is what gets translated, the DOI/author
 // string is the same in every language. Each entry carries a stable `id` so prose can refer
 // to it (e.g. "(Geller et al. 1997)") and an optional `doi`/`url` for a real outbound link.
 
@@ -238,13 +238,13 @@ export const CITATIONS = {
   mousavi2020: {
     id: "mousavi2020",
     label: "Mousavi et al. 2020 (EQTransformer)",
-    full: "Mousavi, S. M., Ellsworth, W. L., Zhu, W., Chuang, L. Y., & Beroza, G. C. (2020). Earthquake transformer—an attentive deep-learning model for simultaneous earthquake detection and phase picking. Nature Communications 11, 3952.",
+    full: "Mousavi, S. M., Ellsworth, W. L., Zhu, W., Chuang, L. Y., & Beroza, G. C. (2020). Earthquake transformer, an attentive deep-learning model for simultaneous earthquake detection and phase picking. Nature Communications 11, 3952.",
     doi: "10.1038/s41467-020-17591-w",
   },
   woollam2022: {
     id: "woollam2022",
     label: "Woollam et al. 2022 (SeisBench)",
-    full: "Woollam, J., et al. (2022). SeisBench—A Toolbox for Machine Learning in Seismology. SRL 93(3), 1695–1709.",
+    full: "Woollam, J., et al. (2022). SeisBench, A Toolbox for Machine Learning in Seismology. SRL 93(3), 1695–1709.",
     doi: "10.1785/0220210324",
   },
   liu2024seislm: {

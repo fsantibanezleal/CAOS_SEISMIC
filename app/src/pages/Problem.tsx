@@ -10,23 +10,23 @@ import { SingleOutcomeFigure } from "@/components/problem/SingleOutcomeFigure";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Route 2 — The problem. The honest epistemics of earthquake forecasting
+ * Route 2: The problem. The honest epistemics of earthquake forecasting
  * (research/01-problem-and-predictability + synthesis/methodology.md "Honest limits").
  *
  * This is the load-bearing honesty page of the whole product. It is intentionally dense and
- * equation/diagram heavy — a technical workbench, not plain text:
+ * equation/diagram heavy: a technical workbench, not plain text:
  *
  *  - the product creed, verbatim;
  *  - why deterministic *prediction* is effectively impossible (Geller et al. 1997), grounded in
  *    self-organized criticality / scale-invariance (Bak & Tang 1989) as the LEADING explanation,
  *    not settled physics;
- *  - the empirical scaling laws that DO hold — Gutenberg–Richter (with its log-linear plot) and
- *    the exceedance map P(>=1) = 1 - e^{-N} — and what they do / do not buy us;
+ *  - the empirical scaling laws that DO hold: Gutenberg–Richter (with its log-linear plot) and
+ *    the exceedance map P(>=1) = 1 - e^{-N}: and what they do / do not buy us;
  *  - the prediction-vs-forecast split (ICEF / Jordan et al. 2011): a forecast is a probability
  *    strictly in (0, 1), rendered as the contrast figure and a definition grid;
  *  - the honest absolute scale (< 1% per day) with the "always next to baseline" rule;
- *  - three teaching cases — Parkfield, Ridgecrest (the ~3% worked example, as a figure),
- *    L'Aquila — each with rendered citations;
+ *  - three teaching cases: Parkfield, Ridgecrest (the ~3% worked example, as a figure),
+ *    L'Aquila: each with rendered citations;
  *  - what IS achievable: real, deployed Operational Earthquake Forecasting.
  *
  * Every supporting point carries a canonical citation via <Cite/>; the full reference block
@@ -58,7 +58,7 @@ export default function Problem() {
         <p className="lede">{t("problem.lede")}</p>
       </header>
 
-      {/* The creed, verbatim — the product's central honest message. */}
+      {/* The creed, verbatim, the product's central honest message. */}
       <Callout tone="strong" title={t("problem.creedTitle")}>
         <span className="creed-verbatim">{t("disclaimer.creed")}</span>
       </Callout>

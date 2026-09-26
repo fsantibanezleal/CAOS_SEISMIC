@@ -4,22 +4,22 @@ Every model here implements the :class:`~caos_seismic.contracts.Forecaster` port
 intensity → expected counts → exceedance probability), so the inference driver and the CSEP harness
 can treat them interchangeably:
 
-* :class:`ETASForecaster` — space-time ETAS (Ogata 1998), the primary estimator *and* the reference
+* :class:`ETASForecaster`: space-time ETAS (Ogata 1998), the primary estimator *and* the reference
   any candidate forecaster must beat in prospective CSEP testing.
-* :class:`ReasenbergJonesForecaster` — the transparent modified-Omori aftershock fallback / sanity
+* :class:`ReasenbergJonesForecaster`: the transparent modified-Omori aftershock fallback / sanity
   check (USGS OAF shape).
-* :class:`SmoothedSeismicityForecaster` — the adaptive smoothed-seismicity Poisson background and the
+* :class:`SmoothedSeismicityForecaster`: the adaptive smoothed-seismicity Poisson background and the
   *mandatory null* (Helmstetter-Kagan-Jackson 2007); also supplies ``mu(x, y)`` to ETAS.
-* :class:`TiledForecaster` — the GLOBAL adapter: fits ETAS (+ its smoothed background) **per tectonic
+* :class:`TiledForecaster`: the GLOBAL adapter: fits ETAS (+ its smoothed background) **per tectonic
   regime / spatial tile** and aggregates the per-tile fields into one global conditional field, so the
   conditional models stay tractable (no global ``O(N^2)``) and physically meaningful (subduction
   parameters never bleed into the stable interior). It still implements the same Forecaster port. The
   regimes + tiling live in :mod:`caos_seismic.model.regime`
   (:func:`~caos_seismic.model.regime.assign_regime`, :func:`~caos_seismic.model.regime.iterate_tiles`).
-* :class:`ContextTPPForecaster` — the **gated neural challenger**: a context-conditioned spatio-temporal
+* :class:`ContextTPPForecaster`: the **gated neural challenger**: a context-conditioned spatio-temporal
   neural temporal point process (Hawkes inductive bias + CNN context encoder). It is **never the
   default** and reaches the public field only if it beats ETAS in prospective CSEP *and* calibrates.
-  Its symbols are re-exported here, but importing this subpackage stays torch-free — ``context_tpp``
+  Its symbols are re-exported here, but importing this subpackage stays torch-free, ``context_tpp``
   imports torch lazily inside its methods, so ``from caos_seismic.model import ContextTPPForecaster``
   works with only the core deps.
 

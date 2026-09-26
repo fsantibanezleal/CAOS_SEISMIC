@@ -1,4 +1,4 @@
-"""Spatio-temporal event association — match catalog rows to a reference catalog.
+"""Spatio-temporal event association, match catalog rows to a reference catalog.
 
 Used by :func:`caos_seismic.data.clean.build_mw_anchor` to pair network events with their
 Mw-homogenized ISC-GEM/GCMT counterparts (the overlap that anchors the TLS magnitude conversion).

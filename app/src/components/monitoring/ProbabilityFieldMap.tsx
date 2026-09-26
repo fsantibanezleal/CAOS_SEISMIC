@@ -11,7 +11,7 @@ import { cellToLatLng } from "h3-js";
 import { sampleRamp, valueToColor, valueToT, type RGB, type ScaleOptions } from "@/components/monitoring/colormap";
 import type { CellSelection } from "@/data/types";
 
-/** The two field renderings (purely visual — same data, same scale). */
+/** The two field renderings (purely visual, same data, same scale). */
 export type FieldMode = "hexbins" | "heatmap";
 
 /**
@@ -21,10 +21,10 @@ export type FieldMode = "hexbins" | "heatmap";
  *   - MapLibre GL JS as the WebGL2 base map (vector borders/labels stay legible).
  *   - deck.gl overlay attached via `MapboxOverlay` with `interleaved: true`, so the
  *     probability surface renders INTO MapLibre's single WebGL context (labels above the
- *     field). The heavy data goes through deck.gl's `H3HexagonLayer` — NOT MapLibre vector
+ *     field). The heavy data goes through deck.gl's `H3HexagonLayer`: NOT MapLibre vector
  *     polygons (which benchmark slow, Çabuk et al. 2025).
  *   - The hexagons are coloured on the perceptually-uniform SEQUENTIAL colormap
- *     (colormap.ts) — NEVER a red traffic-light ramp.
+ *     (colormap.ts): NEVER a red traffic-light ramp.
  *   - Cells in the coverage mask are NOT coloured by value; they render as a desaturated
  *     "out of coverage" hatch surrogate (blank ≠ safe). On a failed/stale run the whole field
  *     is desaturated by the parent (it passes `degraded`).
@@ -35,10 +35,10 @@ export type FieldMode = "hexbins" | "heatmap";
  * add a `MapboxOverlay` control, and update deck layers when props change.
  *
  * A free demo raster/vector style is used as the base; the data host can swap in a self-hosted
- * style without any code change. No tokens, no keys — public-repo safe.
+ * style without any code change. No tokens, no keys: public-repo safe.
  */
 
-/** Minimal raster base style (OSM tiles) — no API key, public-repo safe. The data host can
+/** Minimal raster base style (OSM tiles), no API key, public-repo safe. The data host can
  * replace this with a self-hosted vector style; the overlay code is unchanged. */
 const BASE_STYLE: maplibregl.StyleSpecification = {
   version: 8,
@@ -58,7 +58,7 @@ const BASE_STYLE: maplibregl.StyleSpecification = {
 
 export interface ProbabilityFieldMapProps {
   cells: CellSelection[];
-  /** H3 keys explicitly out of validated coverage — rendered as a desaturated hatch. */
+  /** H3 keys explicitly out of validated coverage, rendered as a desaturated hatch. */
   coverageMask: string[];
   /** Initial centre [lng, lat] + zoom (region-aware; world default if absent). */
   center?: [number, number];
@@ -66,7 +66,7 @@ export interface ProbabilityFieldMapProps {
   scale?: ScaleOptions;
   /** Stale/failed run → desaturate the whole field (visible degradation). */
   degraded?: boolean;
-  /** Field rendering: discrete H3 hexbins (default) or a continuous KDE heatmap. Visual only —
+  /** Field rendering: discrete H3 hexbins (default) or a continuous KDE heatmap. Visual only, 
    * both read the SAME per-cell values on the SAME perceptually-uniform colormap. */
   mode?: FieldMode;
   /** Called when a hexagon is clicked/hovered, for the drill-down panel. */

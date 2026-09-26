@@ -1,4 +1,4 @@
-"""Country VIEWs into the global field — the unit the global back-analysis scores over.
+"""Country VIEWs into the global field, the unit the global back-analysis scores over.
 
 The re-scoped thesis: **global context conditions short-term local forecasts**. The model trains on
 worldwide seismicity and conditions a single global field; *any country is a VIEW into that field*,
@@ -11,7 +11,7 @@ This module is a **thin, config-driven adapter** over the canonical view registr
 geometry: bounding boxes, ``m_max`` and attribution all come from that single source of truth so the
 back-analysis can never drift from the views the daily product and the web's country selector use.
 What this module adds is the **pre-registered seismicity-class partition** used by the high-vs-low
-bias comparison — each registry entry carries ``seismicity_class`` (``high`` = active plate boundary,
+bias comparison, each registry entry carries ``seismicity_class`` (``high`` = active plate boundary,
 ``low`` = stable interior / slow-deforming) and ``plate_setting``, surfaced here as a typed
 :class:`CountryView`.
 
@@ -20,7 +20,7 @@ tectonically diverse high-seismicity set (Chile, Japan, California, New Zealand)
 low-seismicity control set (Central/Eastern US, Western Europe, Eastern Australia), chosen *before*
 scoring (evaluation-plan §2) so the high-vs-low partition is fixed, not a post-hoc split.
 
-Imports only core deps + the package config/contracts — safe to import anywhere.
+Imports only core deps + the package config/contracts, safe to import anywhere.
 """
 
 from __future__ import annotations
@@ -46,7 +46,7 @@ class CountryView:
     Attributes
     ----------
     region:
-        The :class:`Region` (id, names, bbox, ``m_max``, attribution) scored by the forecast clock —
+        The :class:`Region` (id, names, bbox, ``m_max``, attribution) scored by the forecast clock, 
         projected from the registry :class:`~caos_seismic.contracts.View` via ``as_region()``.
     seismicity_class:
         ``"high"`` (active plate boundary) or ``"low"`` (stable interior / slow-deforming), read from
@@ -112,7 +112,7 @@ def all_views(include_global: bool = True, view_ids: list[str] | None = None) ->
     """All views the global back-analysis scores: every country view, optionally the GLOBAL view.
 
     The GLOBAL view is appended last so a reader sees per-country results before the pooled global
-    number (which is dominated by the high-seismicity margins — the exact bias the high-vs-low
+    number (which is dominated by the high-seismicity margins, the exact bias the high-vs-low
     comparison quantifies).
     """
     views = country_views(view_ids)

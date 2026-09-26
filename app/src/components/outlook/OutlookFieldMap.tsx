@@ -10,7 +10,7 @@ import { sampleRamp, type RGB } from "@/components/monitoring/colormap";
 import type { OutlookCell } from "@/data/outlook";
 
 /**
- * The 30-day outlook field as a continuous deck.gl HeatmapLayer over a desaturated MapLibre base — the
+ * The 30-day outlook field as a continuous deck.gl HeatmapLayer over a desaturated MapLibre base: the
  * geodetic-context background expected-count surface. Lazily imported (MapLibre + deck.gl are heavy) so
  * the bundle discipline matches Monitoring. Same perceptually-uniform viridis ramp as the daily field.
  */

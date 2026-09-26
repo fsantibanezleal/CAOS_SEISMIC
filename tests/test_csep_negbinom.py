@@ -1,4 +1,4 @@
-"""E13 — the negative-binomial (over-dispersion-honest) N-test.
+"""E13, the negative-binomial (over-dispersion-honest) N-test.
 
 The gridded-Poisson N-test assumes Var[N]=E[N] and so over-rejects clustered (ETAS branching) counts
 during sequences. `n_test_negbinom` scores the total against a negative-binomial null with the same
@@ -8,7 +8,7 @@ correct, honest evaluation fix (not a way to launder a real rate miscalibration)
 1. r → ∞ recovers the Poisson test exactly.
 2. For moderate over-dispersion, a vigorous-but-plausible sequence the Poisson test wrongly rejects is
    accepted.
-3. An extreme rate UNDER-forecast (our measured benchmark: 64 forecast vs 248 observed) STILL fails — a
+3. An extreme rate UNDER-forecast (our measured benchmark: 64 forecast vs 248 observed) STILL fails: a
    dispersion fix must not whitewash a genuine rate bias.
 """
 
@@ -35,7 +35,7 @@ def test_negbinom_accepts_moderate_overdispersion_that_poisson_rejects():
 
 
 def test_negbinom_still_fails_extreme_rate_underforecast():
-    """The measured benchmark gap (ETAS 64.2 vs 248 observed) is a RATE bias, not dispersion — it must
+    """The measured benchmark gap (ETAS 64.2 vs 248 observed) is a RATE bias, not dispersion, it must
     still fail under the configured r=4 (a dispersion fix cannot whitewash a 3.9x rate miss)."""
     nb = n_test_negbinom(64.2, 248, dispersion=4.0)
     assert nb.passed is False

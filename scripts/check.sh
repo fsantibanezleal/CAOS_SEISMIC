@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# check.sh — environment + repo + config sanity checks (no network, no science deps required).
+# check.sh: environment + repo + config sanity checks (no network, no science deps required).
 #
 #   scripts/check.sh --region chile
 #

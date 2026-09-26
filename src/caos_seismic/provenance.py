@@ -1,4 +1,4 @@
-"""Provenance helpers — write the versioned manifests that make every stage reproducible.
+"""Provenance helpers, write the versioned manifests that make every stage reproducible.
 
 A manifest (see :class:`caos_seismic.contracts.Manifest`) is the small JSON record committed to
 ``manifests/`` for every pipeline stage. Raw data, features and weights are NEVER versioned; the
@@ -6,8 +6,8 @@ manifest is the durable, byte-level provenance of *how* they were produced (sour
 params, row counts, config hash, code git SHA, issue timestamp). It is what makes a past forecast
 auditable months later (see ``data-and-pipelines.md`` §4, the versioned pipeline DAG).
 
-This module depends only on the standard library plus the package's own ``config``/``contracts`` —
-no heavy or optional dependencies — so the manifest record can always be written.
+This module depends only on the standard library plus the package's own ``config``/``contracts``, 
+no heavy or optional dependencies, so the manifest record can always be written.
 """
 
 from __future__ import annotations

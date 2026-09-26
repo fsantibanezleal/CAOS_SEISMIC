@@ -1,4 +1,4 @@
-"""Public contracts for CAOS_SEISMIC — the seams every module implements against.
+"""Public contracts for CAOS_SEISMIC, the seams every module implements against.
 
 This module is the single source of truth for:
   * the **catalog schema** (column contract for the event DataFrame),
@@ -35,7 +35,7 @@ CATALOG_COLUMNS: dict[str, str] = {
     "longitude": "degrees, WGS84",
     "depth_km": "hypocentral depth, km",
     "mag": "native magnitude value",
-    "mag_type": "native magnitude type (mb, Ms, ML, Md, Mw, ...) — NEVER dropped",
+    "mag_type": "native magnitude type (mb, Ms, ML, Md, Mw, ...), NEVER dropped",
     "mw": "magnitude homogenized to Mw-equivalent (TLS conversion; == mag where already Mw)",
     "source": "provider (usgs_comcat | csn | isc_gem | gcmt | emsc | ...)",
 }
@@ -76,7 +76,7 @@ class View(BaseModel):
     Core thesis of the global re-scope: the model trains on worldwide seismicity and conditions a
     single global field; *any country is a VIEW into that field*, never a separately-trained model.
     A view is a lightweight spatial window (an ISO-3166 country, a tectonic province, …) the static
-    web's region selector slices the global artifact down to. It is NOT a fitting unit — fitting is
+    web's region selector slices the global artifact down to. It is NOT a fitting unit, fitting is
     always global; the view only bounds which cells are surfaced and which ``m_max`` / attribution
     apply when the artifact is read back as a per-country slice.
     """
@@ -104,7 +104,7 @@ class View(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# The Forecaster port — every model (ETAS, Reasenberg–Jones, smoothed, neural) implements this
+# The Forecaster port: every model (ETAS, Reasenberg–Jones, smoothed, neural) implements this
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -188,7 +188,7 @@ class ForecastField(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Provenance manifest (VERSIONED) — makes every forecast byte-reproducible
+# Provenance manifest (VERSIONED): makes every forecast byte-reproducible
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -204,7 +204,7 @@ class Manifest(BaseModel):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# The compact daily artifact — the contract between the offline job and the static web app
+# The compact daily artifact: the contract between the offline job and the static web app
 # ─────────────────────────────────────────────────────────────────────────────
 
 ARTIFACT_SCHEMA_VERSION = "1.0"
@@ -229,7 +229,7 @@ class Staleness(BaseModel):
 
 
 class ViewIndexEntry(BaseModel):
-    """One entry in the artifact's ``views`` index — a country slice of the global field.
+    """One entry in the artifact's ``views`` index, a country slice of the global field.
 
     The global artifact ships ONE field; the SPA's country selector resolves a view to its cell-key
     list (``cells``) and reads only those keys from the shared ``forecast`` dict. Storing the cell

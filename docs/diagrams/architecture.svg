@@ -22,7 +22,7 @@
   </defs>
 
   <rect x="0" y="0" width="1200" height="800" fill="#0d1117"/>
-  <text x="40" y="52" class="accent" font-size="26" font-weight="700">CAOS_SEISMIC — deployment: compute &#8594; git &#8594; web</text>
+  <text x="40" y="52" class="accent" font-size="26" font-weight="700">CAOS_SEISMIC, deployment: compute &#8594; git &#8594; web</text>
   <text x="40" y="80" class="m" font-size="14">Heavy compute runs once per day, offline; the runtime is stateless and read-only.</text>
 
   <!-- three swim lanes -->

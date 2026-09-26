@@ -7,7 +7,7 @@ import { PipelineDiagram } from "@/components/content/PipelineDiagram";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Route 4 — Implementation (web-app-spec.md §5 + model-design.md §9).
+ * Route 4: Implementation (web-app-spec.md §5 + model-design.md §9).
  *
  * The v0 model description, the global / regime-tiled + context-encoder structure, and the
  * inline SVG flow diagram of the daily offline pipeline (web-app-spec.md §5.2):

@@ -8,13 +8,13 @@ import type { Language } from '@/i18n/config';
  * The REAL global multi-country back-analysis + the multi-model benchmark (web-app-spec §6: show every
  * model's prospective performance, honest failures included). Renders the committed
  * `backanalysis-global.json` (per-country IGPE vs the Poisson null, the high-vs-low-seismicity bias, the
- * context-contribution status) and `benchmark.json` (each model's IGPE — including the ones we do NOT
+ * context-contribution status) and `benchmark.json` (each model's IGPE: including the ones we do NOT
  * ship). Bilingual via the `lang` prop (this section is data-dense; labels are inlined EN/ES rather than
  * routed through the i18n bundle).
  */
 
 function fmt(x: number | null | undefined, dp = 4): string {
-  if (x === null || x === undefined || Number.isNaN(x)) return '—';
+  if (x === null || x === undefined || Number.isNaN(x)) return '–';
   return (x >= 0 ? '+' : '') + x.toFixed(dp);
 }
 
@@ -35,7 +35,7 @@ export function GlobalResults({ lang }: { lang: Language }) {
       .catch((e: unknown) => !cancelled && setErr(e instanceof Error ? e.message : String(e)));
     loadBenchmark()
       .then((d) => !cancelled && setBench(d))
-      .catch(() => undefined); // benchmark is optional — absence just hides that block
+      .catch(() => undefined); // benchmark is optional, absence just hides that block
     return () => {
       cancelled = true;
     };
@@ -70,7 +70,7 @@ export function GlobalResults({ lang }: { lang: Language }) {
         <div className="result-card">
           <span className="result-value mono">{fmt(globalIgpe, 4)}</span>
           <span className="result-label">{L('Global field vs null (1-day)', 'Campo global vs null (1 día)')}</span>
-          <span className="result-sub">{L('the global context contribution — nats/eq', 'la contribución del contexto global — nats/sismo')}</span>
+          <span className="result-sub">{L('the global context contribution, nats/eq', 'la contribución del contexto global, nats/sismo')}</span>
         </div>
         <div className="result-card">
           <span className="result-value mono">{fmt(biasGap, 4)}</span>
@@ -110,7 +110,7 @@ export function GlobalResults({ lang }: { lang: Language }) {
                     <td key={h} className={`mono ${val !== null && val > 0 ? 'pos' : val !== null && val < 0 ? 'neg' : ''}`}>{fmt(val, 4)}</td>
                   );
                 })}
-                <td className="mono">{ntp === null || ntp === undefined ? '—' : `${(ntp * 100).toFixed(0)}%`}</td>
+                <td className="mono">{ntp === null || ntp === undefined ? '–' : `${(ntp * 100).toFixed(0)}%`}</td>
               </tr>
             );
           })}
@@ -118,15 +118,15 @@ export function GlobalResults({ lang }: { lang: Language }) {
       </table>
       <p className="muted small">
         {L(
-          'Positive = the conditioned model beats the stationary null. Skill is highest globally (aggregated triggering) and in active margins; low-seismicity interiors sit at ~0 — a self-exciting model has nothing to add without aftershock sequences.',
-          'Positivo = el modelo condicionado supera al null estacionario. La skill es máxima globalmente (triggering agregado) y en márgenes activos; los interiores de baja sismicidad quedan en ~0 — un modelo auto-excitado no aporta sin secuencias de réplicas.',
+          'Positive = the conditioned model beats the stationary null. Skill is highest globally (aggregated triggering) and in active margins; low-seismicity interiors sit at ~0, a self-exciting model has nothing to add without aftershock sequences.',
+          'Positivo = el modelo condicionado supera al null estacionario. La skill es máxima globalmente (triggering agregado) y en márgenes activos; los interiores de baja sismicidad quedan en ~0, un modelo auto-excitado no aporta sin secuencias de réplicas.',
         )}
       </p>
 
       {/* Multi-model benchmark */}
       {bench ? (
         <>
-          <h3>{L('Model benchmark — every model, including the ones we don’t ship', 'Benchmark de modelos — todos, incluidos los que no desplegamos')}</h3>
+          <h3>{L('Model benchmark, every model, including the ones we don’t ship', 'Benchmark de modelos, todos, incluidos los que no desplegamos')}</h3>
           <p className="muted small">
             {L('Single-window leakage-free IGPE vs the Poisson null (', 'IGPE de ventana única sin fuga vs el null de Poisson (')}
             {bench.horizon_days}{L('-day holdout, M ≥ ', '-día holdout, M ≥ ')}{bench.m_threshold}{').'}
@@ -155,7 +155,7 @@ export function GlobalResults({ lang }: { lang: Language }) {
                       const isBest = val !== undefined && etas !== undefined && m.id === 'etas';
                       return (
                         <td key={m.id} className={`mono ${isBest ? 'best' : ''} ${val !== undefined && val > 0 ? 'pos' : val !== undefined && val < 0 ? 'neg' : ''}`}>
-                          {s ? fmt(val, 3) : '—'}
+                          {s ? fmt(val, 3) : '–'}
                         </td>
                       );
                     })}
@@ -166,8 +166,8 @@ export function GlobalResults({ lang }: { lang: Language }) {
           </table>
           <p className="callout honest small">
             {L(
-              'Honest finding: ETAS is the best single model, and the naive equal-weight ensemble UNDERPERFORMS it — averaging in the null and the weak Reasenberg–Jones dilutes the triggering signal that is the skill. This matches the literature (ensembles help only when score-weighted with strong members), so we do not ship the naive ensemble.',
-              'Hallazgo honesto: ETAS es el mejor modelo único, y el ensemble naïve de peso igual lo SUB-rinde — promediar el null y el débil Reasenberg–Jones diluye la señal de triggering que es la skill. Coincide con la literatura (los ensembles solo ayudan score-weighted con miembros fuertes), así que no desplegamos el ensemble naïve.',
+              'Honest finding: ETAS is the best single model, and the naive equal-weight ensemble UNDERPERFORMS it, averaging in the null and the weak Reasenberg–Jones dilutes the triggering signal that is the skill. This matches the literature (ensembles help only when score-weighted with strong members), so we do not ship the naive ensemble.',
+              'Hallazgo honesto: ETAS es el mejor modelo único, y el ensemble naïve de peso igual lo SUB-rinde, promediar el null y el débil Reasenberg–Jones diluye la señal de triggering que es la skill. Coincide con la literatura (los ensembles solo ayudan score-weighted con miembros fuertes), así que no desplegamos el ensemble naïve.',
             )}
           </p>
         </>

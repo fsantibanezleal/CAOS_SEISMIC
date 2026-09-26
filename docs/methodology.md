@@ -13,28 +13,28 @@
 
 This page is the equation-rich explainer behind the forecast. It has three parts:
 
-1. **Classical theories** — the analytical, physics-informed, and statistical models that define
+1. **Classical theories**: the analytical, physics-informed, and statistical models that define
    the field-standard baseline. Each is given with its governing equation, its parameters, and a
    peer-reviewed reference.
-2. **Analytical / ML approaches** — temporal point processes, neural temporal point processes
+2. **Analytical / ML approaches**: temporal point processes, neural temporal point processes
    (NTPP), and the honest, evidence-grounded verdict on machine learning *vs.* ETAS.
-3. **The CSEP evaluation backbone** — the credibility layer: consistency tests, comparative
+3. **The CSEP evaluation backbone**: the credibility layer: consistency tests, comparative
    information gain, calibration, and the Molchan/ROC view.
 
 **Conventions.** Magnitudes are homogenized to moment magnitude $M_w$ where possible; $M_c$ is the
 magnitude of completeness; $b$ is the Gutenberg–Richter slope; $\beta = b\ln 10$; information gains
-are reported in **nats** (natural-log units, the CSEP convention) — never bits.
+are reported in **nats** (natural-log units, the CSEP convention), never bits.
 
 ---
 
-## Part 1 — Classical theories
+## Part 1: Classical theories
 
 A well-tuned **ETAS** model is the de-facto short-term forecasting baseline that any candidate model
 (including every neural model) must be benchmarked against, and beaten in prospective CSEP testing,
 before it can claim forecasting skill. The classical stack below is what the system runs in
 production for v0.
 
-### 1.1 Gutenberg–Richter — the magnitude–frequency law
+### 1.1 Gutenberg–Richter: the magnitude–frequency law
 
 The frequency–magnitude distribution of earthquakes is, to first order, a power law. It supplies the
 **magnitude term** of every forecast.
@@ -59,7 +59,7 @@ rolling space–time window and their uncertainty is propagated into the forecas
   Tinti & Mulargia (1987), *BSSA* 77(6), 2125–2134 (binning correction);
   Wiemer & Wyss (2000), *BSSA* 90(4), 859–869 (doi:[10.1785/0119990114](https://doi.org/10.1785/0119990114)).
 
-### 1.2 Omori–Utsu — aftershock decay
+### 1.2 Omori–Utsu: aftershock decay
 
 After a mainshock, the aftershock rate decays as a power law in time:
 
@@ -74,14 +74,14 @@ $$N(t_1, t_2) = \frac{K}{1 - p}\left[(t_2 + c)^{1-p} - (t_1 + c)^{1-p}\right].$$
   Ogata (1988), *JASA* 83(401), 9–27
   (doi:[10.1080/01621459.1988.10478560](https://doi.org/10.1080/01621459.1988.10478560)).
 
-> **Honest limit — short-term aftershock incompleteness.** Immediately after a large mainshock —
-> exactly the highest-stakes, highest-traffic moment for a forecast — the catalog is grossly
+> **Honest limit, short-term aftershock incompleteness.** Immediately after a large mainshock, 
+> exactly the highest-stakes, highest-traffic moment for a forecast, the catalog is grossly
 > incomplete: $M_c$ spikes for hours to days while small events are buried in the coda. A naive fit
 > then **underestimates productivity** precisely when a large aftershock is most likely. The
 > real-time update therefore uses a time-dependent completeness $M_c(t)$ (incompleteness-aware
 > ETAS) rather than a flat threshold.
 
-### 1.3 ETAS — the Epidemic-Type Aftershock Sequence model (primary baseline)
+### 1.3 ETAS: the Epidemic-Type Aftershock Sequence model (primary baseline)
 
 ETAS is a self-exciting Hawkes point process: a stationary background plus the sum of all triggered
 "offspring" of every past event. It stitches together the background rate, Utsu productivity, the
@@ -96,7 +96,7 @@ $g(t) = \tfrac{p-1}{c}\big(1 + t/c\big)^{-p}$. The Ogata (1998) inverse-power sp
 $$f(x, y \mid M_i) = \frac{q - 1}{\pi\,\zeta^2}\left(1 + \frac{r^2}{\zeta^2}\right)^{-q},
 \qquad \zeta = D\, e^{\gamma (M_i - M_0)},\quad r^2 = (x-x_i)^2 + (y-y_i)^2 .$$
 
-**Stability — two distinct gates.** Two logically separate conditions must hold:
+**Stability, two distinct gates.** Two logically separate conditions must hold:
 
 1. **Finite branching:** the magnitude integral converges only if $\alpha < \beta$ (with
    $\beta = b\ln 10$). If $\alpha \ge \beta$ the productivity–magnitude integral diverges.
@@ -117,7 +117,7 @@ The point-process log-likelihood maximized in the fit (reused as the L-test kern
 $$\ln L = \sum_i \ln \lambda(t_i, x_i, y_i \mid \mathcal H_{t_i})
 - \int_0^T\!\!\int_A \lambda(t, x, y \mid \mathcal H_t)\, dx\, dy\, dt .$$
 
-### 1.4 Reasenberg–Jones — the transparent operational baseline
+### 1.4 Reasenberg–Jones: the transparent operational baseline
 
 The most transparent "tomorrow's earthquakes" model. The rate of events of magnitude $\ge M$ after a
 mainshock $M_m$ follows a Gutenberg–Richter magnitude term times a modified-Omori time decay:
@@ -137,10 +137,10 @@ $$P(\ge 1) = 1 - e^{-N} .$$
   global tectonic-regime extension Page et al. (2016), *BSSA* 106(5), 2290–2301
   (doi:[10.1785/0120160073](https://doi.org/10.1785/0120160073)).
 
-### 1.5 STEP — Short-Term Earthquake Probability
+### 1.5 STEP: Short-Term Earthquake Probability
 
 STEP is the production reference for the **product output shape**: it wraps Reasenberg–Jones
-clustering plus a background term into gridded shaking-probability maps — a
+clustering plus a background term into gridded shaking-probability maps, a
 "one-inference-per-(short interval)" probabilistic regional map, exactly the form of this product
 (daily cadence in our case). The conditional rate at a cell is the background rate plus the summed
 Reasenberg–Jones contribution of recent events.
@@ -149,7 +149,7 @@ Reasenberg–Jones contribution of recent events.
 - **Reference:** Gerstenberger, Wiemer, Jones & Reasenberg (2005), *Nature* 435, 328–331
   (doi:[10.1038/nature03622](https://doi.org/10.1038/nature03622)).
 
-### 1.6 EEPAS — Every Earthquake a Precursor According to Scale (medium term)
+### 1.6 EEPAS: Every Earthquake a Precursor According to Scale (medium term)
 
 A medium-term (months–years) precursory-scaling model. Each earthquake of precursor magnitude $M_p$
 contributes a rate density that is a product of three densities (magnitude, time, location),
@@ -164,12 +164,12 @@ with the rate density $\propto$ (normal in magnitude) $\times$ (lognormal in tim
 
 - **Honest caveat:** the published EEPAS density constants contain **known typos across papers**; if
   used, pin to a reference implementation (pyCSEP / floatCSEP) rather than transcribing constants.
-  EEPAS sits outside the 1-week primary window — a feature/context source, not a short-term core
+  EEPAS sits outside the 1-week primary window, a feature/context source, not a short-term core
   model.
 - **Reference:** Rhoades & Evison (2004), *Pure Appl. Geophys.* 161, 47–72
   (doi:[10.1007/s00024-003-2434-9](https://doi.org/10.1007/s00024-003-2434-9)).
 
-### 1.7 Smoothed seismicity — the spatial background $\mu(x,y)$ and the mandatory null
+### 1.7 Smoothed seismicity: the spatial background $\mu(x,y)$ and the mandatory null
 
 A stationary, time-independent estimate of where earthquakes occur, obtained by smoothing a
 **declustered** catalog with an adaptive kernel. The Helmstetter–Kagan–Jackson adaptive power-law
@@ -185,11 +185,11 @@ $$\mu(x, y) = \sum_i K_{d_i}(r), \qquad K_d(r) = \frac{C(d)}{\left(r^2 + d^2\rig
 > (Helmstetter–Kagan–Jackson 2007 or the pyCSEP/floatCSEP code), not assumed.
 
 - **Role:** (a) the spatial background field $\mu(x,y)$ that feeds ETAS; (b) the **stationary
-  Poisson reference** — the mandatory null any time-dependent model must beat.
+  Poisson reference**, the mandatory null any time-dependent model must beat.
 - **Reference:** Helmstetter, Kagan & Jackson (2007), *SRL* 78(1), 78–86
   (doi:[10.1785/gssrl.78.1.78](https://doi.org/10.1785/gssrl.78.1.78)).
 
-### 1.8 BPT / renewal — long-term time-dependent recurrence
+### 1.8 BPT / renewal: long-term time-dependent recurrence
 
 Where paleoseismic data genuinely constrain a fault's mean recurrence interval, a Brownian Passage
 Time (inverse-Gaussian) renewal model conditions the long-term background. The recurrence-time
@@ -203,12 +203,12 @@ whose hazard rises from zero, peaks, then plateaus.
 - **Parameters:** $\mu$ (mean recurrence interval), $\alpha$ (aperiodicity / coefficient of
   variation).
 - **Honest caveat:** with only a few observed cycles, $\alpha$ is poorly constrained and the gain
-  over a plain Poisson background is marginal — we do not claim renewal skill where the data do not
+  over a plain Poisson background is marginal, we do not claim renewal skill where the data do not
   support it.
 - **Reference:** Matthews, Ellsworth & Reasenberg (2002), *BSSA* 92, 2233–2250
   (doi:[10.1785/0120010267](https://doi.org/10.1785/0120010267)).
 
-### 1.9 Rate-and-state friction + Coulomb stress — the mechanistic layer
+### 1.9 Rate-and-state friction + Coulomb stress: the mechanistic layer
 
 Static stress transfer from a fault slip changes the Coulomb failure stress on neighbouring faults:
 
@@ -224,7 +224,7 @@ $$\frac{R}{r} = \exp\!\left(\frac{\Delta\mathrm{CFS}}{A\sigma}\right),
 
 with $t_a$ the characteristic aftershock-duration timescale.
 
-- **Role:** mechanistic spatial priors (Coulomb lobes promote/suppress triggering) — optional,
+- **Role:** mechanistic spatial priors (Coulomb lobes promote/suppress triggering): optional,
   feature-flagged covariates, not a standalone forecaster.
 - **References:** King, Stein & Lin (1994), *BSSA* 84, 935–953 (Coulomb);
   Dieterich (1994), *JGR* 99(B2), 2601–2618
@@ -259,9 +259,9 @@ the 1960 Valdivia event) and sets the tail probability of the rare, high-impact 
 
 ---
 
-## Part 2 — Analytical / ML model approaches
+## Part 2: Analytical / ML model approaches
 
-### 2.1 Temporal point processes — the unifying language
+### 2.1 Temporal point processes: the unifying language
 
 Every model above is a special case of a marked point process with conditional intensity
 $\lambda(t, x, y \mid \mathcal H_t)$. The model is fit by maximizing the point-process log-likelihood
@@ -269,34 +269,34 @@ $\lambda(t, x, y \mid \mathcal H_t)$. The model is fit by maximizing the point-p
 physics-informed member of this family; neural temporal point processes (NTPP) are the flexible,
 learned members.
 
-Foundational neural-TPP architectures (validated on **non-seismic** event streams — social, retail,
-synthetic — their log-likelihood wins do **not** automatically transfer to seismicity):
+Foundational neural-TPP architectures (validated on **non-seismic** event streams, social, retail,
+synthetic, their log-likelihood wins do **not** automatically transfer to seismicity):
 
-- **RMTPP** — Du et al. (2016), KDD, exponential intensity
+- **RMTPP**: Du et al. (2016), KDD, exponential intensity
   (doi:[10.1145/2939672.2939875](https://doi.org/10.1145/2939672.2939875)).
-- **Neural Hawkes Process** — Mei & Eisner (2017), NeurIPS, continuous-time LSTM with a softplus
+- **Neural Hawkes Process**: Mei & Eisner (2017), NeurIPS, continuous-time LSTM with a softplus
   intensity that permits inhibition (arXiv:1612.09328).
-- **Self-Attentive Hawkes** — Zhang et al. (2020), ICML (arXiv:1907.07561).
-- **Transformer Hawkes Process** — Zuo et al. (2020), ICML (PMLR v119).
+- **Self-Attentive Hawkes**: Zhang et al. (2020), ICML (arXiv:1907.07561).
+- **Transformer Hawkes Process**: Zuo et al. (2020), ICML (PMLR v119).
 
-### 2.2 Neural TPP for earthquakes — what genuinely helps
+### 2.2 Neural TPP for earthquakes: what genuinely helps
 
 Where learned models *can* add value over fixed-kernel ETAS, the gains come from two real ETAS gaps,
 not from "deep-learning magic":
 
-1. **Multivariate covariate ingestion** ETAS cannot easily absorb — sub-$M_c$ events, geodesy /
+1. **Multivariate covariate ingestion** ETAS cannot easily absorb: sub-$M_c$ events, geodesy /
    InSAR, injection / pore-pressure data, multiple catalogs.
-2. **Learned spatial anisotropy** — fault-aligned triggering structure recovered without explicit
+2. **Learned spatial anisotropy**: fault-aligned triggering structure recovered without explicit
    fault inputs.
 
 Two honest exemplars:
 
 - **RECAST** (Dascher-Cousineau et al., 2023, *GRL* 50, e2023GL103909,
-  doi:[10.1029/2023GL103909](https://doi.org/10.1029/2023GL103909)) — a GRU-based encoder–decoder
+  doi:[10.1029/2023GL103909](https://doi.org/10.1029/2023GL103909)), a GRU-based encoder–decoder
   neural TPP. It **improves on temporal ETAS only when the training catalog is large**
   ($\gtrsim 10^4$ events); on smaller catalogs it merely *matches* ETAS.
 - **FERN** (Zlydenko et al., 2023, *Sci. Rep.* 13,
-  doi:[10.1038/s41598-023-38033-9](https://doi.org/10.1038/s41598-023-38033-9)) — an
+  doi:[10.1038/s41598-023-38033-9](https://doi.org/10.1038/s41598-023-38033-9)), an
   ETAS-generalizing encoder (MLPs replace fixed kernels). The **FERN+** variant (which ingests
   sub-$M_c$ events) reports a 4–12 % information-gain-per-earthquake improvement and learns
   fault-aligned anisotropy. **Crucial caveats stated by the authors themselves:** it is *not*
@@ -314,7 +314,7 @@ short-term forecasting under fair, prospective CSEP-style testing.** The decisiv
   The authors conclude current NPP implementations are "not yet suitable for practical earthquake
   forecasting." On the ComCat dataset, ETAS passes the consistency tests at ~95.8 % (N-test),
   **92.0 % (spatial)**, 93.8 % (magnitude), 97.6 % (pseudo-likelihood), whereas the best NPP passes
-  ~86–88 % on the number/pseudo-likelihood tests but only **~68.6 % on the spatial test** — exactly
+  ~86–88 % on the number/pseudo-likelihood tests but only **~68.6 % on the spatial test**, exactly
   where forecasting value lives. The crucial methodological fix EarthquakeNPP made was to repair a
   **data-leakage flaw** in earlier neural-TPP-for-earthquakes work (non-chronological / alternating
   splits inflate metrics via triggering; excluding the Tohoku sequence makes the benchmark
@@ -323,36 +323,36 @@ short-term forecasting under fair, prospective CSEP-style testing.** The decisiv
 
 > **Scope caveat.** This "NPPs do not beat ETAS" result is established on the California-only
 > benchmark to date (1971–2021), not proven globally. It justifies shipping ETAS-class only for v0
-> and gating any neural model behind a CSEP win — but it is stated as "on the benchmark to date,"
+> and gating any neural model behind a CSEP win, but it is stated as "on the benchmark to date,"
 > not as an unconditional law. We do **not** claim ML can *never* add skill: some hybrid and neural
 > models match or beat plain ETAS on information gain *in specific settings*. The honest statement
 > is: *no pure ML / NPP has robustly beaten ETAS in prospective CSEP to date.*
 
-### 2.4 The cautionary tale — over-parameterization and the wrong metric
+### 2.4 The cautionary tale: over-parameterization and the wrong metric
 
 The canonical warning is **DeVries et al. (2018)** (*Nature* 560, 632–634,
 doi:[10.1038/s41586-018-0438-y](https://doi.org/10.1038/s41586-018-0438-y)): a deep net (6 hidden
 layers, ~13,451 free parameters, 12 stress features) reported AUC 0.85 for aftershock spatial
 pattern vs 0.58 for Coulomb stress. **Mignan & Broccardo (2019)** (*Nature* 575, E1–E3,
 doi:[10.1038/s41586-019-1582-8](https://doi.org/10.1038/s41586-019-1582-8)) matched that 0.85 with a
-**2-parameter logistic regression** ("one neuron") using a single feature — the sum of the absolute
+**2-parameter logistic regression** ("one neuron") using a single feature, the sum of the absolute
 values of the stress-change components. Root causes, each a guardrail for us:
 
 - **Massive over-parameterization** vs only ~199 effective mainshocks → assume overfitting whenever
   parameters $\gg$ effective samples.
 - **Per-cell "computer-vision" framing** inflated the apparent sample size (~131,000 correlated
   cells).
-- **AUC is the wrong metric for rate forecasting** — it is invariant to monotone rescaling, hence
+- **AUC is the wrong metric for rate forecasting**: it is invariant to monotone rescaling, hence
   blind to the calibration of the very probabilities a forecast publishes, and on a rare,
   per-cell-per-day task it largely measures *between-region rate differences* (it becomes a region
   classifier), not skill. **AUC / accuracy are banned as primary forecasting metrics.**
 
 ### 2.5 Detection is not forecasting
 
-ML waveform models — PhaseNet, EQTransformer, PhaseNO, SeisBench, and the SeisLM foundation model
-(arXiv:2410.15765) — are mature/production for phase-picking, detection, association, and
+ML waveform models, PhaseNet, EQTransformer, PhaseNO, SeisBench, and the SeisLM foundation model
+(arXiv:2410.15765), are mature/production for phase-picking, detection, association, and
 characterization. They build **better, more complete catalogs**, which helps both ETAS and neural
-forecasters — the single biggest realizable near-term lever. But they **do not forecast**: SeisLM is
+forecasters, the single biggest realizable near-term lever. But they **do not forecast**: SeisLM is
 positioned for detection/characterization only, and its foreshock–aftershock task is *retrospective*
 classification of existing waveforms relative to a *known* mainshock. We keep the
 detection/forecasting line explicit in product copy so detection branding never implies prediction.
@@ -364,15 +364,15 @@ never the default: it reaches the public map only if it **beats ETAS in our own 
 harness AND is calibrated**. The best-class challenger is a conditional spatio-temporal NTPP with a
 Hawkes inductive bias (FERN spirit: keep the additive background + summed-triggering skeleton,
 replace fixed kernels with small MLPs/attention) *and* explicit magnitude modelling (most NPPs lack
-this — a real weakness EarthquakeNPP flags). Calibration (reliability / PIT) is a release blocker.
+this, a real weakness EarthquakeNPP flags). Calibration (reliability / PIT) is a release blocker.
 
 ---
 
-## Part 3 — The CSEP evaluation backbone
+## Part 3: The CSEP evaluation backbone
 
 A forecast is only as honest as its prospective scoring. We adopt **CSEP** (the Collaboratory for
 the Study of Earthquake Predictability) and its community-endorsed toolkit **pyCSEP** as the *only*
-scoring framework — using standard tests, not bespoke metrics, is what makes the product defensible.
+scoring framework, using standard tests, not bespoke metrics, is what makes the product defensible.
 Each daily inference is **logged immutably at issue time, together with the exact catalog state it
 was computed from**, then scored. The live **calibration / reliability diagram** ("when we said 5 %,
 it happened ~5 % of the time") is the single most credibility-building artifact we ship. The full
@@ -443,7 +443,7 @@ and corroborated by the non-parametric **W-test** (Wilcoxon signed-rank).
 > zero in quiet periods**, with a modest all-period average. For scale, *time-independent*
 > model-vs-smoothed-seismicity contrasts in prospective California CSEP give IGPE of only about
 > **−0.7 to +0.5 nats**. We therefore report the gain as state-dependent, **not** as a fabricated
-> round figure, and always in nats — never bits.
+> round figure, and always in nats, never bits.
 
 ### E.4 Proper scoring rules & the alarm/ROC view (communication aids, not substitutes)
 
@@ -464,11 +464,11 @@ fraction $\tau$) and the **Area Skill Score** (1 = perfect, 0.5 = random):
   (doi:[10.1111/j.1365-246X.2007.03676.x](https://doi.org/10.1111/j.1365-246X.2007.03676.x)); ASS
   statistic Zechar & Jordan (2010), *PAGEOPH* 167, 893–906.
 
-> Note on **ROC/AUC**: shown only as a communication aid, never as a primary skill metric — it is
+> Note on **ROC/AUC**: shown only as a communication aid, never as a primary skill metric, it is
 > invariant to calibration and, on rare per-cell-per-day tasks, degenerates into a region classifier
 > (the DeVries trap, §2.4).
 
-### E.5 pyCSEP — the implementation
+### E.5 pyCSEP: the implementation
 
 All tests above are implemented in **pyCSEP** (Savran et al., 2022, *SRL* 93(5), 2858–2870,
 doi:[10.1785/0220220033](https://doi.org/10.1785/0220220033); docs at
@@ -480,7 +480,7 @@ our *model*, not our test code. *(There is no negative-binomial N-test in the co
 over-dispersion is handled via the catalog-based number test.)*
 
 A real operational template to sanity-check our scores: Serafini et al. (2025), *Scientific Data*
-12, 1501 (doi:[10.1038/s41597-025-05766-3](https://doi.org/10.1038/s41597-025-05766-3)) — 25
+12, 1501 (doi:[10.1038/s41597-025-05766-3](https://doi.org/10.1038/s41597-025-05766-3)), 25
 automated $M \ge 3.95$ daily models, >50,000 daily next-day forecasts over California (2007–2018),
 all scored with pyCSEP. The load-bearing finding: **no single model dominates the decade** (STEP
 excels during aftershock sequences); ETAS is the consistent generalist.
@@ -492,7 +492,7 @@ excels during aftershock sequences); ETAS is the consistent generalist.
 - **No deterministic prediction.** Whether a small rupture cascades into a great earthquake depends
   on unmeasurably fine details of the crust; deterministic prediction is effectively impossible
   (Geller et al., 1997, *Science* 275, 1616–1617). The physical picture is self-organized
-  criticality (Bak & Tang, 1989, *JGR* 94(B11), 15635–15637) — a *leading explanatory framework, not
+  criticality (Bak & Tang, 1989, *JGR* 94(B11), 15635–15637), a *leading explanatory framework, not
   settled physics*.
 - **Absolute probabilities stay small.** Even during an active sequence, the absolute probability of
   a large event in the next day is usually well under a few percent. The *relative* gain over
@@ -502,16 +502,16 @@ excels during aftershock sequences); ETAS is the consistent generalist.
   Ridgecrest sequence, UCERF3-ETAS gave ~3 % (≈2.8 %) chance of a larger event in the first week;
   the $M$ 7.1 struck ~34 h later. A 3 % forecast is **not wrong** when the 3 % outcome occurs.
 - **Operational systems are real and honest.** USGS OAF (Reasenberg–Jones → Page et al. 2016 global)
-  and OEF-Italy (an ensemble of **three distinct models — ETAS + ETES + STEP**) run as scheduled
+  and OEF-Italy (an ensemble of **three distinct models, ETAS + ETES + STEP**) run as scheduled
   services and publish calibrated probabilities with uncertainty. The OEF-Italy 10-year validation
   (Spassiani, Falcone, Murru & Marzocchi, 2023, *GJI* 234(3), 2501–2518) found it **broadly
   reliable, with a documented underestimation during the 2016–2017 Central Italy sequence** caused by
-  post-mainshock catalog incompleteness — exactly the short-term incompleteness limit in §1.2.
+  post-mainshock catalog incompleteness, exactly the short-term incompleteness limit in §1.2.
 - **The communication failure mode is the dangerous one.** The L'Aquila earthquake (2009, $M_w$
   ~6.1–6.3) and its trials are the field's cautionary tale: the harm was **false reassurance**, not a
   failure to predict. This product never over-reassures and never issues an alarm; it publishes
   calibrated conditional probabilities with explicit uncertainty, scored prospectively, as an
-  independent research/education tool that **complements** — never replaces — official agencies.
+  independent research/education tool that **complements**, never replaces, official agencies.
 
 ---
 

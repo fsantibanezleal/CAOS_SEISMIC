@@ -1,7 +1,7 @@
 """Typed loading of the YAML configs in `configs/`.
 
 Configs are the versioned source of truth for the region, grid, completeness, declustering, ETAS, the
-forecast/output settings, and publishing. Raw data, features, and weights are NEVER versioned — they are
+forecast/output settings, and publishing. Raw data, features, and weights are NEVER versioned, they are
 rebuildable from these configs + manifests + code.
 """
 
@@ -123,7 +123,7 @@ def view_metadata(view_id: str) -> dict[str, Any]:
     These tag the pre-registered HIGH/LOW partition for the bias comparison (they live in
     ``configs/views.yaml`` alongside each view but are not part of the lightweight :class:`View`
     contract). Unknown views / missing keys degrade to ``seismicity_class='high'`` (the conservative
-    default — an unclassified loud region is assumed to be in the dominant class) and an empty
+    default, an unclassified loud region is assumed to be in the dominant class) and an empty
     ``plate_setting``.
     """
     registry = (_load_views_raw().get("views", {}) or {})

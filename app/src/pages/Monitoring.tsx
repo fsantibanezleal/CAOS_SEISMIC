@@ -22,22 +22,22 @@ import {
 import type { Bound, CellSelection, ForecastArtifact } from "@/data/types";
 
 /**
- * Route 6 — Monitoring (the adversarial focus; web-app-spec.md §7–§8 implemented exactly).
+ * Route 6: Monitoring (the adversarial focus; web-app-spec.md §7–§8 implemented exactly).
  *
  * Default = a WORLD probability FIELD (NOT alarm dots) rendered via MapLibre GL JS + deck.gl
- * (MapboxOverlay interleaved, H3HexagonLayer) on a perceptually-uniform SEQUENTIAL colormap —
+ * (MapboxOverlay interleaved, H3HexagonLayer) on a perceptually-uniform SEQUENTIAL colormap, 
  * never a red traffic-light ramp. The map + deck.gl bundle is lazy-loaded / code-split behind
  * this route (MonitoringField).
  *
  * Honest controls, all always visible:
- *   - horizon selector (1d/2d/7d) — a probability with no horizon is meaningless;
+ *   - horizon selector (1d/2d/7d): a probability with no horizon is meaningless;
  *   - magnitude-threshold selector (M*);
  *   - bounds triad (Optimistic P10 · Expected median · Pessimistic P90), recolouring the SAME
  *     field, default Expected, with the persistent "plausible bad case, not a prediction" caption;
  *   - a no-map SVG summary, offered as a first-class alternative AND the no-WebGL fallback;
  *   - baseline comparison shown as ratio AND absolute (in the summary + the cell drill-down);
  *   - a numeric legend with cell area + horizon + threshold (never ordinal low/medium/high);
- *   - a calibration badge (green/amber/red = MODEL QUALITY only — the ONLY place red appears)
+ *   - a calibration badge (green/amber/red = MODEL QUALITY only: the ONLY place red appears)
  *     + an expandable CSEP panel + the reliability diagram;
  *   - a staleness / last-run banner + a coverage mask (blank ≠ safe).
  *
@@ -93,12 +93,12 @@ export default function Monitoring() {
     [artifact, horizon, threshold, bound],
   );
 
-  // Mean cell area (km²) for the artifact's display H3 resolution — drives the legend.
+  // Mean cell area (km²) for the artifact's display H3 resolution, drives the legend.
   const cellAreaKm2 = useMemo(() => {
     const res = artifact?.grid?.resolution;
     if (typeof res !== "number") return 0;
     try {
-      // Mean hexagon area (km²) for the display H3 resolution — drives the legend caption.
+      // Mean hexagon area (km²) for the display H3 resolution, drives the legend caption.
       return getHexagonAreaAvg(res, UNITS.km2);
     } catch {
       return 0;
@@ -123,7 +123,7 @@ export default function Monitoring() {
         <p className="lede">{t("monitoring.lede")}</p>
       </header>
 
-      {/* Honest framing — the field is "elevated relative to its own baseline", not an alarm. */}
+      {/* Honest framing, the field is "elevated relative to its own baseline", not an alarm. */}
       <Callout tone="honest">{t("monitoring.framing")}</Callout>
 
       {error ? <p className="error-note">{t("monitoring.error", { message: error })}</p> : null}

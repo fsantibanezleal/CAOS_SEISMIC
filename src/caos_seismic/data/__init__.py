@@ -1,14 +1,14 @@
-"""Data layer — catalog acquisition and cleaning (stages A and B of the pipeline DAG).
+"""Data layer, catalog acquisition and cleaning (stages A and B of the pipeline DAG).
 
 This subpackage implements the **fetch** and **clean** stages defined in
 ``docs/data-and-pipelines.md`` §1–§3:
 
-* :mod:`caos_seismic.data.fetch` — real catalog acquisition. The *spine* is USGS ComCat
+* :mod:`caos_seismic.data.fetch`: real catalog acquisition. The *spine* is USGS ComCat
   pulled over raw FDSN with ``requests`` alone (no ObsPy): ``/count`` first, tile around the
   20,000-event/request cap, ``updatedafter`` incremental deltas, polite retry/backoff. Optional
   helpers for CSN/ISC/EMSC (via ObsPy FDSN) and ISC-GEM/GCMT downloads lazily import the heavy
   deps and raise a clear, actionable error if they are absent.
-* :mod:`caos_seismic.data.clean` — dedupe across providers by preferred id, magnitude
+* :mod:`caos_seismic.data.clean`: dedupe across providers by preferred id, magnitude
   homogenization to **Mw** via a total-least-squares (orthogonal) regression anchored on the
   ISC-GEM/GCMT overlap, and validation against the catalog column contract.
 

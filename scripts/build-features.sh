@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# build-features.sh — Mc + b-value, Mw homogenization, dual-catalog declustering, feature extraction.
+# build-features.sh: Mc + b-value, Mw homogenization, dual-catalog declustering, feature extraction.
 #
 #   scripts/build-features.sh --region chile
 #

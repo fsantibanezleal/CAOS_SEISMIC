@@ -1,14 +1,14 @@
-"""E12 — score-weighted ETAS-variant stacking ensemble.
+"""E12, score-weighted ETAS-variant stacking ensemble.
 
 Pins the three structural guarantees that make the stack a real, fail-safe lever and not a repeat of the
 E8-E9 equal-weight dilution dead-end:
 
-1. **Plumbing** — ``TiledForecaster`` forwards the per-tile ETAS kernel overrides, so V1/V2 (short/long
+1. **Plumbing**: ``TiledForecaster`` forwards the per-tile ETAS kernel overrides, so V1/V2 (short/long
    memory) are genuinely different triggering models.
-2. **Stacking solver** — convex log-score-optimal weights: collapses to the anchor on a sparse/quiet
+2. **Stacking solver**: convex log-score-optimal weights: collapses to the anchor on a sparse/quiet
    holdout, recovers a clear signal when one member forecasts better, always returns a valid simplex
    point, and is never worse than the anchor in objective (the no-worse-than-base property).
-3. **Structural guard** — ``build_etas_stack_ensemble`` refuses any non-ETAS-family weighted member (the
+3. **Structural guard**: ``build_etas_stack_ensemble`` refuses any non-ETAS-family weighted member (the
    smoothed null / R-J), which is exactly what diluted E8-E9.
 """
 

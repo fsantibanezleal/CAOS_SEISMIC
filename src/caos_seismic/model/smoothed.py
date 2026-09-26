@@ -1,4 +1,4 @@
-"""Adaptive smoothed-seismicity background — the **mandatory null** Forecaster.
+"""Adaptive smoothed-seismicity background, the **mandatory null** Forecaster.
 
 Stationary, time-independent Poisson estimate of *where* earthquakes occur, obtained by
 smoothing a **declustered** catalog with an adaptive power-law kernel. This module supplies two
@@ -6,12 +6,12 @@ things the rest of the system depends on:
 
   1. the spatial background field ``mu(x, y)`` that seeds the ETAS conditional intensity
      (:mod:`caos_seismic.model.etas`), and
-  2. the **stationary Poisson reference** — the null hypothesis any time-dependent model must beat
+  2. the **stationary Poisson reference**: the null hypothesis any time-dependent model must beat
      in prospective CSEP comparison testing (information gain > 0 with a CI excluding zero).
 
 Kernel (Helmstetter, Kagan & Jackson 2007, *SRL* 78(1), 78-86, doi:10.1785/gssrl.78.1.78). Each
 event contributes an isotropic power-law kernel whose bandwidth ``d_i`` is the distance to its
-``n``-th nearest neighbour (adaptive smoothing — dense regions sharpen, sparse regions broaden)::
+``n``-th nearest neighbour (adaptive smoothing, dense regions sharpen, sparse regions broaden)::
 
     mu(x, y) = sum_i K_{d_i}(r_i),      K_d(r) = C(d) * (r^2 + d^2)^{-s}
 
@@ -50,7 +50,7 @@ from ._common import (
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Named kernel profiles — pin the exponent + normalization to a reference, never hard-code 3/2.
+# Named kernel profiles: pin the exponent + normalization to a reference, never hard-code 3/2.
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -134,7 +134,7 @@ def _nth_nearest_bandwidth(
     mapped to unit vectors, whose Euclidean **chord** distance is monotonic in great-circle distance,
     so the ``k``-th nearest neighbour is identical to the on-sphere one; the chord is then converted
     back to a great-circle arc-length in km. This is the change that makes the **global** (10^5-event)
-    smoothed-null fit tractable — the previous O(N^2) all-pairs loop hung on a worldwide catalog. A
+    smoothed-null fit tractable, the previous O(N^2) all-pairs loop hung on a worldwide catalog. A
     pure-numpy O(N^2) fallback is kept for the (rare) case SciPy is unavailable.
     """
     n_events = lat.size
@@ -194,7 +194,7 @@ class SmoothedSeismicityForecaster(BaseForecaster):
     mc: float | None = None
     #: Number of nearest events summed per query point at INFERENCE. The adaptive kernel decays as
     #: ``r^{-2s}``, so the few-dozen nearest events carry essentially all of a point's density; querying
-    #: them with a KD-tree makes the field O(cells · k log N) instead of O(cells · N) — the difference
+    #: them with a KD-tree makes the field O(cells · k log N) instead of O(cells · N), the difference
     #: between an instant and a 10^5-events × 10^6-cells global evaluation. ``None`` sums all events.
     inference_k: int = 96
 
@@ -218,7 +218,7 @@ class SmoothedSeismicityForecaster(BaseForecaster):
         """Build the stationary background field from the **declustered** catalog before ``t_issue``.
 
         The caller is responsible for passing the declustered catalog (the dual-catalog rule, see
-        ``configs/declustering.yaml``); this forecaster does not decluster — it only smooths. Events
+        ``configs/declustering.yaml``); this forecaster does not decluster, it only smooths. Events
         at or after ``t_issue`` are dropped here as a leakage backstop even though the forecast clock
         already guarantees it.
         """
@@ -273,14 +273,14 @@ class SmoothedSeismicityForecaster(BaseForecaster):
     def background_density_km2(self, lat: float, lon: float) -> float:
         """Smoothed event density (events / km^2, integrated over all time) at a point.
 
-        This is ``sum_i C(d_i) (r_i^2 + d_i^2)^{-s}`` — the raw HKJ field, normalized so the whole
+        This is ``sum_i C(d_i) (r_i^2 + d_i^2)^{-s}``, the raw HKJ field, normalized so the whole
         catalog integrates to ``len(events)`` over the plane. Multiply by a temporal rate and a cell
         area to get an expected count.
         """
         self._require_fit()
         n = self._ev_lat.size
         if self._tree is not None and self.inference_k is not None and n > int(self.inference_k):
-            # Sum the kernel over the k nearest events only — the decaying ``r^{-2s}`` kernel makes the
+            # Sum the kernel over the k nearest events only: the decaying ``r^{-2s}`` kernel makes the
             # far events' contribution negligible, so this is O(k log N) instead of O(N) per query.
             latr = np.radians(lat)
             lonr = np.radians(lon)

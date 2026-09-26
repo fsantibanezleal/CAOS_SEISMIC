@@ -24,7 +24,7 @@
 
   <!-- ETAS base -->
   <rect class="bx bx-hi" x="14" y="18" width="500" height="200" rx="10"/>
-  <text class="ttl" x="26" y="40">Base — regime-tiled space-time ETAS (Ogata 1998)</text>
+  <text class="ttl" x="26" y="40">Base, regime-tiled space-time ETAS (Ogata 1998)</text>
   <text class="cd mono" x="26" y="55">model/etas.py · model/tiled.py</text>
   <rect class="bx" x="26" y="66" width="476" height="40" rx="6"/>
   <text class="eq mono" x="38" y="92">&#955;(x,t) = &#956;(x) + &#931;&#7522; k(m&#7522;)&#183;g(t&#8722;t&#7522;)&#183;f(r | m&#7522;)</text>
@@ -38,28 +38,28 @@
 
   <!-- geodetic neural -->
   <rect class="bx bx-eng" x="534" y="18" width="332" height="200" rx="10"/>
-  <text class="ttl" x="546" y="40">Challenger — geodetic context-neural</text>
+  <text class="ttl" x="546" y="40">Challenger, geodetic context-neural</text>
   <text class="cd mono" x="546" y="55">model/context_tpp.py</text>
   <rect class="bx" x="546" y="66" width="308" height="56" rx="6"/>
   <text class="it" x="556" y="84">GNSS strain-rate field</text>
   <text class="mu" x="556" y="99">→ CNN spatial-context encoder</text>
   <text class="mu" x="556" y="114">→ calibrated background intensity</text>
   <text class="good" x="546" y="142">30 d: +0.106 IGPE vs ETAS (all 5 views +)</text>
-  <text class="warn" x="546" y="162">1&#8211;7 d: loses — ETAS triggering dominates</text>
+  <text class="warn" x="546" y="162">1&#8211;7 d: loses, ETAS triggering dominates</text>
   <text class="it" x="546" y="184">horizon-dependent: a covariate that helps</text>
   <text class="mu" x="546" y="200">only at the longer, background-led horizon</text>
   <text class="good" x="546" y="216">→ serves the 30-day outlook only</text>
 
   <!-- evaluation band -->
   <rect class="bx bx-hi" x="14" y="240" width="852" height="172" rx="10"/>
-  <text class="ttl" x="26" y="262">Honest evaluation — skill is measured, never asserted</text>
+  <text class="ttl" x="26" y="262">Honest evaluation, skill is measured, never asserted</text>
   <rect class="bx" x="26" y="274" width="408" height="124" rx="6"/>
   <text class="it" x="38" y="294">Catalog-based N-test (experiment E13)</text>
   <text class="cd mono" x="38" y="311">model/simulate.py</text>
   <text class="mu" x="38" y="330">ETAS branching simulation → over-dispersion-honest</text>
   <text class="mu" x="38" y="345">count distribution (Var ≫ mean during sequences)</text>
   <text class="it" x="38" y="368">an apparent under-forecast reads as over-dispersion</text>
-  <text class="it" x="38" y="383">+ secondary cascade — NOT a model failure</text>
+  <text class="it" x="38" y="383">+ secondary cascade, NOT a model failure</text>
   <rect class="bx" x="446" y="274" width="408" height="124" rx="6"/>
   <text class="it" x="458" y="294">Skill = information gain per earthquake (nats)</text>
   <text class="cd mono" x="458" y="311">eval/csep.py · eval/backanalysis.py</text>

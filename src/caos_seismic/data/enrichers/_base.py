@@ -3,19 +3,19 @@
 Every enricher in this subpackage is a *global* static-context loader: it downloads a worldwide
 dataset once (cached to the gitignored ``data/enrichers/`` store), then answers
 ``features_at(lat, lon)`` for any cell on Earth. The core thesis of CAOS_SEISMIC is that the global
-context conditions short-term *local* forecasts — so the enrichers are deliberately global, and any
+context conditions short-term *local* forecasts, so the enrichers are deliberately global, and any
 region is just a spatial *view* into the same global covariate field.
 
 This module holds the small, dependency-light pieces every enricher reuses:
 
-* :data:`ENRICHER_CACHE` — the gitignored cache root (``data/enrichers/``), with a per-dataset
+* :data:`ENRICHER_CACHE`: the gitignored cache root (``data/enrichers/``), with a per-dataset
   subdirectory helper. Raw downloads and parsed caches are *never* versioned (rebuildable from the
   provenance record + code), exactly like the catalog stores.
-* :class:`Provenance` — the license/citation/URL record every ``download()`` returns, so the public
+* :class:`Provenance`: the license/citation/URL record every ``download()`` returns, so the public
   credits page is never forgotten (data-and-pipelines.md §9).
-* :func:`http_download` — a polite, resumable-enough file GET reusing the catalog fetch
+* :func:`http_download`: a polite, resumable-enough file GET reusing the catalog fetch
   ``User-Agent`` and a small retry/backoff (no obspy; ``requests`` only).
-* :data:`EnricherResult` typing — the per-cell feature mapping ``features_at`` returns.
+* :data:`EnricherResult` typing: the per-cell feature mapping ``features_at`` returns.
 
 Heavy geospatial dependencies (``geopandas``/``shapely``/``netCDF4``/``xarray``/``pygtide``) are
 **never** imported here; each enricher imports them lazily inside its own functions with a clear,
@@ -39,7 +39,7 @@ from ...config import REPO_ROOT
 logger = logging.getLogger(__name__)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Cache root (gitignored — rebuildable from provenance + code)
+# Cache root (gitignored: rebuildable from provenance + code)
 # ─────────────────────────────────────────────────────────────────────────────
 
 #: Root of the gitignored enricher cache. Mirrors the ``data/raw`` / ``data/features`` convention:
@@ -68,7 +68,7 @@ def user_agent() -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Provenance — license + citation + source URLs (for the public credits page)
+# Provenance: license + citation + source URLs (for the public credits page)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -178,7 +178,7 @@ def require(module_hint: str, *, extra: str = "science"):
         gpd = require("geopandas")()
 
     The returned callable imports the module on first call and returns it; on ``ImportError`` it
-    raises with the exact ``pip install`` line. Never imported at module top level — that would put
+    raises with the exact ``pip install`` line. Never imported at module top level, that would put
     the heavy dep on the core import path, which the contracts forbid.
     """
     top = module_hint.split(".")[0]

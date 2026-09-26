@@ -1,4 +1,4 @@
-"""CSEP scoring primitives — consistency tests, comparison tests, reliability diagram.
+"""CSEP scoring primitives, consistency tests, comparison tests, reliability diagram.
 
 This module is the *scoring* half of the evaluation backbone. It speaks the field-standard CSEP
 language (Schorlemmer et al. 2007, *SRL* 78:17-29, doi:10.1785/gssrl.78.1.17; Zechar, Gerstenberger
@@ -16,9 +16,9 @@ correctly delegated to pyCSEP; their fallbacks raise an actionable error rather 
 
 Two representations are scored (methodology.md §E.1), with different tests:
 
-* **gridded-rate** — a Poisson expected count :math:`\\lambda_i` per space (×magnitude) bin; the
+* **gridded-rate**: a Poisson expected count :math:`\\lambda_i` per space (×magnitude) bin; the
   Poisson consistency tests apply directly.
-* **catalog-based** — an ensemble of :math:`\\ge 10{,}000` synthetic catalogs; empirical,
+* **catalog-based**: an ensemble of :math:`\\ge 10{,}000` synthetic catalogs; empirical,
   non-Poisson tests that relax the Poisson assumption, because regional seismicity is
   over-dispersed (variance :math:`\\gg` mean) and the Poisson grid tests **over-reject during
   aftershock sequences** (Kagan 2017, *GJI* 211:335-345, doi:10.1093/gji/ggx300; Savran et al.
@@ -43,7 +43,7 @@ import numpy as np
 from scipy import stats
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Lazy pyCSEP import — never at module top level (keeps the package importable with core deps only)
+# Lazy pyCSEP import: never at module top level (keeps the package importable with core deps only)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -117,13 +117,13 @@ class ConsistencyResult:
 
 @dataclass
 class ComparisonResult:
-    """Outcome of a paired comparison test of model A vs baseline B — where skill lives.
+    """Outcome of a paired comparison test of model A vs baseline B, where skill lives.
 
     The metric is **information gain per earthquake (IGPE)** in **nats** (methodology.md §E.3,
     Rhoades et al. 2011, *Acta Geophysica* 59:728-747, doi:10.2478/s11600-011-0013-5). Skill over
     baseline ``B`` is claimed only when ``igpe > 0`` AND the T-test CI excludes zero
     (``t_ci_excludes_zero``), corroborated by the W-test (``w_pvalue`` small). Honest expectation:
-    IGPE is state-dependent — large during active sequences, ≈0 when quiet — so a non-significant or
+    IGPE is state-dependent, large during active sequences, ≈0 when quiet, so a non-significant or
     negative result is reported as such, never hidden.
     """
 
@@ -148,7 +148,7 @@ class ComparisonResult:
 class ReliabilityDiagram:
     """Binned reliability diagram (the headline credibility artifact, methodology.md §6.4).
 
-    ``bins`` is a list of ``[forecast_prob, observed_freq, n]`` rows — exactly the shape consumed by
+    ``bins`` is a list of ``[forecast_prob, observed_freq, n]`` rows, exactly the shape consumed by
     :class:`caos_seismic.contracts.CalibrationSummary.reliability`. ``brier`` is the accompanying
     Brier score (Brier 1950) for the same binary exceedance outcomes; a strictly proper scoring rule
     that complements (never replaces) the CSEP calibration test.
@@ -173,7 +173,7 @@ class ReliabilityDiagram:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Closed-form primitives (numpy only — always available)
+# Closed-form primitives (numpy only: always available)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -204,7 +204,7 @@ def poisson_joint_log_likelihood(
 def n_test_poisson(
     forecast_total: float, observed_total: int, alpha: float = 0.05
 ) -> ConsistencyResult:
-    r"""CSEP **N-test** (number) via the Poisson tails — closed form, no pyCSEP needed.
+    r"""CSEP **N-test** (number) via the Poisson tails, closed form, no pyCSEP needed.
 
     The expected number of target events is :math:`N_{\text{fore}} = \sum_i \lambda_i`; the test
     asks whether the observed total :math:`N_{\text{obs}}` is consistent with a Poisson of that mean.
@@ -249,7 +249,7 @@ def n_test_negbinom(
     Clustered (ETAS branching) seismicity violates that badly: during an aftershock sequence the realized
     count is **over-dispersed**, so the Poisson test over-rejects (it reads a vigorous-but-plausible
     sequence as a gross miscalibration). This is the documented reason gridded-Poisson N-tests fail at
-    quantile 0 during sequences — Werner & Sornette (2008), Werner (2010), Kagan (2017 GJI), Savran et al.
+    quantile 0 during sequences, Werner & Sornette (2008), Werner (2010), Kagan (2017 GJI), Savran et al.
     (2020 BSSA). The fix is to score the total against an over-dispersed null.
 
     We model :math:`N \sim \text{NegBinom}` with mean :math:`N_{\text{fore}}` and variance
@@ -260,9 +260,9 @@ def n_test_negbinom(
     tails keep the same meaning as the Poisson test (``delta1`` small ⇒ forecast too few; ``delta2``
     small ⇒ too many), rejected two-sided at ``alpha``.
 
-    This corrects the *evaluation*, not the rate field — IGPE is unchanged; only the count-consistency
+    This corrects the *evaluation*, not the rate field, IGPE is unchanged; only the count-consistency
     verdict becomes honest. A *rate* under-forecast far beyond what ``r`` can absorb (e.g. a mainshock
-    sequence the productivity badly under-predicts) still fails, and *should* — that is a real rate
+    sequence the productivity badly under-predicts) still fails, and *should*, that is a real rate
     miscalibration, not a dispersion artifact, and the heavy-tailed catalog-based test is the next layer.
     """
     n_fore = float(forecast_total)
@@ -304,7 +304,7 @@ def information_gain_per_earthquake(
                     - \frac{\hat N_A - \hat N_B}{N}
 
     (methodology.md §E.3; Rhoades et al. 2011, doi:10.2478/s11600-011-0013-5). The sum runs over the
-    :math:`N = \sum_i \omega_i` observed target earthquakes — a bin with :math:`\omega_i` events
+    :math:`N = \sum_i \omega_i` observed target earthquakes, a bin with :math:`\omega_i` events
     contributes its log-rate difference :math:`\omega_i (\ln \lambda_A - \ln \lambda_B)`. The second
     term subtracts the rate-normalisation difference :math:`(\hat N_A - \hat N_B)/N`, with
     :math:`\hat N = \sum_i \lambda_i`.
@@ -352,7 +352,7 @@ def brier_score(forecast_probs: Sequence[float], outcomes: Sequence[int]) -> flo
 
     with :math:`p_t \in [0, 1]` the forecast exceedance probability and :math:`y_t \in \{0, 1\}` the
     outcome. A strictly proper scoring rule (Gneiting & Raftery 2007, doi:10.1198/016214506000001437)
-    that complements CSEP — lower is better, 0 is perfect. Used as a secondary scoring aid, never as
+    that complements CSEP, lower is better, 0 is perfect. Used as a secondary scoring aid, never as
     the headline skill metric.
     """
     p = np.asarray(forecast_probs, dtype=float)
@@ -372,12 +372,12 @@ def reliability_diagram(
     r"""Compute a binned reliability diagram + Brier score (methodology.md §6.4).
 
     Each forecast probability is assigned to one of ``n_bins`` equal-width bins on [0, 1]; for each
-    non-empty bin we report ``[mean_forecast_prob, observed_frequency, n]`` — the public "when we
+    non-empty bin we report ``[mean_forecast_prob, observed_frequency, n]``, the public "when we
     said X %, it happened ~X %" artifact. The output ``bins`` matches
     :class:`caos_seismic.contracts.CalibrationSummary.reliability` exactly.
 
     Validate calibration *specifically in the quiet / cold-start regime*, which dominates the diagram
-    because most cells are quiet (model-design.md §8) — not only during active sequences. This is a
+    because most cells are quiet (model-design.md §8), not only during active sequences. This is a
     closed-form computation (no pyCSEP needed); the pyCSEP ``calibration`` test is reported alongside
     by :func:`consistency_tests` when available.
     """
@@ -408,7 +408,7 @@ def reliability_diagram(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Consistency tests — pyCSEP when present, numpy N-test fallback otherwise
+# Consistency tests: pyCSEP when present, numpy N-test fallback otherwise
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -444,7 +444,7 @@ def consistency_tests(
     dict
         Mapping ``{test_name: ConsistencyResult}`` restricted to ``tests``. The N-test result always
         carries ``delta1`` / ``delta2``. Consistency calibrates one model; it never establishes
-        skill — see :func:`comparison_tests`.
+        skill, see :func:`comparison_tests`.
     """
     rates = np.asarray(forecast_rates, dtype=float)
     counts = np.asarray(observed_counts, dtype=float)
@@ -586,7 +586,7 @@ def _to_float(value) -> float | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Comparison tests — the only place skill is established
+# Comparison tests: the only place skill is established
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -619,7 +619,7 @@ def _paired_t_test_igpe(per_event_terms: np.ndarray, alpha: float) -> dict[str, 
             "t_ci_low": None,
             "t_ci_high": None,
             "t_ci_excludes_zero": None,
-            "note": "fewer than 2 contributing samples — T-test undefined",
+            "note": "fewer than 2 contributing samples, T-test undefined",
         }
     mean_diff = float(samples.mean())
     # Rhoades variance (unbiased), guarded against tiny negative round-off.
@@ -685,7 +685,7 @@ def comparison_tests(
     forecast_baseline=None,
     observed_catalog=None,
 ) -> ComparisonResult:
-    r"""Paired comparison test of the model vs ONE baseline — IGPE in nats + T-test + W-test.
+    r"""Paired comparison test of the model vs ONE baseline, IGPE in nats + T-test + W-test.
 
     This is the **only** place forecasting skill is established (methodology.md §E.3). It computes
     information gain per earthquake :math:`I_N(\text{model}, \text{baseline})` in **nats**, the paired
@@ -694,7 +694,7 @@ def comparison_tests(
     zero (positive side); the W-test p-value corroborates.
 
     Call once per baseline. The mandatory baselines are a smoothed-seismicity/Poisson null **and**
-    an ETAS model — the model must beat **both** to claim skill. Pass ``forecast_model`` /
+    an ETAS model, the model must beat **both** to claim skill. Pass ``forecast_model`` /
     ``forecast_baseline`` / ``observed_catalog`` pyCSEP objects to route the T/W tests through
     pyCSEP's ``poisson_evaluations.paired_t_test`` / ``w_test`` when installed (``pycsep_used=True``);
     otherwise the numpy implementation here is used.
@@ -722,7 +722,7 @@ def comparison_tests(
             n_earthquakes=0,
             skill_demonstrated=False,
             pycsep_used=False,
-            note="no observed target earthquakes in window — IGPE undefined (quiet period)",
+            note="no observed target earthquakes in window, IGPE undefined (quiet period)",
         )
 
     igpe, per_bin = information_gain_per_earthquake(a, b, omega)

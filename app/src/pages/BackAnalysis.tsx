@@ -18,14 +18,14 @@ import type { Language } from "@/i18n/config";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Route 5 — Back-analysis (web-app-spec.md §6, evaluation-plan.md §7/§9).
+ * Route 5: Back-analysis (web-app-spec.md §6, evaluation-plan.md §7/§9).
  *
  * Renders the retrospective, pseudo-prospective CSEP results per region × horizon from the
- * committed report JSON (via the static data loader — sample data until real pyCSEP output
+ * committed report JSON (via the static data loader: sample data until real pyCSEP output
  * lands). Per cell it shows:
  *   - the N/M/S/L/CL consistency tests, gridded AND catalog-based (Poisson grid over-rejection
  *     during sequences is annotated and paired with the catalog result);
- *   - the T/W comparison vs smoothed-seismicity AND ETAS baselines, with the IGPE CI in nats —
+ *   - the T/W comparison vs smoothed-seismicity AND ETAS baselines, with the IGPE CI in nats, 
  *     INCLUDING the honest failures where the model does NOT beat ETAS;
  *   - a reliability diagram per horizon;
  *   - the expected-vs-observed time series.

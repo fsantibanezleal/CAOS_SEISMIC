@@ -2,13 +2,13 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
- * Figure (a) — prediction (deterministic) vs forecast (probability in (0,1)).
+ * Figure (a): prediction (deterministic) vs forecast (probability in (0,1)).
  *
  * A side-by-side contrast that makes the ICEF distinction (Jordan et al. 2011) visual:
- *  - LEFT  ("prediction"): a binary alarm dial pinned to a single yes/no state — exactly the UI
+ *  - LEFT  ("prediction"): a binary alarm dial pinned to a single yes/no state: exactly the UI
  *    this product never renders. Drawn in the "bad"/faint palette and explicitly crossed out.
  *  - RIGHT ("forecast"):  a continuous probability axis in the open interval (0, 1) with an
- *    uncertainty band and a marker sitting LOW but elevated above its baseline tick — the only
+ *    uncertainty band and a marker sitting LOW but elevated above its baseline tick: the only
  *    thing this product ever emits.
  *
  * The SVG is theme-aware (it reads the palette through the `.pvf-*` classes in globals.css), so

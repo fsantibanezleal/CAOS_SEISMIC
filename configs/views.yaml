@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — country / region VIEWS into the single global field.
+# CAOS_SEISMIC: country / region VIEWS into the single global field.
 #
 # A view is NOT a separately-trained model. The model conditions ONE global field (region.global);
 # each view here is a lightweight spatial window the static web's country selector slices that field
@@ -76,7 +76,7 @@ views:
     seismicity_class: high
     plate_setting: "Apennine extension / Africa–Eurasia convergence"
     attribution:
-      - "Istituto Nazionale di Geofisica e Vulcanologia (INGV) — ISIDe"
+      - "Istituto Nazionale di Geofisica e Vulcanologia (INGV): ISIDe"
       - "USGS ComCat / ANSS"
 
   US-CA:

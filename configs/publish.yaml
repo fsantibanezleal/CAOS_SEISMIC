@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — git-as-data publishing (the daily job). See docs/deploy.md.
+# CAOS_SEISMIC: git-as-data publishing (the daily job). See docs/deploy.md.
 schedule:
   # Daily, early morning ~03:00 local time (Felipe, 2026-06-16).
   time_local: "03:00"
@@ -8,7 +8,7 @@ schedule:
 git:
   publish_branch: main
   remote: origin
-  # SCOPED allowlist — the auto-commit stages ONLY these paths. NEVER `git add -A`/`.` on a machine
+  # SCOPED allowlist: the auto-commit stages ONLY these paths. NEVER `git add -A`/`.` on a machine
   # that also has data/, features/, models/, .venv/, .env present.
   add_allowlist:
     - results/

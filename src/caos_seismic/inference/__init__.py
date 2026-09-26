@@ -4,7 +4,7 @@ This subpackage holds the pieces a daily run shares with the back-analysis harne
 live product and the retrospective evaluation execute *identical* code:
 
 * :class:`ForecastClock` and the ``conditioning_slice`` / ``target_slice`` /
-  ``assert_no_leakage`` helpers make temporal leakage structurally impossible — a forecaster
+  ``assert_no_leakage`` helpers make temporal leakage structurally impossible, a forecaster
   only ever sees the catalog slice strictly before ``t_issue`` (clock.py).
 * The provenance helpers (``build_manifest``, ``write_manifest``, ``read_manifest``,
   ``provenance_block``, ``snapshot_id``, ``code_git_sha``) pin exactly what produced each
@@ -54,7 +54,7 @@ __all__ = [
     "read_manifest",
     "snapshot_id",
     "write_manifest",
-    # daily / artifact — exposed lazily (see __getattr__) to keep package import light
+    # daily / artifact: exposed lazily (see __getattr__) to keep package import light
     "run_infer",
     "DailyInferenceResult",
     "write_artifact",
@@ -62,7 +62,7 @@ __all__ = [
 ]
 
 
-def __getattr__(name: str):  # PEP 562 — lazy re-export of the heavier daily/artifact symbols
+def __getattr__(name: str):  # PEP 562, lazy re-export of the heavier daily/artifact symbols
     """Expose the daily/artifact entry points without importing them at package-import time.
 
     Keeps ``import caos_seismic.inference`` to the core-only clock + provenance modules while still

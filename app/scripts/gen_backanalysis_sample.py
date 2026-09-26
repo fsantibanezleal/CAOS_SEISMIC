@@ -3,13 +3,13 @@
 This is the MOCK at the data boundary ONLY (evaluation-plan.md §9). It writes a small,
 schema-conforming back-analysis report (`back-analysis-sample.json`) so the Back-analysis
 page renders before any real pyCSEP results exist. Real results produced by the offline
-evaluation job replace this file byte-for-byte — the web code path is identical.
+evaluation job replace this file byte-for-byte, the web code path is identical.
 
 The numbers are ILLUSTRATIVE, clearly labelled `"sample": true`. They are NOT real CSEP
 scores. They are constructed only to exercise the page: the N/M/S/L/CL consistency tests
 (gridded AND catalog-based), the T/W comparison vs smoothed-seismicity AND ETAS baselines,
-a reliability diagram per region × horizon, the expected-vs-observed time series, and — as
-the evaluation plan requires — at least one HONEST FAILURE (a region × horizon where the
+a reliability diagram per region × horizon, the expected-vs-observed time series, and, as
+the evaluation plan requires, at least one HONEST FAILURE (a region × horizon where the
 model does NOT beat ETAS), plus a Poisson-grid over-rejection paired with its catalog result.
 
 Determinism: a fixed RNG seed, so the file regenerates identically. Outputs land under
@@ -74,7 +74,7 @@ def _comparison(rng: random.Random, *, beats_etas: bool) -> list[dict]:
         "w_pvalue": round(0.001 + 0.01 * rng.random(), 4),
         "skill": True,
     }
-    # vs ETAS: small gain, and only sometimes significant — the honest, hard comparison.
+    # vs ETAS: small gain, and only sometimes significant: the honest, hard comparison.
     if beats_etas:
         ig_et = round(0.04 + 0.06 * rng.random(), 3)
         ci_lo = round(ig_et - 0.03, 3)  # excludes 0 -> skill
@@ -86,7 +86,7 @@ def _comparison(rng: random.Random, *, beats_etas: bool) -> list[dict]:
             "skill": ci_lo > 0,
         }
     else:
-        # near-zero / slightly negative: NO skill over ETAS — a published failure.
+        # near-zero / slightly negative: NO skill over ETAS: a published failure.
         ig_et = round(-0.02 + 0.04 * rng.random(), 3)
         et = {
             "baseline": "etas",
@@ -187,8 +187,8 @@ def build_report() -> dict:
         _region(
             rng, "japan", "Japan", "Japón",
             "JMA (research use)",
-            "Dense network, very low Mc, abundant sequences — a demanding calibration test.",
-            "Red densa, Mc muy bajo, secuencias abundantes — una prueba de calibración exigente.",
+            "Dense network, very low Mc, abundant sequences, a demanding calibration test.",
+            "Red densa, Mc muy bajo, secuencias abundantes, una prueba de calibración exigente.",
             4.0, fail_horizon=2, overreject_horizon=None, evo_scale=4.5,
         ),
         _region(

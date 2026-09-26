@@ -1,4 +1,4 @@
-"""Stress enricher — crustal stress orientation/regime from the World Stress Map (+ focal mechanisms).
+"""Stress enricher, crustal stress orientation/regime from the World Stress Map (+ focal mechanisms).
 
 The World Stress Map (WSM; Heidbach et al., 2016) is the global compilation of present-day crustal
 stress indicators: each record carries the azimuth of the maximum horizontal compressive stress
@@ -94,7 +94,7 @@ def download(
     if url is None:
         raise ValueError(
             "download(stress) requires an explicit `url` to the current World Stress Map CSV "
-            f"(obtain it from {WSM_HOME} / GFZ Data Services — versioned per release). The CSV must "
+            f"(obtain it from {WSM_HOME} / GFZ Data Services, versioned per release). The CSV must "
             "carry LAT, LON, AZI (SHmax azimuth), REGIME, and QUALITY columns."
         )
     out = dest / "world_stress_map.csv"

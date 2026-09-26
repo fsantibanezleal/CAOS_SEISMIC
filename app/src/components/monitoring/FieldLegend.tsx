@@ -8,7 +8,7 @@ import { legendStops, type ScaleOptions } from "@/components/monitoring/colormap
  *
  * MANDATORY content: the legend states the HORIZON and the MAGNITUDE THRESHOLD (a probability
  * with neither is meaningless), the CELL AREA in km² (so "0.02 expected events / cell / 24 h"
- * is interpretable), and a NUMERIC ramp — never ordinal low/medium/high, never a traffic-light.
+ * is interpretable), and a NUMERIC ramp: never ordinal low/medium/high, never a traffic-light.
  * The ramp swatches are sampled from the same perceptually-uniform sequential colormap the
  * field uses.
  *

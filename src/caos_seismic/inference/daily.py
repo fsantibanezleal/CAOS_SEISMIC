@@ -1,11 +1,11 @@
-"""Daily inference — run ONE forecast for a region at a single issue time.
+"""Daily inference, run ONE forecast for a region at a single issue time.
 
 This is the orchestration spine of step (model-design.md §9, web-app-spec.md §8.2): the forecast
 clock hands the model only events ``< t_issue``; the conditional model (ETAS, with a
 Reasenberg–Jones fallback and a smoothed-seismicity null floor) is fit/conditioned on that lawful
 past; an ensemble of synthetic catalogs is simulated; per cell × horizon × threshold we compute the
 exceedance probability plus a **real** optimistic / expected / pessimistic decomposition (parameter
-bootstrap + Mc/b uncertainty + negative-binomial over-dispersion — *not* a cosmetic Poisson
+bootstrap + Mc/b uncertainty + negative-binomial over-dispersion, *not* a cosmetic Poisson
 interval); the public probability is **isotonically recalibrated**; a **QA gate** can refuse to
 publish; and a :class:`~caos_seismic.contracts.ForecastField` → :class:`ForecastArtifact` is
 assembled and serialized by :mod:`caos_seismic.inference.artifact`.
@@ -17,12 +17,12 @@ Design rules honoured here (all from the synthesis):
 * **The dual-catalog rule** (configs/declustering.yaml): the *declustered* catalog feeds the
   stationary smoothed-seismicity background; the *full un-declustered* catalog feeds the conditional
   model. When the declustering stage has not landed yet, we degrade transparently (same catalog to
-  both) and record the degradation in the manifest — never silently.
+  both) and record the degradation in the manifest, never silently.
 * **Cold-start floor** (model-design.md §8): the conditional rate floors to the long-term smoothed
   background ``μ(x,y)``, never to a hard-coded per-day constant.
 * **Bounded GR** (m_max per region) bounds every exceedance integral.
 * **Bounds are real** (model-design.md §7.2): a parameter bootstrap over the fitted model, Mc/b
-  estimation uncertainty, and negative-binomial over-dispersion over the ensemble counts — the
+  estimation uncertainty, and negative-binomial over-dispersion over the ensemble counts, the
   pessimistic (P90) bound is therefore wider than a naive Poisson quantile.
 * **Calibration is a release blocker** (model-design.md §7.1): isotonic regression on the
   pseudo-prospective reliability pairs; if no calibration map can be learned the identity map is
@@ -116,7 +116,7 @@ def run_infer(
     """Run one daily inference for ``region`` at ``issue`` and (optionally) write the artifact.
 
     Global re-scope: when ``region`` is the global field (``id == "global"``) the model is
-    conditioned over the **whole-Earth multi-resolution grid** (coarse world + fine coverage tiles —
+    conditioned over the **whole-Earth multi-resolution grid** (coarse world + fine coverage tiles, 
     :func:`build_global_fit_cells`), a single GLOBAL :class:`ForecastArtifact` is assembled, and each
     configured country **view** is sliced out of that one global field (the web's region selector
     reads these slices). A non-global region falls back to the regular single-region grid, so the
@@ -136,7 +136,7 @@ def run_infer(
     publish:
         If ``True`` and the QA gate passes, serialize the compact artifact under ``results/`` and
         update ``results/index.json``. If the gate fails the artifact is *not* written (the product
-        degrades visibly rather than serving a corrupted forecast — web-app-spec §8.2/§9).
+        degrades visibly rather than serving a corrupted forecast, web-app-spec §8.2/§9).
     rng_seed:
         Seed for the ensemble simulator and the bootstrap, so a daily run is byte-reproducible.
     views:
@@ -214,10 +214,10 @@ def run_infer(
 
     field_obj = ForecastField(region_id=reg.id, issued_at=issued_at, cells=cell_forecasts)
 
-    # 6) Isotonic calibration (release blocker) — recalibrate the public probability per horizon.
+    # 6) Isotonic calibration (release blocker): recalibrate the public probability per horizon.
     calibration = _calibrate_field(field_obj, horizons, forecast_cfg)
 
-    # 7) QA gate — refuse to publish a corrupted/anomalous artifact.
+    # 7) QA gate: refuse to publish a corrupted/anomalous artifact.
     qa_passed, qa_reasons = _qa_gate(
         field=field_obj,
         conditioning=conditional_cat,
@@ -225,7 +225,7 @@ def run_infer(
         thresholds=thresholds,
     )
 
-    # 8) Provenance manifest (always written — even a blocked run is auditable).
+    # 8) Provenance manifest (always written: even a blocked run is auditable).
     manifest = build_manifest(
         stage="inference",
         region_id=reg.id,
@@ -371,7 +371,7 @@ def _catalog_hygiene(
             "mc_version": mc_version, "declustering": declustering, "declustered": declustered,
         }
 
-    # Mc + b — prefer the catalog.completeness estimators; fall back to _common if the stage is absent.
+    # Mc + b: prefer the catalog.completeness estimators; fall back to _common if the stage is absent.
     try:
         completeness = importlib.import_module("caos_seismic.catalog.completeness")
         mc_est = completeness.mc_estimate(
@@ -397,7 +397,7 @@ def _catalog_hygiene(
                 b, b_unc = 1.0, 0.1
         mc = max(regional_default, float(past["mw"].min()))
 
-    # Declustering (dual-catalog rule) — prefer the decluster stage; degrade to the same catalog.
+    # Declustering (dual-catalog rule): prefer the decluster stage; degrade to the same catalog.
     try:
         decluster = importlib.import_module("caos_seismic.catalog.decluster")
         dual = decluster.dual_catalog(past, region=region)
@@ -472,10 +472,10 @@ def build_global_fit_cells(
     fit on a *multi-resolution* grid (``configs/grid.yaml: fit.global_fit``):
 
     1. a **coarse worldwide baseline grid** at ``world_cell_deg`` (e.g. 1°) covering the whole region
-       bbox — enough cells to carry the quiet-everywhere smoothed background everywhere on the planet
+       bbox, enough cells to carry the quiet-everywhere smoothed background everywhere on the planet
        without exploding (a 1° world grid is ~64k cells, not 6.5M); and
     2. **fine coverage tiles** at ``tile_cell_deg`` (e.g. 0.25°) carved only around recent seismicity
-       (events ``>= tile_min_mag`` in the conditioning slice, padded by ``tile_pad_deg``) — the
+       (events ``>= tile_min_mag`` in the conditioning slice, padded by ``tile_pad_deg``), the
        active provinces where a finer cell is actually fittable and where short-horizon skill lives.
 
     Where a fine tile overlaps the coarse grid, the coarse cells under the tile are dropped (no double
@@ -593,7 +593,7 @@ def _fit_model_family(
 
     Returns a dict carrying the fitted forecasters plus the name/version/params of whichever is the
     *primary* estimator (the tiled ETAS if it fit cleanly, else R-J). The smoothed null is always
-    present — it is the cold-start floor and the CSEP reference. The primary is the SAME tiled model
+    present, it is the cold-start floor and the CSEP reference. The primary is the SAME tiled model
     `train` fits, so the served forecast matches the trained manifest's ``primary_model``.
     """
     # Mandatory null + floor: the smoothed-seismicity background on the DECLUSTERED catalog.
@@ -604,7 +604,7 @@ def _fit_model_family(
     rj = ReasenbergJonesForecaster(b=b_value)
     rj.fit(conditional_cat, region, t_issue)
 
-    # Primary: regime-aware TILED ETAS — fit ETAS per tectonic tile and aggregate into the global
+    # Primary: regime-aware TILED ETAS: fit ETAS per tectonic tile and aggregate into the global
     # field, IDENTICAL to `train` (so the served forecast matches the manifest's primary_model). A
     # single monolithic ETAS over a worldwide 10^5-event catalog is both O(N^2) and physically wrong
     # (subduction ≠ stable interior); each tile enforces both stability gates and falls back to its own
@@ -680,7 +680,7 @@ def _forecast_cells(
     4. **Real bounds** (P10/P90) from a Monte-Carlo over three independent uncertainty sources
        (:func:`_bounds_for_cells`): a debiased ETAS-parameter bootstrap, Mc/b estimation uncertainty
        propagated through the GR tail, and a right-skewed Gamma over-dispersion multiplier (the
-       Gamma–Poisson / negative-binomial analogue on the rate) — so the pessimistic bound is wider
+       Gamma–Poisson / negative-binomial analogue on the rate), so the pessimistic bound is wider
        than a Poisson quantile while the triad stays monotone (lo <= expected <= hi).
     """
     lo_q, _mid_q, hi_q = quantiles[0], quantiles[1], quantiles[-1]
@@ -745,21 +745,21 @@ def _bounds_for_cells(
     hi_q: float,
     rng: np.random.Generator,
 ) -> tuple[np.ndarray, np.ndarray]:
-    r"""Monte-Carlo optimistic/pessimistic probability bounds for every cell — a REAL decomposition.
+    r"""Monte-Carlo optimistic/pessimistic probability bounds for every cell, a REAL decomposition.
 
     The bounds are quantiles of the uncertain **expected count** :math:`N(\geq M^*)` per cell, mapped
     through the public exceedance formula :math:`p = 1 - e^{-N}`. Working on the *rate* :math:`N`
     (continuous), rather than on a single integer-count draw, is what keeps the triad monotone
     (:math:`\text{lo} \leq \text{expected} \leq \text{hi}` by construction) while still encoding three
-    genuinely different uncertainty sources — *not* a cosmetic Poisson interval (model-design.md §7.2):
+    genuinely different uncertainty sources, *not* a cosmetic Poisson interval (model-design.md §7.2):
 
-    1. **ETAS-parameter / structural uncertainty** — a multiplicative log-normal factor
+    1. **ETAS-parameter / structural uncertainty**: a multiplicative log-normal factor
        :math:`\exp(\sigma_p z)` (a fast surrogate for the MLE-covariance / bootstrap ensemble of
        §7.2-1/§7.2-3), debiased so its *median* is 1.0 (the point estimate is unshifted).
-    2. **Mc / b-value estimation uncertainty** — :math:`b` and :math:`M_c` are redrawn from their
+    2. **Mc / b-value estimation uncertainty**: :math:`b` and :math:`M_c` are redrawn from their
        estimation errors and the bounded-GR magnitude tail :math:`\Phi(M^*)` is recomputed,
        propagating completeness / Gutenberg–Richter uncertainty into the rate (§7.2-2).
-    3. **Over-dispersion** — a **Gamma over-dispersion multiplier** with shape/rate :math:`r` (mean 1,
+    3. **Over-dispersion**: a **Gamma over-dispersion multiplier** with shape/rate :math:`r` (mean 1,
        variance :math:`1/r`) inflates the upper tail of :math:`N`, the continuous analogue of the
        negative-binomial (Gamma–Poisson) catalog-count model. Its right-skew is what makes the
        pessimistic (P90) bound **wider than a naive Poisson quantile** (Kagan 2017;
@@ -784,7 +784,7 @@ def _bounds_for_cells(
     phi_point = max(phi_point, 1e-12)
     base_rate_at_mc = lam_eff / phi_point  # rate at >= Mc (the unscaled productivity), per cell
 
-    # (1) Parameter / structural channel — debiased log-normal (median 1, so the point λ is unshifted).
+    # (1) Parameter / structural channel: debiased log-normal (median 1, so the point λ is unshifted).
     sigma_p = 0.35
     param_factor = np.exp(rng.normal(0.0, sigma_p, size=n_draws))  # median exp(0)=1
 
@@ -797,7 +797,7 @@ def _bounds_for_cells(
     )
     phi_ratio = np.clip(phi_draws / phi_point, 0.0, None)
 
-    # (3) Over-dispersion multiplier — Gamma(shape=r, scale=1/r): mean 1, variance 1/r, right-skewed.
+    # (3) Over-dispersion multiplier: Gamma(shape=r, scale=1/r): mean 1, variance 1/r, right-skewed.
     nb_r = 4.0
     overdisp = rng.gamma(shape=nb_r, scale=1.0 / nb_r, size=n_draws)
 
@@ -817,7 +817,7 @@ def _bounds_for_cells(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Calibration (isotonic) — release blocker
+# Calibration (isotonic): release blocker
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -891,7 +891,7 @@ def _load_calibration_history() -> list[list[float]] | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# QA gate — refuse to publish on failure (web-app-spec §8.2 / §9)
+# QA gate: refuse to publish on failure (web-app-spec §8.2 / §9)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -906,12 +906,12 @@ def _qa_gate(
 
     Checks (configs/forecast.yaml ``qa_gate``):
 
-    * **probabilities in range** — every published ``expected``/``lo``/``hi`` ∈ [0, 1] with
+    * **probabilities in range**: every published ``expected``/``lo``/``hi`` ∈ [0, 1] with
       ``lo <= expected <= hi`` (a violated ordering means a bounds bug, not a forecast).
-    * **event-count anomaly** — the conditioning catalog's most recent daily count is within
+    * **event-count anomaly**: the conditioning catalog's most recent daily count is within
       ``max_event_count_zscore`` of the rolling daily mean (a single bad/duplicated/retracted spike
-      near M* can swing a public probability — model-design.md §9).
-    * **near-threshold duplicate guard** — no exact duplicate (id, time, mag) near a published M*
+      near M* can swing a public probability, model-design.md §9).
+    * **near-threshold duplicate guard**: no exact duplicate (id, time, mag) near a published M*
       when ``forbid_duplicate_near_threshold`` is set.
 
     Returns ``(passed, reasons)``; ``reasons`` is the human-readable failure list recorded in the
@@ -967,7 +967,7 @@ def _latest_daily_count_zscore(conditioning: pd.DataFrame) -> float | None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Artifact assembly (in-memory) — the writer (artifact.py) does H3 + quantize + gzip
+# Artifact assembly (in-memory): the writer (artifact.py) does H3 + quantize + gzip
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -1051,7 +1051,7 @@ def assemble_artifact(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Per-view extraction — slice the GLOBAL field down to one country VIEW
+# Per-view extraction: slice the GLOBAL field down to one country VIEW
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -1061,7 +1061,7 @@ def extract_view(artifact: ForecastArtifact, view: View | str) -> ForecastArtifa
     The global field is the single source of truth; this returns a *standalone* artifact carrying
     only the cells inside the view's bbox, with the view's own ``region``/``m_max``/``attribution``.
     It is what ``/api/region/{iso}`` serves and what the web's country selector renders when a user
-    drills into a country — no separate model, just a window into the one global field.
+    drills into a country, no separate model, just a window into the one global field.
 
     Cell membership is decided by the H3 cell centre when ``h3`` is available (display keys), and by
     the ``"lat,lon"`` key otherwise (fine keys / no-h3 fallback). The forecast payload is shared
@@ -1108,15 +1108,15 @@ def view_cell_keys(
 
 
 def _cell_centroid(key: str) -> tuple[float | None, float | None]:
-    """Centroid ``(lat, lon)`` of a cell key — ``"lat,lon"`` directly, or an H3 cell via lazy h3."""
-    # Fine "lat,lon" key — parse directly (no h3 needed).
+    """Centroid ``(lat, lon)`` of a cell key, ``"lat,lon"`` directly, or an H3 cell via lazy h3."""
+    # Fine "lat,lon" key: parse directly (no h3 needed).
     if "," in key:
         a, _, b = key.partition(",")
         try:
             return float(a), float(b)
         except ValueError:
             pass
-    # H3 display key — resolve the cell centre lazily (h3 is a core dep but imported on use only).
+    # H3 display key: resolve the cell centre lazily (h3 is a core dep but imported on use only).
     try:
         import h3
     except ModuleNotFoundError:
@@ -1146,7 +1146,7 @@ def _fmt_m(m: float) -> str:
 
 
 def _next_run_iso(issued_at: str, schedule: dict) -> str:
-    """Next scheduled issue time (ISO-8601 UTC) — issued_at + one cadence step (daily by default)."""
+    """Next scheduled issue time (ISO-8601 UTC), issued_at + one cadence step (daily by default)."""
     try:
         base = pd.Timestamp(issued_at)
         if base.tzinfo is None:

@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — declustering. THE DUAL-CATALOG RULE (the most common pipeline mistake made explicit):
+# CAOS_SEISMIC: declustering. THE DUAL-CATALOG RULE (the most common pipeline mistake made explicit):
 #   - background mu(x,y):  fit on a DECLUSTERED catalog (independent mainshocks only)
 #   - ETAS / conditional:  fed the FULL, UN-declustered catalog (triggering IS the predictable signal)
 #   - scoring:             on the NON-declustered catalog (we deliberately forecast clustering)

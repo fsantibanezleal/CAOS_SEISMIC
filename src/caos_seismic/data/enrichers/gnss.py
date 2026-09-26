@@ -1,4 +1,4 @@
-"""NGL / MIDAS GNSS enricher — geodetic strain-rate proxy at each cell.
+"""NGL / MIDAS GNSS enricher, geodetic strain-rate proxy at each cell.
 
 The Nevada Geodetic Laboratory publishes MIDAS (Blewitt et al., 2016) trend velocities for the global
 GNSS station network: a robust, outlier-resistant secular velocity per station in the IGS14 frame.
@@ -17,7 +17,7 @@ Per-cell features
 
 Data & license
 --------------
-* Source: ``geodesy.unr.edu`` — the MIDAS combined file ``midas.IGS14.txt`` (one row per station:
+* Source: ``geodesy.unr.edu``: the MIDAS combined file ``midas.IGS14.txt`` (one row per station:
   id, lon, lat, east/north/up velocity + uncertainties) and per-station ``.tenv3`` time series.
 * License: open with attribution (Nevada Geodetic Laboratory / Blewitt et al., 2018).
 
@@ -66,7 +66,7 @@ def download(
     http_download(url, out, overwrite=overwrite, session=session)
     return Provenance(
         dataset=DATASET,
-        title="Nevada Geodetic Laboratory — MIDAS GNSS velocities (IGS14)",
+        title="Nevada Geodetic Laboratory, MIDAS GNSS velocities (IGS14)",
         version="MIDAS combined (rolling)",
         source_url=f"{NGL_BASE}/velocities/",
         license="Open with attribution (Nevada Geodetic Laboratory)",
@@ -150,7 +150,7 @@ def load_midas(path: Path) -> pd.DataFrame:
         )
     df = pd.DataFrame(rows, columns=["station", "lat", "lon", "ve_mm_yr", "vn_mm_yr"])
     if df.empty:
-        raise ValueError(f"parsed zero MIDAS stations from {path} — check the file format.")
+        raise ValueError(f"parsed zero MIDAS stations from {path}, check the file format.")
     return df
 
 

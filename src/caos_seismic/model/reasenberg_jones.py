@@ -1,4 +1,4 @@
-"""Reasenberg-Jones aftershock model — the transparent operational fallback / sanity check.
+"""Reasenberg-Jones aftershock model, the transparent operational fallback / sanity check.
 
 The most transparent "tomorrow's earthquakes" model and the shape the USGS Operational Aftershock
 Forecast (OAF) system runs alongside ETAS. The rate of aftershocks of magnitude ``>= M`` following a
@@ -17,7 +17,7 @@ and the probability of at least one such event (non-homogeneous Poisson)::
 
 Here ``t`` is elapsed time since the **most recent triggering mainshock** in the catalog. The model
 is deliberately mainshock-driven: it is a *fallback* and *sanity check*, not the primary spatial
-forecaster — it forecasts the aftershock productivity of the largest recent event, distributed in
+forecaster, it forecasts the aftershock productivity of the largest recent event, distributed in
 space by that event's smoothed influence. Where ETAS is the production estimator, R-J is the
 human-auditable cross-check (does ETAS roughly agree with the textbook Omori extrapolation?).
 
@@ -25,7 +25,7 @@ Parameters
 ----------
 ``a`` (sequence productivity), ``b`` (Gutenberg-Richter slope), ``c`` (Omori offset, days), ``p``
 (Omori decay). Generic / regionally-defaulted constants are explicitly flagged: the methodology
-warns *do not reuse California parameters for Chile* — defaults here are the widely-cited generic
+warns *do not reuse California parameters for Chile*, defaults here are the widely-cited generic
 values (Reasenberg & Jones 1989; Page et al. 2016 global), used only when a region/sequence fit is
 unavailable, and the chosen values are recorded in ``params_used`` for the manifest.
 
@@ -47,7 +47,7 @@ from ._common import DEG2KM, haversine_km, poisson_p_at_least_one
 
 # Generic Reasenberg-Jones constants (California-derived; flagged non-universal). The a/b/c/p below
 # are the order-of-magnitude generic values used by the OAF when no sequence-specific fit exists.
-# They are NOT silently trusted for Chile — see the region note in region.chile.yaml.
+# They are NOT silently trusted for Chile: see the region note in region.chile.yaml.
 GENERIC_RJ = {"a": -1.67, "b": 0.91, "c": 0.05, "p": 1.08}
 
 
@@ -62,7 +62,7 @@ class ReasenbergJonesForecaster(BaseForecaster):
         and flagged in :attr:`params_used`; ``b`` defaults to the catalog Aki-Utsu estimate when a
         completeness is supplied via :meth:`fit`.
     influence_km:
-        Spatial smoothing length (km) of the mainshock's aftershock zone — aftershock density is a
+        Spatial smoothing length (km) of the mainshock's aftershock zone, aftershock density is a
         Gaussian in epicentral distance with this scale, so the per-cell rate decays away from the
         mainshock rather than being uniform over the region. Scales with mainshock magnitude via the
         Utsu rupture-length relation if not overridden.

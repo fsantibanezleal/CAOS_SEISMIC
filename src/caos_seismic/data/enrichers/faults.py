@@ -1,4 +1,4 @@
-"""GEM Global Active Faults enricher — distance-to-nearest-fault and fault style per cell.
+"""GEM Global Active Faults enricher, distance-to-nearest-fault and fault style per cell.
 
 The GEM Global Active Faults Database (Styron & Pagani, 2020) is a worldwide, harmonized vector
 catalog of active fault traces with a ``slip_type`` attribute (normal / reverse / dextral /
@@ -19,7 +19,7 @@ Data & license
 --------------
 * Source: ``github.com/GEMScienceTools/gem-global-active-faults`` (GeoJSON/GPKG/SHP). The harmonized
   release file is ``gem_active_faults_harmonized.geojson``.
-* License: **CC-BY-SA 4.0** (verify the repo ``LICENSE`` per release — share-alike: a redistributed
+* License: **CC-BY-SA 4.0** (verify the repo ``LICENSE`` per release: share-alike: a redistributed
   derivative must keep the license + attribution). Internal feature-building is unaffected; the
   public credits page must attribute GEM.
 
@@ -49,7 +49,7 @@ GEM_HARMONIZED_GEOJSON = (
     "master/geojson/gem_active_faults_harmonized.geojson"
 )
 
-#: Slip-type string → small integer code (stable; do not renumber — it is a model feature).
+#: Slip-type string → small integer code (stable; do not renumber, it is a model feature).
 SLIP_TYPE_CODES: dict[str, int] = {
     "unknown": 0,
     "reverse": 1,
@@ -115,7 +115,7 @@ def download(
         title="GEM Global Active Faults Database (harmonized)",
         version="harmonized release",
         source_url=GEM_REPO,
-        license="CC-BY-SA 4.0 (verify repo LICENSE per release — share-alike)",
+        license="CC-BY-SA 4.0 (verify repo LICENSE per release, share-alike)",
         attribution="GEM Global Active Faults Database (Styron & Pagani, 2020)",
         citation=(
             "Styron, R., & Pagani, M. (2020). The GEM Global Active Faults Database. "
@@ -184,7 +184,7 @@ class FaultsEnricher:
         self._lon = np.asarray(lons, dtype=float)
         self._code = np.asarray(codes, dtype=int)
         if self._lat.size == 0:
-            raise ValueError("GEM faults layer densified to zero vertices — check the source file.")
+            raise ValueError("GEM faults layer densified to zero vertices, check the source file.")
 
     def features_at(self, lat: float, lon: float, **_: Any) -> EnricherResult:
         """Return nearest-fault distance + style covariates at ``(lat, lon)``."""

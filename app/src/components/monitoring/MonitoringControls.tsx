@@ -5,16 +5,16 @@ import type { Bound } from "@/data/types";
 /**
  * The honest, always-visible Monitoring controls (web-app-spec.md §7.3):
  *
- *  - HORIZON selector (1d / 2d / 7d) — always visible; a probability with no horizon is
+ *  - HORIZON selector (1d / 2d / 7d): always visible; a probability with no horizon is
  *    meaningless. Switching horizon recolours the field.
- *  - MAGNITUDE-THRESHOLD selector (M*) — the field encodes P(≥1 event ≥ M*).
- *  - BOUNDS triad — Optimistic (P10) · Expected (median) · Pessimistic (P90), a segmented
+ *  - MAGNITUDE-THRESHOLD selector (M*): the field encodes P(≥1 event ≥ M*).
+ *  - BOUNDS triad: Optimistic (P10) · Expected (median) · Pessimistic (P90), a segmented
  *    control recolouring the SAME field. Default lands on Expected, with the persistent
  *    caption "the pessimistic view is a plausible bad case, not a prediction".
- *  - BASELINE-comparison mode — show the ratio-to-baseline AND the absolute expected count.
+ *  - BASELINE-comparison mode: show the ratio-to-baseline AND the absolute expected count.
  *
  * None of these is a traffic-light; all are neutral segmented controls. The component is
- * purely presentational — state lives in the parent (Monitoring page).
+ * purely presentational: state lives in the parent (Monitoring page).
  */
 
 export interface MonitoringControlsProps {

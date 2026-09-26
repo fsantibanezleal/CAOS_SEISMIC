@@ -6,9 +6,9 @@ import { loadOutlook, type OutlookArtifact, type OutlookEvidence, type OutlookVi
 const OutlookFieldMap = lazy(() => import("@/components/outlook/OutlookFieldMap"));
 
 /**
- * Route — 30-day OUTLOOK. The honest longer-horizon surface: the geodetic-context neural background
+ * Route: 30-day OUTLOOK. The honest longer-horizon surface: the geodetic-context neural background
  * measurably beats ETAS at 30 days (E11/E14), the one horizon where a covariate helps. The 1-7 day
- * operational product stays ETAS (Monitoring) — the geodetic context does NOT help there, and we say so.
+ * operational product stays ETAS (Monitoring): the geodetic context does NOT help there, and we say so.
  */
 
 const REGION_NAMES: Record<string, string> = {
@@ -94,7 +94,7 @@ export default function Outlook() {
                       <tr key={vid} className={vid === "global" ? "row-global" : ""}>
                         <td>{REGION_NAMES[vid] ?? vid}</td>
                         <td style={{ color: pos ? "#2e9e5b" : "#c0564a" }}>
-                          {v.mean_igpe_vs_etas == null ? "—" : (v.mean_igpe_vs_etas > 0 ? "+" : "") + v.mean_igpe_vs_etas.toFixed(4)}
+                          {v.mean_igpe_vs_etas == null ? "–" : (v.mean_igpe_vs_etas > 0 ? "+" : "") + v.mean_igpe_vs_etas.toFixed(4)}
                         </td>
                         <td>{v.windows_positive}</td>
                         <td>{v.n_eq}</td>
@@ -113,7 +113,7 @@ export default function Outlook() {
               {topZones.map((z, i) => (
                 <li key={i}>
                   <span className="mono">{z.lat.toFixed(1)}°, {z.lon.toFixed(1)}°</span>
-                  {" — "}
+                  {", "}
                   {(z.p30 * 100).toFixed(1)}% {lang === "es" ? "prob. 30d" : "30d prob."}
                   <span className="muted small"> (N={z.n30.toFixed(3)})</span>
                 </li>

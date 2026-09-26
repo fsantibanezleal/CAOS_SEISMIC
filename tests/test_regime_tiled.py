@@ -1,4 +1,4 @@
-"""Unit tests for the global conditioning layer — tectonic regimes + spatial tiling + tiled fit.
+"""Unit tests for the global conditioning layer, tectonic regimes + spatial tiling + tiled fit.
 
 Core deps only (numpy/pandas/scipy/pydantic); no enrichers on disk (the regime classifier exercises
 its heuristic fallback), no network, no heavy science deps. The invariants pinned here are:
@@ -104,7 +104,7 @@ def test_assign_regime_is_total_and_records_source():
 
 
 def test_shallow_subduction_margin_is_interface_via_heuristic():
-    # Offshore central Chile, shallow — circum-Pacific margin box → subduction interface.
+    # Offshore central Chile, shallow: circum-Pacific margin box → subduction interface.
     a = assign_regime(-33.5, -72.0, 20.0)
     assert a.regime == TectonicRegime.SUBDUCTION_INTERFACE
 
@@ -224,7 +224,7 @@ def test_tiled_forecaster_probabilities_in_unit_interval():
 
 def test_tiled_forecaster_enforces_stability_gate_per_tile():
     # A supercritical per-tile ETAS must be rejected and the tile carried by its smoothed null,
-    # with the rejection reason recorded — never a silently published explosive intensity.
+    # with the rejection reason recorded: never a silently published explosive intensity.
     reg = _wide_region()
     cat = _two_cluster_catalog()
     t_issue = pd.Timestamp("2025-06-01", tz="UTC")

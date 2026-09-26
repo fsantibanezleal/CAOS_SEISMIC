@@ -1,15 +1,15 @@
-"""Tectonic regimes + spatial tiling — the GLOBAL conditioning that makes ETAS tractable per region.
+"""Tectonic regimes + spatial tiling, the GLOBAL conditioning that makes ETAS tractable per region.
 
 The core thesis of the global re-scope is that **global context conditions short-term local
 forecasts**: the model trains on worldwide seismicity, and any country is a *view* into one global
 field. But a single global ETAS fit is both intractable (the triggering sum is ``O(N^2)`` in the
-catalog size, and a global daily catalog is ``10^5``-``10^6`` events) and *physically wrong* — a
+catalog size, and a global daily catalog is ``10^5``-``10^6`` events) and *physically wrong*, a
 subduction megathrust does not share productivity / Omori / spatial-decay parameters with a
 stable continental interior. The fix is to partition the globe twice:
 
 1. **By tectonic regime** (this module's :class:`TectonicRegime`): every point is assigned to one of
-   five mechanism classes — subduction *interface*, *intraslab*, *crustal / strike-slip*,
-   *intraplate*, *ridge / transform* — using the static geophysical enrichers (Slab2 geometry, the
+   five mechanism classes, subduction *interface*, *intraslab*, *crustal / strike-slip*,
+   *intraplate*, *ridge / transform*, using the static geophysical enrichers (Slab2 geometry, the
    Bird 2003 PB2002 plate-boundary model, GEM active faults). Regimes carry **different ETAS priors**
    (Page et al. 2016 global tectonic-regime aftershock statistics), so a thin-data tile *borrows
    strength* from the worldwide pool for its regime rather than inventing a noisy local fit
@@ -21,7 +21,7 @@ stable continental interior. The fix is to partition the globe twice:
    (so the ``O(N^2)`` triggering sum stays bounded) and lets the daily job parallelize trivially.
 
 This module is **enricher-aware but enricher-optional**. The heavy geophysical layers (Slab2 NetCDF,
-PB2002 ASCII, GEM faults GeoPackage — see ``data-and-pipelines.md`` §1.3) are loaded *lazily* and
+PB2002 ASCII, GEM faults GeoPackage, see ``data-and-pipelines.md`` §1.3) are loaded *lazily* and
 only if present on disk; when they are absent the classifier degrades to a transparent,
 self-contained heuristic on ``(lat, lon, depth)`` (depth bands + a coarse built-in subduction-margin
 mask) so the package always imports and runs on the core deps alone. Every classification records its
@@ -89,7 +89,7 @@ INTERFACE_DISTANCE_KM = 30.0
 
 @dataclass(frozen=True)
 class RegimePrior:
-    """Per-regime ETAS / aftershock prior — the strength a thin tile borrows from the global pool.
+    """Per-regime ETAS / aftershock prior, the strength a thin tile borrows from the global pool.
 
     The values are *priors* (regularization centres + the data-informed optimizer start), never
     hard-published parameters: the daily fit still MLE-estimates each tile and only shrinks toward
@@ -106,7 +106,7 @@ class RegimePrior:
         sequences are the most productive; intraplate the least.
     alpha:
         Prior centre for the productivity magnitude-scaling ``alpha`` (must stay below
-        ``beta = b ln 10`` for finite branching — gate 1 in :mod:`caos_seismic.model.etas`).
+        ``beta = b ln 10`` for finite branching, gate 1 in :mod:`caos_seismic.model.etas`).
     p, c:
         Modified-Omori decay exponent / offset (days) prior centres.
     b_value:
@@ -126,7 +126,7 @@ class RegimePrior:
 
 
 #: Regime-keyed ETAS priors. Centres are order-of-magnitude, deliberately conservative, and exist to
-#: regularize sparse tiles toward the worldwide behaviour of their regime — NOT to bypass the MLE.
+#: regularize sparse tiles toward the worldwide behaviour of their regime, NOT to bypass the MLE.
 REGIME_PRIORS: dict[TectonicRegime, RegimePrior] = {
     TectonicRegime.SUBDUCTION_INTERFACE: RegimePrior(
         productivity_k=0.15, alpha=1.0, p=1.10, c=0.02, b_value=1.0, n_neighbors=8
@@ -171,7 +171,7 @@ class RegimeAssignment:
 # Coarse built-in subduction-margin boxes (lon_min, lon_max, lat_min, lat_max) used ONLY when Slab2
 # is not on disk. They are intentionally generous polygons over the world's circum-Pacific + key
 # subduction margins so the heuristic does not silently mislabel a megathrust as intraplate. This is
-# a fallback, not the authoritative geometry — Slab2 supersedes it whenever present.
+# a fallback, not the authoritative geometry: Slab2 supersedes it whenever present.
 _SUBDUCTION_MARGIN_BOXES: tuple[tuple[float, float, float, float], ...] = (
     (-80.0, -68.0, -56.0, 6.0),     # South America (Nazca/Antarctic → SAM): Chile, Peru, Colombia, Ecuador
     (-106.0, -83.0, 7.0, 20.0),     # Central America (Cocos → Caribbean)
@@ -216,7 +216,7 @@ class _Enrichers:
 
     Loaded once on first use and cached. Heavy deps (``xarray``/``netCDF4`` for Slab2, ``geopandas``/
     ``shapely`` for faults/plates) are imported *inside* the loaders so importing this module needs
-    only numpy. Missing data on disk is not an error — the classifier just falls back to the
+    only numpy. Missing data on disk is not an error, the classifier just falls back to the
     heuristic and records ``source="heuristic"``.
 
     The expected on-disk layout (gitignored; rebuilt by the fetch stage) is::
@@ -296,7 +296,7 @@ class _Enrichers:
 
         ``boundary_type`` is one of ``"subduction" | "ridge" | "transform" | "continental"`` mapped
         from the PB2002 step classes. Distance is the great-circle distance to the nearest boundary
-        vertex (a vertex-level proxy for the segment distance — fine for regime classification at the
+        vertex (a vertex-level proxy for the segment distance, fine for regime classification at the
         0.1° grid scale).
         """
         boundaries = self._ensure_pb2002()
@@ -415,12 +415,12 @@ def assign_regime(
 
     Decision order (most authoritative first):
 
-    1. **Slab2** — if the point sits above a modelled subduction interface, use the interface depth:
+    1. **Slab2**: if the point sits above a modelled subduction interface, use the interface depth:
        shallow + close to interface → ``SUBDUCTION_INTERFACE``; deep (> :data:`INTRASLAB_DEPTH_KM`)
        → ``INTRASLAB``.
-    2. **PB2002** — otherwise the nearest plate-boundary type within a tolerance fixes ridge /
+    2. **PB2002**: otherwise the nearest plate-boundary type within a tolerance fixes ridge /
        transform / subduction-margin / continental-crustal; far from any boundary → ``INTRAPLATE``.
-    3. **Heuristic** — with no enrichers on disk, a coarse built-in subduction/ridge mask plus the
+    3. **Heuristic**: with no enrichers on disk, a coarse built-in subduction/ridge mask plus the
        event depth give a transparent fallback (recorded ``source="heuristic"``).
 
     Parameters
@@ -493,7 +493,7 @@ def assign_regime(
 
 
 def _heuristic_regime(lat: float, lon: float, depth_km: float | None) -> RegimeAssignment:
-    """Self-contained regime guess from coarse masks + depth — the no-enricher fallback.
+    """Self-contained regime guess from coarse masks + depth, the no-enricher fallback.
 
     Uses the built-in subduction-margin / ridge boxes plus the event depth: in a subduction box a
     deep event is intraslab and a shallow one is interface; in a ridge corridor it is ridge; otherwise
@@ -546,7 +546,7 @@ class Tile:
     """One spatial tile: an interior bbox plus a halo bbox for edge-correct triggering.
 
     ETAS/smoothed-seismicity are *fit* on the events inside ``halo`` (so a parent just outside the
-    interior still triggers offspring that land inside it — no truncation at tile edges), but each
+    interior still triggers offspring that land inside it, no truncation at tile edges), but each
     tile *owns* only the cells whose centres lie in ``interior`` when the per-tile fields are
     aggregated into the global field (so cells are never double-counted across overlapping halos).
 
@@ -586,7 +586,7 @@ def iterate_tiles(
     The interior tiles tessellate the bbox exactly (no gaps / no overlap); each one is grown by
     ``halo_deg`` on every side to form its fitting halo. ``tile_deg`` bounds the per-fit catalog size
     so the ETAS triggering sum stays tractable (a 10° tile of a busy subduction margin holds at most a
-    few thousand M≥Mc events per few years — well within the ``O(N^2)`` budget), while ``halo_deg``
+    few thousand M≥Mc events per few years, well within the ``O(N^2)`` budget), while ``halo_deg``
     (≈ a large-event aftershock-zone radius) keeps triggering continuous across tile boundaries.
 
     Parameters
@@ -642,7 +642,7 @@ def tiles_for_region(
     tile_deg: float = 10.0,
     halo_deg: float = 1.0,
 ) -> list[Tile]:
-    """Eager :func:`iterate_tiles` — the materialized tile list (convenient for length / indexing)."""
+    """Eager :func:`iterate_tiles`, the materialized tile list (convenient for length / indexing)."""
     return list(iterate_tiles(region, tile_deg=tile_deg, halo_deg=halo_deg))
 
 
@@ -659,7 +659,7 @@ def dominant_regime(
 
     Used to pick the per-tile ETAS prior (:func:`regime_prior`): a tile is regularized toward the
     regime most of its seismicity belongs to. With no events in the halo the tile takes ``default``
-    (crustal — the most generic regime). Empty/degenerate inputs degrade gracefully to ``default``.
+    (crustal, the most generic regime). Empty/degenerate inputs degrade gracefully to ``default``.
     """
     lat = np.asarray(catalog_lat, dtype=float)
     lon = np.asarray(catalog_lon, dtype=float)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# backanalysis.sh — pseudo-prospective CSEP back-analysis over a date range.
+# backanalysis.sh: pseudo-prospective CSEP back-analysis over a date range.
 #
 #   scripts/backanalysis.sh --region chile --start 2024-01-01 --end 2024-12-31
 #

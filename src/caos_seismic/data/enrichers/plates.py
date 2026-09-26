@@ -1,4 +1,4 @@
-"""Bird (2003) PB2002 plate-boundary enricher — distance-to-boundary, boundary type, relative velocity.
+"""Bird (2003) PB2002 plate-boundary enricher, distance-to-boundary, boundary type, relative velocity.
 
 PB2002 (Bird, 2003, *G-cubed*) is a global model of present-day plate boundaries: digitized boundary
 segments, each tagged with a two-letter **boundary class** and the relative motion of the two
@@ -11,7 +11,7 @@ Per-cell features
 ``plate_boundary_dist_km``   great-circle distance to the nearest PB2002 boundary point (km).
 ``plate_boundary_type_code`` integer code of the nearest boundary's class (see
                              :data:`BOUNDARY_TYPE_CODES`; ``0`` = unknown).
-``plate_rel_velocity_mm_yr`` relative plate velocity at the nearest boundary point (mm/yr) — from the
+``plate_rel_velocity_mm_yr`` relative plate velocity at the nearest boundary point (mm/yr), from the
                              PB2002 boundary file's per-step velocity, when present.
 ``plate_is_convergent``      1.0 if the nearest boundary is a subduction/convergent class, else 0.0.
 ``plate_is_divergent``       1.0 if it is an oceanic-spreading/divergent class, else 0.0.
@@ -19,7 +19,7 @@ Per-cell features
 
 Data & license
 --------------
-* Source: ``peterbird.name/publications/2003_pb2002/`` — ASCII files
+* Source: ``peterbird.name/publications/2003_pb2002/``: ASCII files
   ``PB2002_boundaries.dig.txt`` (boundary geometry, two-letter class per segment) and
   ``PB2002_steps.dat`` (per-step boundary class + relative velocity).
 * License: open for research with citation (Bird, 2003). No redistribution restriction.

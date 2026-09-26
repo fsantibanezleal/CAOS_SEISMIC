@@ -17,7 +17,7 @@ dist/
 *.local
 *.secret
 
-# ── Heavy data, features, model weights — NEVER versioned ──────────────────
+# ── Heavy data, features, model weights: NEVER versioned ──────────────────
 # (rebuildable from manifests + code; see docs/data-and-pipelines.md)
 data/raw/
 data/clean/
@@ -55,7 +55,7 @@ Thumbs.db
 *.swp
 
 # ── Local scratch / diagnostics (process-validation only, never committed) ──
-# ALL throwaway runners + their logs live under .scratch/ — keep the repo root clean.
+# ALL throwaway runners + their logs live under .scratch/: keep the repo root clean.
 .scratch/
 .diag_*
 *.log

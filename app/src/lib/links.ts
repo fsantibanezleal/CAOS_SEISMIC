@@ -1,4 +1,4 @@
-// Canonical external links. Only public github.com / public-site URLs — never
+// Canonical external links. Only public github.com / public-site URLs, never
 // local machine paths, never private vault references.
 
 export const EXTERNAL_LINKS = {

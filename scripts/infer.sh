@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# infer.sh — run the daily forecast clock for an issue date -> compact artifact under results/.
+# infer.sh: run the daily forecast clock for an issue date -> compact artifact under results/.
 #
 #   scripts/infer.sh                                  # issue date = today (UTC)
 #   scripts/infer.sh --region chile --issue 2026-06-16

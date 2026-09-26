@@ -46,7 +46,7 @@ export default defineConfig({
     sourcemap: false,
     // Bundle ALL CSS into one stylesheet (no per-chunk CSS). The lazy map route imports
     // maplibre-gl's stylesheet; with cssCodeSplit on, Vite emits a separate `maplibre-*.css`
-    // chunk and `__vitePreload` tries to preload it when the route loads — which throws
+    // chunk and `__vitePreload` tries to preload it when the route loads, which throws
     // "Unable to preload CSS" on some hosts/networks even though the file is served (a known
     // Vite issue). One combined stylesheet eliminates that preload step entirely. Total CSS is
     // small (~125 KB raw / ~25 KB gzip), so loading it upfront is a non-issue.

@@ -1,4 +1,4 @@
-"""Context-conditioned spatio-temporal neural temporal point process — the **gated challenger**.
+"""Context-conditioned spatio-temporal neural temporal point process, the **gated challenger**.
 
 This module implements the thesis model of CAOS_SEISMIC: a neural conditional intensity that learns
 *global context conditions short-term local forecasts*. The catalog is a realization of a marked
@@ -10,7 +10,7 @@ self-excitation, in the FERN spirit) whose fixed ETAS kernels are replaced by sm
 multi-channel "image" and produces a per-cell context embedding that conditions the intensity.
 
 Thesis (carried in code): the model trains on **worldwide** seismicity + global covariate fields; any
-country is a *view into a global field*. The CNN is the spatial encoder of that context — **not** a
+country is a *view into a global field*. The CNN is the spatial encoder of that context, **not** a
 standalone aftershock classifier. The DeVries et al. (2018, *Nature* 560:632-634) standalone-CNN
 aftershock approach is the **refuted lesson** here: a 2-parameter logistic regression matched it
 (Mignan & Broccardo 2019, *Nature* 575:E1-E3, doi:10.1038/s41586-019-1582-8); per-cell AUC on
@@ -25,19 +25,19 @@ Architecture (model-design §2 + research/03-ml-approaches §9)::
 
 where ``C`` / ``C_i`` is the per-cell context embedding produced by the CNN from the covariate field.
 
-* ``mu_theta``  — background MLP head over (smoothed-seismicity log-rate, context embedding); learns a
+* ``mu_theta`` : background MLP head over (smoothed-seismicity log-rate, context embedding); learns a
   conditioned tectonic background (geodetic strain has established time-independent value, model-design
   §6.2).
-* ``kappa_phi`` — productivity MLP (Utsu-like: monotone-ish in magnitude via a softplus head) modulated
+* ``kappa_phi``: productivity MLP (Utsu-like: monotone-ish in magnitude via a softplus head) modulated
   by the parent-cell context embedding (learned, context-dependent productivity).
-* ``g_psi``     — a normalized Omori-like temporal kernel parameterized by a small MLP over log-elapsed
+* ``g_psi``    : a normalized Omori-like temporal kernel parameterized by a small MLP over log-elapsed
   time (a flexible monotone-decaying density, integrating to ~1 by Monte-Carlo normalization on the
   unit window). Keeps the additive-Hawkes survival term tractable.
-* ``f_eta``     — a spatial kernel whose magnitude-dependent scale ``zeta`` is *modulated* by the
+* ``f_eta``    : a spatial kernel whose magnitude-dependent scale ``zeta`` is *modulated* by the
   context embedding, letting the model learn **anisotropy aligned with fault/slab structure** without
-  hand-coding geometry (the proven FERN lever — Zlydenko et al. 2023, *Sci. Reports* 13,
+  hand-coding geometry (the proven FERN lever, Zlydenko et al. 2023, *Sci. Reports* 13,
   doi:10.1038/s41598-023-38033-9).
-* **Explicit magnitude head** — a learnable Gutenberg-Richter ``b`` (and a context-conditioned
+* **Explicit magnitude head**: a learnable Gutenberg-Richter ``b`` (and a context-conditioned
   correction) so the model produces a real conditional magnitude distribution. Most NPPs omit this; it
   is a real gap flagged by EarthquakeNPP (Stockman, Lawson & Werner, TMLR 2026, arXiv:2410.08226).
 
@@ -99,7 +99,7 @@ def _gr_exceedance_fraction_vec(
     """Vectorized bounded Gutenberg-Richter tail fraction Φ(M*) over an array of per-cell ``b`` values.
 
     Element-for-element identical to :func:`_common.gr_exceedance_fraction` (scalar ``m_threshold``,
-    ``mc``, ``m_max``; ``b`` an array) — only the per-cell Python call is lifted into numpy so the
+    ``mc``, ``m_max``; ``b`` an array), only the per-cell Python call is lifted into numpy so the
     magnitude term can be applied to the whole forecast field at once.
     """
     b = np.asarray(b, dtype=np.float64)
@@ -115,7 +115,7 @@ def _gr_exceedance_fraction_vec(
     return np.clip(frac, 0.0, 1.0)
 
 
-#: Default checkpoint directory — OUTSIDE git (the repo .gitignore excludes data/ and weights). Neural
+#: Default checkpoint directory, OUTSIDE git (the repo .gitignore excludes data/ and weights). Neural
 #: weights are never versioned; they are rebuildable from configs + the global catalog + this code.
 DEFAULT_CHECKPOINT_DIR = "data/weights"
 
@@ -136,19 +136,19 @@ COVARIATE_CHANNELS: tuple[str, ...] = (
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Covariate field — the gridded GLOBAL context the CNN ingests (core-deps only)
+# Covariate field: the gridded GLOBAL context the CNN ingests (core-deps only)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 @dataclass
 class CovariateField:
-    """A multi-channel gridded covariate field over a lat/lon box — the CNN's "image" input.
+    """A multi-channel gridded covariate field over a lat/lon box, the CNN's "image" input.
 
     This is the in-memory representation of the GLOBAL context resampled to a regular grid. It is pure
     numpy (no torch, no geopandas) so it can be constructed, cached, sliced and asserted on with only
     the core deps; the heavy producers (Slab2 netCDF, GEM faults shapefile, MIDAS strain, pygtide
     tides) live in :mod:`caos_seismic.data` and write the channel arrays here. When a producer is
-    unavailable the channel is zero-filled and recorded in :attr:`missing_channels` — the model then
+    unavailable the channel is zero-filled and recorded in :attr:`missing_channels`, the model then
     conditions on catalog-derived context only, and the manifest shows the degradation honestly.
 
     Attributes
@@ -213,7 +213,7 @@ class CovariateField:
         *,
         channels: tuple[str, ...] = COVARIATE_CHANNELS,
     ) -> "CovariateField":
-        """Build an all-zero field over the region bbox — the honest 'no covariates available' state.
+        """Build an all-zero field over the region bbox, the honest 'no covariates available' state.
 
         Used when no geophysical producers are wired yet (the package ships before Slab2/faults/GNSS
         are fetched). Every channel is marked missing so the manifest and the UI coverage mask show the
@@ -371,7 +371,7 @@ def _build_network(cfg: ContextTPPConfig, n_channels: int):
 
         This is the **spatial encoder of context**, not a forecaster. Input is an ``NCHW`` patch
         ``(B, n_channels, P, P)`` centred on the target cell; output is a length-``context_dim``
-        embedding ``C``. Small by design (two conv blocks + global pooling + linear) — capacity here
+        embedding ``C``. Small by design (two conv blocks + global pooling + linear), capacity here
         invites the DeVries overfitting failure, and the inductive bias should come from the Hawkes
         skeleton, not a deep CNN.
         """
@@ -413,12 +413,12 @@ def _build_network(cfg: ContextTPPConfig, n_channels: int):
 
         Sub-modules:
 
-        * ``encoder``   — :class:`_ContextEncoderCNN`, the CNN context encoder.
-        * ``mu_head``   — background MLP over (context, smoothed-log-rate) -> softplus rate density.
-        * ``kappa_head``— productivity MLP over (magnitude, parent context) -> softplus offspring count.
-        * ``g_head``    — temporal-kernel MLP over a log-elapsed-time feature -> unnormalized density.
-        * ``zeta_head`` — spatial-scale MLP over (magnitude, parent context) -> softplus scale (deg).
-        * ``log_b``     — learnable scalar; ``b = softplus(log_b)`` is the global Gutenberg-Richter b,
+        * ``encoder``  : :class:`_ContextEncoderCNN`, the CNN context encoder.
+        * ``mu_head``  : background MLP over (context, smoothed-log-rate) -> softplus rate density.
+        * ``kappa_head``, productivity MLP over (magnitude, parent context) -> softplus offspring count.
+        * ``g_head``   : temporal-kernel MLP over a log-elapsed-time feature -> unnormalized density.
+        * ``zeta_head``: spatial-scale MLP over (magnitude, parent context) -> softplus scale (deg).
+        * ``log_b``    : learnable scalar; ``b = softplus(log_b)`` is the global Gutenberg-Richter b,
           with a small per-cell context correction ``b_ctx`` (explicit magnitude modelling).
 
         The intensity is assembled by :meth:`intensity_at_events` (for the NLL log-term) and the
@@ -441,17 +441,17 @@ def _build_network(cfg: ContextTPPConfig, n_channels: int):
             return self.encoder(patches)
 
         def background(self, ctx: "Tensor", smoothed_lograte: "Tensor") -> "Tensor":
-            """mu(x,y,C) — softplus background rate density (events/day/deg^2), per cell."""
+            """mu(x,y,C), softplus background rate density (events/day/deg^2), per cell."""
             x = torch.cat([ctx, smoothed_lograte.unsqueeze(-1)], dim=-1)
             return self.mu_head(x).squeeze(-1)
 
         def productivity(self, mag: "Tensor", ctx: "Tensor") -> "Tensor":
-            """kappa(m, C) — softplus expected direct offspring of a parent (context-modulated Utsu)."""
+            """kappa(m, C), softplus expected direct offspring of a parent (context-modulated Utsu)."""
             x = torch.cat([(mag - cfg.m0).unsqueeze(-1), ctx], dim=-1)
             return self.kappa_head(x).squeeze(-1)
 
         def temporal_density(self, dt_days: "Tensor") -> "Tensor":
-            """g(dt) — unnormalized neural temporal kernel (normalized to a density by Monte-Carlo).
+            """g(dt), unnormalized neural temporal kernel (normalized to a density by Monte-Carlo).
 
             Feature is ``log(dt + c0)`` (an Omori-like log-time coordinate) so the MLP can recover a
             power-law decay while staying a flexible monotone-ish density. The normalization to unit
@@ -462,7 +462,7 @@ def _build_network(cfg: ContextTPPConfig, n_channels: int):
             return self.g_head(feat).squeeze(-1)
 
         def spatial_scale(self, mag: "Tensor", ctx: "Tensor") -> "Tensor":
-            """zeta(m, C) — softplus magnitude-and-context-dependent spatial scale (deg).
+            """zeta(m, C), softplus magnitude-and-context-dependent spatial scale (deg).
 
             The context modulation is the learned-anisotropy lever (FERN): zeta grows with magnitude
             and is reshaped by the slab/fault/strain context around the parent cell.
@@ -486,7 +486,7 @@ def _build_network(cfg: ContextTPPConfig, n_channels: int):
 
 @dataclass
 class ContextTPPForecaster(BaseForecaster):
-    """Context-conditioned spatio-temporal neural TPP — the gated neural challenger to ETAS.
+    """Context-conditioned spatio-temporal neural TPP, the gated neural challenger to ETAS.
 
     Implements the :class:`~caos_seismic.contracts.Forecaster` port (``fit`` /
     ``expected_counts``) so the inference driver and the CSEP harness treat it interchangeably with
@@ -502,7 +502,7 @@ class ContextTPPForecaster(BaseForecaster):
         :class:`ContextTPPConfig` hyperparameters.
     covariate_provider:
         Callable returning the :class:`CovariateField` for a region/issue time. If ``None``, a
-        smoothed-seismicity-only field is built at ``fit`` time (the honest cold-start context — the
+        smoothed-seismicity-only field is built at ``fit`` time (the honest cold-start context, the
         model still gets the dominant covariate channel). Wire the real geophysical loaders here for a
         full global-context run.
     background:
@@ -558,11 +558,11 @@ class ContextTPPForecaster(BaseForecaster):
         1. Slice + sort the lawful past; estimate ``Mc`` / prior ``b``.
         2. Build (or fetch) the :class:`CovariateField`, fill the smoothed-seismicity channel, and
            standardize it (stats persisted for inference).
-        3. Cache the parent-event arrays (ages in days, lat/lon/mw) — the same representation ETAS uses.
+        3. Cache the parent-event arrays (ages in days, lat/lon/mw): the same representation ETAS uses.
         4. Build the torch network and run the AdamW training loop minimizing the negative
            point-process log-likelihood ``-(sum_i ln lambda_i - ∫∫∫ lambda)`` with the compensator
            approximated by Monte-Carlo over the observation window (the integral term is what makes
-           this a *probabilistic* model, not a regressor — research/03-ml-approaches §1).
+           this a *probabilistic* model, not a regressor, research/03-ml-approaches §1).
         5. Checkpoint the weights + covariate stats outside git.
 
         Returns ``self``. Requires torch (raises a clear error otherwise); the ETAS core does not.
@@ -606,7 +606,7 @@ class ContextTPPForecaster(BaseForecaster):
         field_raw = field_raw.with_smoothed_seismicity(self.background)
         self._field, self._field_mean, self._field_std = field_raw.standardized()
 
-        # 3) Parent arrays (ages in days before t_issue, >= 0) — same representation as ETAS.
+        # 3) Parent arrays (ages in days before t_issue, >= 0): same representation as ETAS.
         t_days = (self._t_issue - complete["time"]).dt.total_seconds().to_numpy() / 86400.0
         self._ev_t = np.clip(t_days, 0.0, None)
         self._ev_lat = complete["latitude"].to_numpy(dtype=float)
@@ -657,7 +657,7 @@ class ContextTPPForecaster(BaseForecaster):
 
         Keeps the trained net weights, the covariate field (the geophysical context is time-independent
         over a refit cadence), the Mc/b prior, and the ``rate_cal`` calibration; refreshes only the
-        triggering CONDITIONING — which events are parents and their ages. Mirrors
+        triggering CONDITIONING, which events are parents and their ages. Mirrors
         :meth:`ETASForecaster.recondition`, so a pseudo-prospective back-analysis can advance the neural
         day-to-day (fit weekly, recondition daily) instead of paying the ~74-min retrain at every issue.
         Leakage-safe: only events strictly before ``t_issue`` are admitted. Requires a prior :meth:`fit`.
@@ -696,12 +696,12 @@ class ContextTPPForecaster(BaseForecaster):
 
         Loss = ``-(sum_i ln lambda(t_i, x_i, y_i) - ∫_0^T ∫_A lambda)``:
 
-        * **log term** — for each event ``j`` the intensity is the conditioned background at its cell
+        * **log term**: for each event ``j`` the intensity is the conditioned background at its cell
           plus the summed neural triggering from its (truncated) causal parents ``i < j``. Computed in
           minibatches of events for memory.
-        * **compensator** — Monte-Carlo over the window: the background mass is ``mu_total * T``; the
+        * **compensator**: Monte-Carlo over the window: the background mass is ``mu_total * T``; the
           triggering mass is ``sum_i kappa(m_i, C_i) * G_i`` where ``G_i`` is the (normalized) temporal
-          kernel mass over the parent's in-window age — exactly the closed-form ETAS compensator with
+          kernel mass over the parent's in-window age, exactly the closed-form ETAS compensator with
           the neural kernels substituted. Because ``g`` is normalized to a unit-mass density on the
           window, ``G_i`` is the temporal CDF mass, mirroring ETAS's ``omori_utsu_cumulative``.
 
@@ -809,13 +809,13 @@ class ContextTPPForecaster(BaseForecaster):
         return total * (n / max(batch, 1))
 
     def _compensator_term(self, net, ctx_all, mu_all, ages_t, mags_t, train_days):
-        """``∫_0^T ∫_A lambda`` — background mass + summed neural-triggering mass over the window.
+        """``∫_0^T ∫_A lambda``, background mass + summed neural-triggering mass over the window.
 
         Background mass: the region-integrated background rate times ``T``. We approximate the spatial
         integral of ``mu`` by the mean per-event background density times the region area in deg^2 (the
         events sample the region where the rate is non-negligible). Triggering mass: each parent's
         neural productivity ``kappa(m_i, C_i)`` times the temporal-kernel mass ``G_i`` over its
-        in-window age, with ``g`` normalized to unit mass on the window by Monte-Carlo — so ``G_i`` is
+        in-window age, with ``g`` normalized to unit mass on the window by Monte-Carlo, so ``G_i`` is
         the fraction of the parent's offspring expected inside the window (the ETAS compensator shape).
         """
         torch = _import_torch()
@@ -849,7 +849,7 @@ class ContextTPPForecaster(BaseForecaster):
 
         Forecast a one-day window at ``Mc`` with the RAW (``rate_cal = 1``) integration over the SAME grid
         the forecast / gate uses (multi-resolution ``build_global_fit_cells`` globally; the fine grid for a
-        bounded region — so the inferred per-cell area is identical and the constant transfers), sum it,
+        bounded region, so the inferred per-cell area is identical and the constant transfers), sum it,
         and return ``(training events ≥ Mc per day) / (raw daily forecast)``. Anchors the absolute level
         the NLL left unconstrained while preserving the conditional shape; uses only training data
         (leakage-free). Returns ``1.0`` if the grid or the raw forecast is degenerate.
@@ -909,7 +909,7 @@ class ContextTPPForecaster(BaseForecaster):
 
             # Horizon-integrated neural triggering at EVERY cell, vectorized. Exact reformulation of
             # the old per-cell midpoint quadrature: the productivity (kappa) and spatial scale (zeta)
-            # depend only on the parent events, and the temporal kernel g only on the step — so all
+            # depend only on the parent events, and the temporal kernel g only on the step: so all
             # three are computed once over the parents and the 119k-cell × 12-step Python loop (~1.4M
             # net calls, ~50 min) collapses to a chunked distance matrix (seconds). See _triggering_field.
             steps = 12
@@ -970,12 +970,12 @@ class ContextTPPForecaster(BaseForecaster):
     def _triggering_field(
         self, net, lats: np.ndarray, lons: np.ndarray, mids: np.ndarray, dts: np.ndarray
     ) -> np.ndarray:
-        """Horizon-integrated neural triggering at every cell — the vectorized form of looping
+        """Horizon-integrated neural triggering at every cell, the vectorized form of looping
         :meth:`_triggering_intensity` over cells × time steps. **Numerically identical**, ~10³× faster.
 
         The per-cell quadrature is ``Σ_k dt_k · Σ_p κ_p · g(age_p + s_k) · f(r_{cell,p}, ζ_p)``. The
         productivity ``κ_p`` and spatial scale ``ζ_p`` depend only on the parent event (not the target
-        cell or the step), and the temporal kernel ``g`` depends only on the step — so we evaluate the
+        cell or the step), and the temporal kernel ``g`` depends only on the step, so we evaluate the
         net ONCE over the parents, integrate the temporal kernel per parent
         (``G_p = Σ_k dt_k · g(age_p + s_k)``), and the cell loop collapses to ``f @ (κ·G)`` over a
         chunked great-circle distance matrix. Swapping the two sums is exact because ``f`` and ``κ`` do
@@ -995,7 +995,7 @@ class ContextTPPForecaster(BaseForecaster):
             for s, w in zip(mids, dts):
                 dt = torch.as_tensor(self._ev_t + float(s), dtype=torch.float32, device=self._device)
                 g_int += float(w) * net.temporal_density(dt).cpu().numpy().astype(np.float64)
-        # Per-parent constants in float32 — the (chunk × P) kernel is summed to a per-cell scalar, so
+        # Per-parent constants in float32: the (chunk × P) kernel is summed to a per-cell scalar, so
         # single precision is ample and HALVES the peak memory vs float64. (P can be tens of thousands.)
         amp = (kappa * g_int).astype(np.float32)             # (P,) per-parent amplitude κ_p·G_p
         inv_zeta2 = (1.0 / (zeta * zeta)).astype(np.float32)  # (P,)
@@ -1020,7 +1020,7 @@ class ContextTPPForecaster(BaseForecaster):
 
     # ── context / patch helpers ───────────────────────────────────────────────
     def _parent_context(self, net):
-        """Encode (and cache) the per-parent context embeddings — used by the triggering sum."""
+        """Encode (and cache) the per-parent context embeddings, used by the triggering sum."""
         torch = _import_torch()
         if getattr(self, "_ctx_parents_cache", None) is not None:
             return self._ctx_parents_cache
@@ -1036,7 +1036,7 @@ class ContextTPPForecaster(BaseForecaster):
 
         ``P = 2 * patch_radius + 1``. Out-of-grid borders are edge-padded (replicate) so coastal/edge
         cells still get a full patch. This is the multi-channel "image" the CNN context encoder
-        ingests — the spatial-context input that conditions the intensity.
+        ingests, the spatial-context input that conditions the intensity.
         """
         fld = self._field
         assert fld is not None
@@ -1154,7 +1154,7 @@ class ContextTPPForecaster(BaseForecaster):
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# train(...) entrypoint — callable from model/train.py and cli.py
+# train(...) entrypoint: callable from model/train.py and cli.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -1178,7 +1178,7 @@ def train(
     Parameters
     ----------
     region:
-        Region or id. Default ``"global"`` — the thesis trains worldwide; any country is a view.
+        Region or id. Default ``"global"``, the thesis trains worldwide; any country is a view.
     catalog:
         In-memory cleaned global catalog (skips the store load; used by tests/offline).
     t_issue:
@@ -1203,7 +1203,7 @@ def train(
 
     Notes
     -----
-    Requires torch. The ETAS core does not — if torch is missing this raises a clear error and the
+    Requires torch. The ETAS core does not, if torch is missing this raises a clear error and the
     public field keeps using ETAS. Skill is established only by the prospective back-analysis
     (:mod:`caos_seismic.eval.backanalysis`), never by this in-loop gate alone.
     """
@@ -1278,7 +1278,7 @@ def train(
     m_star = float(min(load("forecast").get("magnitude_thresholds", [5.0])))
     horizon = float(holdout_days)
 
-    # ETAS reference (the floor to beat). At global scope use the regime-TILED ETAS — a single monolithic
+    # ETAS reference (the floor to beat). At global scope use the regime-TILED ETAS: a single monolithic
     # ETAS over the worldwide 10^5-event catalog is O(N^2) AND physically wrong (subduction != stable
     # interior); a bounded region uses one ETAS. If it cannot fit, the challenger has no honest baseline.
     etas_ok = False
@@ -1320,7 +1320,7 @@ def train(
         # SHAPE-only gate. The trained NLL fixes the intensity SHAPE but not its absolute LEVEL: the
         # forecast-grid integration in expected_counts is mis-normalized vs the (Monte-Carlo) training
         # compensator, so `igpe_vs_etas_nats` is dominated by the rate-normalization term, not skill.
-        # Renormalize the challenger field to the ETAS total before scoring — this isolates the
+        # Renormalize the challenger field to the ETAS total before scoring: this isolates the
         # spatial/temporal CONTEXT contribution (does the field place events BETTER than ETAS, given the
         # same count?) from the separate, still-open absolute-rate calibration problem. THIS is the number
         # that answers "does the (geodetic) context improve the forecast shape".

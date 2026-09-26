@@ -1,4 +1,4 @@
-# caos-seismic-daily.timer — fire the daily forecast job at 03:00 local, with missed-run catch-up.
+# caos-seismic-daily.timer: fire the daily forecast job at 03:00 local, with missed-run catch-up.
 #
 # Pairs with caos-seismic-daily.service. OnCalendar uses the system's *local* time zone; set the host's
 # timezone (e.g. `timedatectl set-timezone America/Santiago`) so 03:00 matches configs/publish.yaml

@@ -1,7 +1,7 @@
 /**
  * Loader + types for the committed multi-model benchmark (`results/benchmark.json`, written by the
  * benchmark job). A single-window, leakage-free IGPE-vs-the-Poisson-null comparison of every model
- * (ETAS, the ensemble, Reasenberg–Jones, the null) per view — the "show every model's performance,
+ * (ETAS, the ensemble, Reasenberg–Jones, the null) per view: the "show every model's performance,
  * even the ones we don't ship" record. Same static-first read-only contract as the forecast client.
  */
 

@@ -1,4 +1,4 @@
-"""Stage (B+C) entry point — clean + completeness + declustering, into the inference-ready store.
+"""Stage (B+C) entry point, clean + completeness + declustering, into the inference-ready store.
 
 This is the module the ``caos-seismic build-features`` command delegates to. It chains the already
 built primitives into one runnable stage and writes the cleaned catalog store the daily inference
@@ -10,8 +10,8 @@ loads:
    dedupe + total-least-squares ``native → Mw`` conversion; native columns kept).
 3. **Completeness + b-value** via :func:`caos_seismic.catalog.completeness.mc_estimate` and
    :func:`~caos_seismic.catalog.completeness.aki_utsu_b_value` (MAXC + GFT cross-check; the b-value
-   is *estimated*, never hard-coded — methodology §3).
-4. **Dual catalog** via :func:`caos_seismic.catalog.decluster.dual_catalog` — the declustered
+   is *estimated*, never hard-coded, methodology §3).
+4. **Dual catalog** via :func:`caos_seismic.catalog.decluster.dual_catalog`: the declustered
    background (for the smoothed null) and the full un-declustered catalog (for ETAS / scoring). The
    **dual-catalog rule** is enforced by the primitive; this stage only records which view is which.
 5. **Persist** the cleaned, below-Mc-cut catalog to the gitignored store
@@ -21,7 +21,7 @@ loads:
 Only the core deps are needed (numpy / pandas / scipy / pyarrow / pydantic). The heavy
 declustering ZBZ pass is the same core-only code as :mod:`caos_seismic.catalog.decluster`; nothing
 here imports an optional science dependency. Inputs/outputs are versioned by manifest, not by
-committing the catalog — the catalog is rebuildable from the configs + manifests + code.
+committing the catalog, the catalog is rebuildable from the configs + manifests + code.
 """
 
 from __future__ import annotations
@@ -77,7 +77,7 @@ def run_build_features(
     region:
         A :class:`Region` or region id (``configs/region.<id>.yaml``).
     catalog:
-        Optional in-memory raw catalog (skips loading the Parquet store — used by ``check`` and
+        Optional in-memory raw catalog (skips loading the Parquet store, used by ``check`` and
         tests so the stage runs offline).
     reference:
         Optional Mw-homogenized reference (ISC-GEM/GCMT) to fit the TLS conversions; when absent only
@@ -89,7 +89,7 @@ def run_build_features(
     -------
     dict
         ``{"region", "n_in", "n_clean", "n_below_mc_cut", "mc", "b_value", "b_uncertainty",
-        "n_background", "n_conditional", "declustering", "clean_store", "manifest"}`` — the CLI
+        "n_background", "n_conditional", "declustering", "clean_store", "manifest"}``, the CLI
         prints this summary.
     """
     reg = load_region(region) if isinstance(region, str) else region
@@ -124,11 +124,11 @@ def run_build_features(
     try:
         b_est = aki_utsu_b_value(with_mw["mw"].to_numpy(), mc, dm=dm)
         b_value, b_unc = float(b_est.b), float(b_est.b_uncertainty)
-    except ValueError as exc:  # thin / degenerate FMD — keep going with a flagged default
+    except ValueError as exc:  # thin / degenerate FMD, keep going with a flagged default
         logger.warning("b-value estimation failed (%s); recording b=1.0 as a flagged placeholder", exc)
         b_value, b_unc = 1.0, float("nan")
 
-    # Cut to the completeness threshold — every downstream rate is defined for events >= Mc.
+    # Cut to the completeness threshold: every downstream rate is defined for events >= Mc.
     complete = with_mw.loc[with_mw["mw"] >= mc - 1e-9].reset_index(drop=True)
     complete = validate_catalog(complete)
     n_clean = int(len(complete))
@@ -198,7 +198,7 @@ def run_build_features(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Global context feature matrix — join every enricher onto the forecast grid
+# Global context feature matrix: join every enricher onto the forecast grid
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -218,20 +218,20 @@ def build_context_features(
     geodetic strain rate, crustal stress, tidal stress); this function evaluates every enricher's
     :func:`features_at` at each cell and assembles one wide DataFrame the model ingests alongside the
     catalog-derived (ETAS / recent-window) features. The enrichers are *global*, so the very same
-    call produces the context matrix for any region — Chile, California, NZ — by passing that
+    call produces the context matrix for any region, Chile, California, NZ, by passing that
     region's grid.
 
     Parameters
     ----------
     grid:
-        The forecast grid — a list of :class:`~caos_seismic.contracts.Cell` (the fine fit grid from
+        The forecast grid, a list of :class:`~caos_seismic.contracts.Cell` (the fine fit grid from
         :func:`caos_seismic.inference.daily.build_fit_cells`) or any DataFrame with ``lat``/``lon``
         (or ``latitude``/``longitude``) columns and an optional ``key`` cell id.
     enrichers:
         Which enricher datasets to join (default: all, in the registry's expected-lift order). Pass a
         subset (e.g. ``["slab2", "faults", "plates"]``) to build a lighter matrix or to isolate one
         enricher's marginal information gain over the catalog-only ETAS baseline (the gate every
-        enricher must clear before it ships in a public number — data-and-pipelines.md §1.3).
+        enricher must clear before it ships in a public number, data-and-pipelines.md §1.3).
     t_issue:
         Issue time handed to time-dependent enrichers (tides). Defaults to "now" (UTC); the daily
         forecast clock passes the sealed time so the context matrix is reproducible.
@@ -242,7 +242,7 @@ def build_context_features(
         Region id used for the store filename / provenance when ``write_store`` is set.
     enricher_kwargs:
         Optional per-enricher keyword overrides, e.g.
-        ``{"gnss": {"radius_km": 200.0}, "tides": {"fault": FaultGeometry(...)}}`` — forwarded to the
+        ``{"gnss": {"radius_km": 200.0}, "tides": {"fault": FaultGeometry(...)}}``, forwarded to the
         enricher's ``features_at``. (Constructed enrichers use their defaults otherwise.)
 
     Returns
@@ -250,7 +250,7 @@ def build_context_features(
     pandas.DataFrame
         One row per grid cell with columns ``key, lat, lon`` followed by every enricher's covariate
         columns. Cells outside a dataset's footprint carry ``NaN`` for that dataset's columns
-        (e.g. ``slab_*`` is ``NaN`` away from subduction margins) — *blank is information, not error*.
+        (e.g. ``slab_*`` is ``NaN`` away from subduction margins), *blank is information, not error*.
 
     Notes
     -----
@@ -288,7 +288,7 @@ def build_context_features(
     for name in selected:
         mod = ENRICHERS[name]
         extra: dict[str, Any] = dict(kw.get(name, {}))
-        if name == "tides":  # time-dependent enricher — pass the sealed issue time
+        if name == "tides":  # time-dependent enricher, pass the sealed issue time
             extra.setdefault("t_issue", issued)
         feature_names = list(getattr(mod, "FEATURE_NAMES", ()))
         rows: list[dict[str, Any]] = []
@@ -320,7 +320,7 @@ def context_provenance(
 ) -> "list[dict[str, Any]]":
     """Collect each enricher's license/citation :class:`Provenance` for the public credits page.
 
-    This does *not* download — it returns the provenance records (some enrichers need an explicit
+    This does *not* download, it returns the provenance records (some enrichers need an explicit
     ``url``/``base_url`` and will raise without one; pass them via ``download_kwargs[name]``). Use it
     to assemble the attribution block the app must display (data-and-pipelines.md §9).
     """
@@ -332,7 +332,7 @@ def context_provenance(
         try:
             prov = ENRICHERS[name].download(**download_kwargs.get(name, {}))  # type: ignore[arg-type]
             out.append(prov.to_dict())
-        except Exception as exc:  # a missing URL is fine here — record the obligation, not the file
+        except Exception as exc:  # a missing URL is fine here, record the obligation, not the file
             out.append({"dataset": name, "error": str(exc)})
     return out
 

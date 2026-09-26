@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — region config: Chile (subduction margin). v0 focus region.
+# CAOS_SEISMIC: region config: Chile (subduction margin). v0 focus region.
 # All distances in km, times in days, magnitudes homogenized to Mw where possible.
 id: chile
 name: { en: "Chile (subduction margin)", es: "Chile (margen de subducción)" }

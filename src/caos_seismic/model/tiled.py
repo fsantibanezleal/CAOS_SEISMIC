@@ -1,4 +1,4 @@
-"""Tiled, regime-aware forecaster — fit ETAS (or any per-tile Forecaster) per tile, aggregate globally.
+"""Tiled, regime-aware forecaster, fit ETAS (or any per-tile Forecaster) per tile, aggregate globally.
 
 This is the adapter that makes the conditional models tractable + meaningful at **global** scope while
 keeping the :class:`~caos_seismic.contracts.Forecaster` contract intact. Instead of one global ETAS
@@ -15,7 +15,7 @@ wrong assumption that a subduction megathrust shares parameters with a stable in
    if a tile's ETAS fails a gate or is too thin, that tile **falls back** to its smoothed-seismicity
    null (never silently publishing a supercritical intensity);
 4. answers :meth:`expected_counts` for any global cell by routing the cell to the tile that **owns**
-   it (its centre lies in that tile's interior) and evaluating that tile's fitted model — then the
+   it (its centre lies in that tile's interior) and evaluating that tile's fitted model, then the
    per-tile answers concatenate into one **global field** over the requested cells.
 
 The aggregate stays the calibrated **reference** the neural challenger must beat: it is exactly the
@@ -115,7 +115,7 @@ class TiledForecaster(BaseForecaster):
     use_regime_priors: bool = True
     root: Path | None = None
 
-    # Per-tile ETAS kernel overrides — forwarded to every tile's ETASForecaster (None => ETAS defaults).
+    # Per-tile ETAS kernel overrides: forwarded to every tile's ETASForecaster (None => ETAS defaults).
     # These exist so the score-weighted ensemble (model/ensemble.py) can build ETAS-family VARIANTS that
     # differ only in triggering memory / reach / Omori bounds: a short-memory member (fast aftershock
     # decay) and a long-memory member (late-aftershock tail) that fail in different time regimes than the
@@ -135,7 +135,7 @@ class TiledForecaster(BaseForecaster):
         """Fit one model per tile on its halo events; aggregate into the global field.
 
         For each tile: slice the lawful past to the tile halo, assign the dominant regime, fit the
-        per-tile smoothed-seismicity null (always — it is the fallback and the ETAS background), then
+        per-tile smoothed-seismicity null (always, it is the fallback and the ETAS background), then
         attempt the per-tile ETAS MLE with both stability gates. A gate failure or a thin tile keeps
         the smoothed null for that tile. Tiles with no halo events are skipped (they contribute a zero
         field, floored later to the region background by the inference driver).
@@ -177,7 +177,7 @@ class TiledForecaster(BaseForecaster):
                 n_null += 1
 
         if not self._tiles:
-            raise ValueError("no non-empty tiles to fit — catalog has no events in the region halo")
+            raise ValueError("no non-empty tiles to fit, catalog has no events in the region halo")
 
         self.params_used = {
             "tiling": {"tile_deg": self.tile_deg, "halo_deg": self.halo_deg},
@@ -227,7 +227,7 @@ class TiledForecaster(BaseForecaster):
         lon = df["longitude"].to_numpy(dtype=float) if not df.empty else np.empty(0, dtype=float)
         for tf in self._tiles:
             if not tf.is_etas:
-                continue  # null tiles are long-term Poisson rates — held across the cadence
+                continue  # null tiles are long-term Poisson rates, held across the cadence
             halo_df = self._slice_to_halo(df, lat, lon, tf.tile) if not df.empty else df
             try:
                 tf.model.recondition(halo_df, self._t_issue)
@@ -358,7 +358,7 @@ class TiledForecaster(BaseForecaster):
         tile boundary go to the nearest tile centre as a tiebreak). All cells owned by one tile are
         evaluated in a single call to that tile's fitted model, so the per-tile expected counts
         concatenate into the global field over ``cells`` (order preserved). Cells that land in no
-        fitted tile (e.g. an empty-skipped tile) get ``0.0`` — the inference driver floors those to
+        fitted tile (e.g. an empty-skipped tile) get ``0.0``, the inference driver floors those to
         the smoothed-seismicity background (cold-start rule, model-design §8).
         """
         self._require_fit()
@@ -380,7 +380,7 @@ class TiledForecaster(BaseForecaster):
             )
             for i, n in zip(cell_indices, counts):
                 out[i] = float(max(n, 0.0))
-        # `unowned` stays 0.0 — floored to background downstream.
+        # `unowned` stays 0.0: floored to background downstream.
         return out
 
     def forecast_probabilities(
@@ -434,7 +434,7 @@ class TiledForecaster(BaseForecaster):
         """Index of the fit tile that owns ``cell`` (interior contains it; nearest-centre tiebreak).
 
         Tiles whose model could not be fit (a degenerate tile where even the smoothed null failed) are
-        never returned — their cells fall through to ``unowned`` and stay ``0.0``, to be floored to the
+        never returned, their cells fall through to ``unowned`` and stay ``0.0``, to be floored to the
         region background by the inference driver, rather than evaluating an unfit model.
         """
         for i, tf in enumerate(self._tiles):

@@ -1,39 +1,39 @@
-"""Pseudo-prospective CSEP back-analysis driver — the credibility record the web app renders.
+"""Pseudo-prospective CSEP back-analysis driver, the credibility record the web app renders.
 
 This module steps the **forecast clock** (the *same* code the live daily product runs, so the
 back-analysis and production cannot diverge) across a region × period, day by day. At each issue
 date ``t`` the model is conditioned on **only** the catalog slice ``(-∞, t)``, the forecast is
-sealed, and it is scored against the target window ``[t, t + H)`` — which the model never saw. The
+sealed, and it is scored against the target window ``[t, t + H)``, which the model never saw. The
 per-issue scores are accumulated and reduced to a compact JSON summary written into ``results/`` for
 the web app's Back-analysis section (evaluation-plan §9).
 
 What this driver guarantees, straight from the evaluation plan:
 
-* **No temporal leakage** (§4.1) — the clock hands the model a causal slice; a defence-in-depth
+* **No temporal leakage** (§4.1): the clock hands the model a causal slice; a defence-in-depth
   assertion re-checks it.
-* **Score on the non-declustered catalog** (§5) — the target includes aftershocks; the product
+* **Score on the non-declustered catalog** (§5): the target includes aftershocks; the product
   deliberately forecasts clustering. (The dual-catalog rule applies to *inputs*, not the target.)
-* **Report every region × horizon cell, including failures** (§4.5, §7) — a cell where the model
+* **Report every region × horizon cell, including failures** (§4.5, §7): a cell where the model
   fails to beat its baselines, or where a day could not be scored, is emitted as such, never
   silently dropped. Selective reporting is the exact selection-bias trap CSEP exists to prevent.
-* **Skill lives in the comparison test** (§6.2) — per-horizon we record the consistency **N-test**
+* **Skill lives in the comparison test** (§6.2): per-horizon we record the consistency **N-test**
   (calibration of one model) *and* the **information gain per earthquake (nats)** of the model vs
   the smoothed-seismicity null (the comparison test where skill is actually established), plus the
   **reliability** pairs (§6.4) the live isotonic recalibration reads back.
 
 Scoring defers to :mod:`caos_seismic.eval.csep`, which uses **pyCSEP** when installed and falls back
-to dependency-free numpy closed forms (N-test, IGPE in nats, Brier, reliability bins) otherwise — so
+to dependency-free numpy closed forms (N-test, IGPE in nats, Brier, reliability bins) otherwise, so
 the back-analysis runs on the core stack. The driver itself imports only core deps at module top;
 the inference machinery (forecast clock + the model family) is imported lazily inside
 :func:`run_back_analysis` so ``import caos_seismic.eval`` stays light.
 
 Public API (mirrors what :mod:`caos_seismic.eval` re-exports):
 
-* :class:`BackAnalysisConfig` — region, period, horizons, thresholds, the M* the binary
+* :class:`BackAnalysisConfig`: region, period, horizons, thresholds, the M* the binary
   reliability/Brier output is computed at, and the issue cadence.
-* :class:`ScoredForecast` — one issued forecast's scores at one issue date.
-* :class:`BackAnalysisResult` — the accumulated, per-horizon-reduced summary + the JSON written.
-* :func:`run_back_analysis` / :func:`run_backanalysis` — the driver (the second name is the CLI's).
+* :class:`ScoredForecast`: one issued forecast's scores at one issue date.
+* :class:`BackAnalysisResult`: the accumulated, per-horizon-reduced summary + the JSON written.
+* :func:`run_back_analysis` / :func:`run_backanalysis`: the driver (the second name is the CLI's).
 """
 
 from __future__ import annotations
@@ -77,14 +77,14 @@ class BackAnalysisConfig:
         Magnitude bands the rate/exceedance is evaluated at.
     reliability_threshold:
         The single M* the binary exceedance outcome (for the reliability diagram + Brier score) is
-        computed at — the most populated band, so the diagram is well-sampled (evaluation-plan §6.4).
+        computed at, the most populated band, so the diagram is well-sampled (evaluation-plan §6.4).
     issue_hour_utc:
-        Issue time of day (UTC) — matches the live ``publish.yaml`` cadence.
+        Issue time of day (UTC), matches the live ``publish.yaml`` cadence.
     rng_seed:
         Seed for the per-issue bound simulator, so a back-analysis is byte-reproducible.
     cell_deg:
         Optional fit-grid cell size (degrees) override. When ``None`` the configured
-        ``grid.yaml: fit.cell_deg`` (0.1°) is used — correct for a spatially-bounded country view.
+        ``grid.yaml: fit.cell_deg`` (0.1°) is used, correct for a spatially-bounded country view.
         A large-bbox view (the whole-Earth GLOBAL window) MUST pass a coarse value (e.g. the
         ``grid.yaml: fit.global_fit.world_cell_deg`` = 1.0°): the dense 0.1° grid over the whole
         Earth is ~6.5M cells and is never materialized (grid.yaml). The global driver sets this.
@@ -113,20 +113,20 @@ class ScoredForecast:
     """The scores of ONE issued forecast at ONE issue date (one row of the back-analysis ledger).
 
     ``ok=False`` with a ``reason`` records a day that could not be scored (e.g. the model could not
-    be conditioned because the lawful past was empty) — those days are *kept*, never dropped, so the
+    be conditioned because the lawful past was empty), those days are *kept*, never dropped, so the
     published record cannot be selection-biased.
 
     Two information-gain channels are recorded per row, both in **nats** (never bits):
 
-    * ``igpe_vs_null_nats`` — gain of the context-conditioned model over the smoothed-seismicity
+    * ``igpe_vs_null_nats``: gain of the context-conditioned model over the smoothed-seismicity
       null. This is the classic "does conditioning on history help at all" number.
-    * ``igpe_vs_etas_nats`` — gain of the context-conditioned model over a **catalog-only ETAS**
+    * ``igpe_vs_etas_nats``: gain of the context-conditioned model over a **catalog-only ETAS**
       baseline. This is the THESIS headline: ETAS already reproduces Omori/Utsu clustering, so a
-      positive, significant gain here is *not* "I predicted aftershocks" — it is "the global context
+      positive, significant gain here is *not* "I predicted aftershocks", it is "the global context
       (covariates, worldwide seismicity) makes the local short-term forecast better than the standard
       self-exciting model can on the catalog alone". When no separate context channel has landed yet
       (the enricher stack is feature-flagged in model-design §6.2), the primary *is* catalog-only
-      ETAS, so this gain is ~0 and ``context_channel_active`` is ``False`` — reported honestly, never
+      ETAS, so this gain is ~0 and ``context_channel_active`` is ``False``, reported honestly, never
       faked into a positive number.
     """
 
@@ -237,7 +237,7 @@ def run_back_analysis(
     completeness_cfg = load("completeness")
     # Fit-grid cell size: a spatially-bounded country view uses the configured fine 0.1° grid; a
     # large-bbox view (whole-Earth GLOBAL) MUST coarsen (the dense global 0.1° grid is ~6.5M cells and
-    # is never materialized — grid.yaml). `config.cell_deg` overrides when set (the global driver does).
+    # is never materialized: grid.yaml). `config.cell_deg` overrides when set (the global driver does).
     if config.cell_deg is not None:
         grid_cfg = {**grid_cfg, "fit": {**grid_cfg.get("fit", {}), "cell_deg": float(config.cell_deg)}}
     cells = build_fit_cells(reg, grid_cfg)
@@ -257,7 +257,7 @@ def run_back_analysis(
     # Fit on a cadence, recondition daily (configs/publish.yaml ``train_cadence.full_refit``): the full
     # per-tile MLE runs every ``refit_every`` issue dates; between refits the held fit is re-conditioned
     # to the lawful past in O(N) (parameters + long-term background stable over the window). This mirrors
-    # how the live system runs and is leakage-safe — recondition admits only events strictly before
+    # how the live system runs and is leakage-safe: recondition admits only events strictly before
     # t_issue. ``refit_every_days = 1`` recovers the old exhaustive full-refit-every-day behaviour.
     refit_every = max(int(getattr(config, "refit_every_days", 7)), 1)
     fit_state: dict[str, Any] | None = None
@@ -297,9 +297,9 @@ def run_back_analysis(
             null = models["smoothed"]
             # Catalog-only ETAS baseline for the THESIS context-gain channel. When the context
             # channel is feature-flagged off, `primary` IS catalog-only ETAS, so the gain is ~0 and
-            # `context_active` is False — surfaced honestly, never faked positive.
+            # `context_active` is False: surfaced honestly, never faked positive.
             etas_baseline, context_active = _catalog_only_etas_baseline(models)
-        except Exception as exc:  # a day we could not score — RECORD it, never drop it
+        except Exception as exc:  # a day we could not score, RECORD it, never drop it
             n_failed_days += 1
             for horizon in horizons:
                 for m_star in thresholds:
@@ -404,7 +404,7 @@ def run_backanalysis(
     catalog: pd.DataFrame | None = None,
     **kwargs: Any,
 ) -> BackAnalysisResult:
-    """CLI entry point (``caos-seismic backanalysis``) — build a config from the region + period and run.
+    """CLI entry point (``caos-seismic backanalysis``), build a config from the region + period and run.
 
     A thin adapter over :func:`run_back_analysis` matching the CLI's keyword call
     (``region=``, ``start=``, ``end=``). Horizons / thresholds default to ``configs/forecast.yaml``.
@@ -435,8 +435,8 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
     Pools across thresholds and issue dates for the headline N-test pass rate / mean information
     gain, and keeps a per-threshold breakdown so the web app can drill down. Two IGPE channels are
     reduced: ``mean_igpe_vs_null_nats`` (over the smoothed null) and the THESIS
-    ``mean_context_gain_vs_etas_nats`` (over catalog-only ETAS — how much the global context adds).
-    Failed (un-scorable) rows are counted but excluded from the rate means — and surfaced via
+    ``mean_context_gain_vs_etas_nats`` (over catalog-only ETAS, how much the global context adds).
+    Failed (un-scorable) rows are counted but excluded from the rate means, and surfaced via
     ``n_failed``.
     """
     out: list[dict[str, Any]] = []
@@ -490,7 +490,7 @@ def _reduce_per_horizon(scored: list[ScoredForecast], horizons: list[int], csep)
                     "n_test_nb_pass_rate is the over-dispersion-honest negative-binomial N-test (E13) "
                     "reported alongside, never replacing it. Skill is the comparison-test win vs ETAS "
                     "(eval.csep), not the consistency pass rate. context_gain_vs_etas is the headline "
-                    "thesis measurement — when context_channel_active is false the context stack has "
+                    "thesis measurement, when context_channel_active is false the context stack has "
                     "not yet landed and the gain is ~0 by construction (not a measured null)."
                 ),
             }
@@ -536,7 +536,7 @@ def _write_summary(result: BackAnalysisResult, config: BackAnalysisConfig, resul
             "reported including failures (no post-hoc selection). Consistency tests calibrate one "
             "model; skill is established only by the comparison test (information gain vs ETAS). "
             "The headline thesis measurement is the information gain of the context-conditioned "
-            "model over catalog-only ETAS (mean_context_gain_vs_etas_nats), in nats — it quantifies "
+            "model over catalog-only ETAS (mean_context_gain_vs_etas_nats), in nats, it quantifies "
             "how much global context adds beyond the self-exciting catalog model. This complements "
             "official OEF systems; it is not a civil-protection alarm."
         ),
@@ -570,11 +570,11 @@ def _recondition_model_family(
     """Advance the held model family's conditioning to a new issue date without a full refit (in place).
 
     Only the primary's triggering conditioning is refreshed (via its ``recondition`` method, if it has
-    one — the tiled/ETAS forecasters do). The smoothed null is a long-term Poisson rate held across the
+    one, the tiled/ETAS forecasters do). The smoothed null is a long-term Poisson rate held across the
     cadence, and the catalog-only ETAS baseline is the primary while the context channel is off, so both
     are covered. If the primary cannot be reconditioned (e.g. a Reasenberg–Jones fallback with no such
-    method, or a tile that lost its parents), the held conditioning is kept — the next cadence day
-    rebuilds it from scratch — rather than raising mid-clock.
+    method, or a tile that lost its parents), the held conditioning is kept, the next cadence day
+    rebuilds it from scratch, rather than raising mid-clock.
     """
     primary = models.get("primary")
     recond = getattr(primary, "recondition", None)
@@ -594,10 +594,10 @@ def _catalog_only_etas_baseline(models: dict[str, Any]) -> tuple[Any, bool]:
     The THESIS headline is the information gain of the *context-conditioned* model (``models[
     "primary"]``) over a catalog-only ETAS that has seen no global context. Two honest cases:
 
-    * **Context channel active** — a distinct context-conditioned primary landed and a separate
+    * **Context channel active**: a distinct context-conditioned primary landed and a separate
       catalog-only ETAS (``models["etas"]``) is available: the baseline is that ETAS, and the gain
       measures exactly what the global context adds. Returns ``(etas, True)``.
-    * **Context channel not yet landed** — the enricher stack is feature-flagged off (model-design
+    * **Context channel not yet landed**: the enricher stack is feature-flagged off (model-design
       §6.2), so the primary IS catalog-only ETAS (or its Reasenberg–Jones fallback). The baseline is
       then the same estimator as the primary, the gain is ~0 by construction, and the flag is
       ``False`` so the reduction labels the context contribution as "not yet measured" rather than

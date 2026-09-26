@@ -1,4 +1,4 @@
-"""Provenance — make every daily forecast byte-reproducible months later.
+"""Provenance, make every daily forecast byte-reproducible months later.
 
 Without an immutable record of *exactly* what produced a forecast, honest pseudo-prospective and
 true-prospective CSEP scoring is impossible: you would end up scoring today's model against a
@@ -8,11 +8,11 @@ retroactively revised ComCat catalog, which is optimistic leakage (web-app-spec.
 This module reads/writes :class:`caos_seismic.contracts.Manifest` objects and assembles the
 ``provenance`` block embedded in each :class:`ForecastArtifact`. A manifest pins:
 
-* **config hash** — :func:`caos_seismic.config.config_hash` over the configs that govern the run;
-* **code git SHA** — the exact commit, so the code is recoverable;
-* **input catalog snapshot id** — the immutable catalog state used (ComCat revisions/retractions are
+* **config hash**: :func:`caos_seismic.config.config_hash` over the configs that govern the run;
+* **code git SHA**: the exact commit, so the code is recoverable;
+* **input catalog snapshot id**: the immutable catalog state used (ComCat revisions/retractions are
   snapshotted, never silently overwritten);
-* **Mc grid version** — the magnitude-of-completeness map is a first-class versioned artifact;
+* **Mc grid version**: the magnitude-of-completeness map is a first-class versioned artifact;
 * **declustering choice**, **model + params**, and the **issue timestamp**.
 
 Manifests live under ``manifests/`` as one JSON per stage; nothing here imports heavy deps.
@@ -51,7 +51,7 @@ def _utc_now_iso() -> str:
 def code_git_sha(short: bool = False) -> str | None:
     """Return the current repo commit SHA, or ``None`` if git is unavailable / not a repo.
 
-    Resolved by shelling out to ``git rev-parse`` in :data:`REPO_ROOT`. Never raises — provenance
+    Resolved by shelling out to ``git rev-parse`` in :data:`REPO_ROOT`. Never raises, provenance
     must degrade gracefully (a missing SHA is recorded as ``None``, not a crash) so a forecast can
     still be produced from a source checkout that is not a git working tree.
     """
@@ -76,7 +76,7 @@ def snapshot_id(catalog, region_id: str, t_issue: str) -> str:
 
     The id is a content hash of the conditioning catalog (event ids + times + magnitudes) plus the
     region and issue time. Two runs over the identical catalog state get the identical id; a single
-    revised/retracted event changes it — which is exactly the audit signal we want (model-design.md
+    revised/retracted event changes it, which is exactly the audit signal we want (model-design.md
     §9 step 1: "Handle ComCat revisions/retractions by snapshotting, never by silently overwriting").
 
     Accepts a DataFrame (hashes the contract columns) or anything JSON-serializable.

@@ -19,7 +19,7 @@ import { Figure } from "@/components/content/Figure";
 import { SubTabs, type SubTabDef } from "@/components/content/SubTabs";
 
 /**
- * Methodology — Tab 2: "Analytical / ML methods" (STATE OF THE ART, not our implementation).
+ * Methodology: Tab 2: "Analytical / ML methods" (STATE OF THE ART, not our implementation).
  *
  * One DEEP sub-tab per method, mapping the deep research
  * (research/03-ml-approaches + synthesis/methodology.md §2): the temporal-point-process
@@ -314,7 +314,7 @@ function AttentionHawkesDiagram() {
 
 /**
  * FERN / ETAS-generalizing encoder: a permutation-invariant (Deep-Sets) sum of per-event MLP
- * responses added to a background field — the ETAS skeleton with learned kernels.
+ * responses added to a background field: the ETAS skeleton with learned kernels.
  */
 function FernDiagram() {
   const { t } = useTranslation();

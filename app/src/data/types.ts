@@ -1,5 +1,5 @@
 /**
- * CAOS_SEISMIC — TypeScript types mirroring the Python compact-artifact contracts.
+ * CAOS_SEISMIC: TypeScript types mirroring the Python compact-artifact contracts.
  *
  * These types are the front-end half of the contract defined in
  * `src/caos_seismic/contracts.py`. They MUST stay byte-compatible with the JSON the
@@ -8,8 +8,8 @@
  * backend compute.
  *
  * Honest-framing invariant carried into the type layer (see web-app-spec.md §3, §7.3):
- * every published number is a CONDITIONAL PROBABILITY in (0, 1) — scoped to
- * region × magnitude threshold × horizon — shown next to its long-term `baseline`,
+ * every published number is a CONDITIONAL PROBABILITY in (0, 1): scoped to
+ * region × magnitude threshold × horizon: shown next to its long-term `baseline`,
  * with `lo`/`hi` uncertainty bounds, evaluated CSEP-style. Never an alarm, never a
  * prediction, never a "safe" state. The shape below makes those companions mandatory
  * (every cell carries `baseline`, `lo`, `hi`).
@@ -54,7 +54,7 @@ export interface Region {
  * `forecast[cell_key][String(horizon_days)][String(m_threshold)]`.
  *
  * Mirrors the dict written from `contracts.CellForecast`:
- *   p        ← CellForecast.expected   (P(>=1 event >= M*), in (0,1) — the public scalar)
+ *   p        ← CellForecast.expected   (P(>=1 event >= M*), in (0,1): the public scalar)
  *   lo       ← CellForecast.lo         (optimistic bound, P10)
  *   hi       ← CellForecast.hi         (pessimistic bound, P90)
  *   rate     ← CellForecast.rate       (expected event count N_{>=M*} = lambda * T)
@@ -73,7 +73,7 @@ export interface CellValue {
    *  (production) artifacts this is decoded by the client from the quantized `q` code via the
    *  artifact `rate_legend` at load time (see `decodeRates`). */
   rate: number;
-  /** Long-term Poisson baseline probability for the same cell — the honesty companion. */
+  /** Long-term Poisson baseline probability for the same cell, the honesty companion. */
   baseline: number;
   /** Quantized log-uint16 rate code AS SHIPPED (publish-stage compaction). Decoded into `rate` at
    *  load time; absent on uncompacted (sample) artifacts. */
@@ -87,7 +87,7 @@ export interface CellValue {
  * numeric values stringified (`"1"`, `"2"`, `"7"` for horizons; `"5.0"`, `"6.0"`,
  * `"7.0"` for thresholds), exactly as Python's `str(int)` / `str(float)` emits them.
  * Only cells inside the validated coverage footprint and above the rate floor are
- * present — every absent cell is implicit long-term baseline, NOT "safe".
+ * present: every absent cell is implicit long-term baseline, NOT "safe".
  *
  * forecast[cellKey][String(horizonDays)][String(mThreshold)] -> CellValue
  */
@@ -109,7 +109,7 @@ export type ReliabilityPoint = [forecastProb: number, observedFreq: number, n: n
  * plus per-test pass flags. Additional keys are tolerated (index signature).
  *
  * N = number test, M = magnitude, S = spatial, L = likelihood, CL = conditional likelihood.
- * The traffic-light triad (green/amber/red) is reserved for MODEL QUALITY only — never
+ * The traffic-light triad (green/amber/red) is reserved for MODEL QUALITY only: never
  * for earthquake danger (web-app-spec.md §7.3).
  */
 export interface CsepScores {
@@ -180,7 +180,7 @@ export interface GridDescriptor {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// View index (mirror ViewIndexEntry) — a country slice of the single global field
+// View index (mirror ViewIndexEntry), a country slice of the single global field
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -194,7 +194,7 @@ export interface GridDescriptor {
  * forecast payload per country.
  */
 export interface ViewIndexEntry {
-  /** Stable view id — ISO-3166 alpha-2/-3 for countries (e.g. "CL", "JP", "US-CA"). */
+  /** Stable view id, ISO-3166 alpha-2/-3 for countries (e.g. "CL", "JP", "US-CA"). */
   id: string;
   name_en: string;
   name_es: string;
@@ -247,7 +247,7 @@ export interface ForecastArtifact {
   grid: GridDescriptor;
   /** Sparse forecast[cell][horizon][threshold] -> {p, lo, hi, rate, baseline}. */
   forecast: ForecastTree;
-  /** CSEP / reliability summary — the product's central credibility artifact. */
+  /** CSEP / reliability summary, the product's central credibility artifact. */
   calibration: CalibrationSummary;
   /** Cell keys explicitly OUT of validated coverage (hatch in the UI; blank != safe). */
   coverage_mask: string[];
@@ -267,7 +267,7 @@ export interface ForecastArtifact {
 }
 
 /**
- * Log-domain uint16 quantization legend for the compacted per-cell `q` rate codes — the publish
+ * Log-domain uint16 quantization legend for the compacted per-cell `q` rate codes: the publish
  * stage stores the expected-count rate as a 16-bit code to keep the world payload small. Decode:
  * `rate = q <= 0 ? 0 : rate_min * (rate_max / rate_min) ** ((q - 1) / (levels - 1))`.
  */
@@ -281,10 +281,10 @@ export interface RateLegend {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// index.json — the latest-pointer + rolling-calibration manifest (web-app-spec.md §8.3)
+// index.json, the latest-pointer + rolling-calibration manifest (web-app-spec.md §8.3)
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** One country view sliceable out of a (global) artifact — the region-selector menu entry. */
+/** One country view sliceable out of a (global) artifact, the region-selector menu entry. */
 export interface IndexViewEntry {
   id: string;
   name_en: string;
@@ -292,7 +292,7 @@ export interface IndexViewEntry {
 }
 
 /**
- * One forecast entry in the index — both the `latest` pointer and every element of the rolling
+ * One forecast entry in the index: both the `latest` pointer and every element of the rolling
  * `forecasts` history share this shape. Mirrors the publish stage's index entry written by
  * `inference/artifact.py: update_index` (data-and-pipelines.md §4 (G), §7).
  */
@@ -318,7 +318,7 @@ export interface ForecastIndexEntry {
 }
 
 /**
- * `data/index.json` — the latest pointer + rolling history + CSEP calibration the client reads
+ * `data/index.json`: the latest pointer + rolling history + CSEP calibration the client reads
  * first. Mirrors the publish stage's `results/index.json` (data-and-pipelines.md §4 (G), §7).
  * `latest` is the most recent artifact entry; `forecasts` is the rolling list (oldest→newest) for
  * the "forecast from {past date}" selector; `latest_by_region` is the per-region newest entry.
@@ -354,7 +354,7 @@ export const BOUND_FIELD: Record<Bound, keyof CellValue> = {
 };
 
 /**
- * The id the country selector uses for the default WORLD view — the whole global field, NOT a slice.
+ * The id the country selector uses for the default WORLD view: the whole global field, NOT a slice.
  * It is not present in `artifact.views`; selecting it surfaces every cell. Any other value is a
  * `ViewIndexEntry.id` (a country slice).
  */

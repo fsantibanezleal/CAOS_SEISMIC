@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — magnitude of completeness (Mc) + b-value. Estimated per region on the TRAINING
+# CAOS_SEISMIC: magnitude of completeness (Mc) + b-value. Estimated per region on the TRAINING
 # window only and re-estimated on a rolling space–time window each inference. A global Mc injects
 # fake non-stationarity. Mc is a first-class versioned artifact (stored next to each catalog snapshot).
 mc:

@@ -1,4 +1,4 @@
-"""Stage B — clean / homogenize the catalog.
+"""Stage B, clean / homogenize the catalog.
 
 This module turns the raw, multi-provider event stream from :mod:`caos_seismic.data.fetch` into the
 single clean catalog every downstream stage consumes. It implements §3 step 2 of the methodology and
@@ -8,14 +8,14 @@ the **CLEAN / HOMOGENIZE** node of the pipeline DAG (``docs/data-and-pipelines.m
    network (CSN/SCEDC/…), EMSC and ISC under different ids. We keep one row per physical event,
    preferring the most authoritative provider and the row carrying the best (moment) magnitude.
 
-2. **Magnitude homogenization to Mw.** Catalogs mix ``ML``/``mb``/``Ms``/``Md``/``Mw`` — different
-   saturation, different physics — so mixing them silently distorts the Gutenberg–Richter tail and
+2. **Magnitude homogenization to Mw.** Catalogs mix ``ML``/``mb``/``Ms``/``Md``/``Mw``: different
+   saturation, different physics, so mixing them silently distorts the Gutenberg–Richter tail and
    every rate forecast. We convert the native magnitude to a moment-magnitude equivalent with a
    **total-least-squares (orthogonal) regression**, *not* OLS, because **both axes carry measurement
    error** (the native magnitude *and* the reference Mw). The conversion is anchored on the
    **ISC-GEM / GCMT overlap** (events present in both a network and a Mw-homogenized reference) and is
    fit **per native magnitude type** (one ``ML→Mw`` line, one ``mb→Mw`` line, …). Native magnitudes
-   are **kept** alongside the homogenized ``mw`` column — nothing is dropped.
+   are **kept** alongside the homogenized ``mw`` column, nothing is dropped.
 
 Why TLS / orthogonal regression (not OLS)
 -----------------------------------------
@@ -33,7 +33,7 @@ ratio ``δ = var(ε_y) / var(ε_x)`` (``δ = 1`` ⇒ orthogonal regression)::
 This is the standard orthogonal-regression solution (Deming 1943; Markovsky & Van Huffel 2007) and is
 the same estimator the seismology literature uses for inter-magnitude conversions (e.g. Castellaro,
 Mulargia & Kagan 2006, *GJI* 165, 245–255, doi:10.1111/j.1365-246X.2006.02902.x; Lolli & Gasperini
-2012). We expose the fitted coefficients so the *clean* manifest can version the conversion — a wrong
+2012). We expose the fitted coefficients so the *clean* manifest can version the conversion, a wrong
 conversion is silent and global, so it must be auditable.
 
 Only the core deps (``numpy`` / ``pandas`` / ``scipy``) are used, so cleaning runs on the ComCat spine
@@ -43,7 +43,7 @@ References
 ----------
 * Deming, W. E. (1943). *Statistical Adjustment of Data.* Wiley (errors-in-both-variables fit).
 * Castellaro, S., Mulargia, F. & Kagan, Y. Y. (2006). *GJI* 165, 245–255,
-  doi:10.1111/j.1365-246X.2006.02902.x (TLS/orthogonal magnitude regression — both axes have error).
+  doi:10.1111/j.1365-246X.2006.02902.x (TLS/orthogonal magnitude regression, both axes have error).
 * Markovsky, I. & Van Huffel, S. (2007). *Signal Processing* 87(10), 2283–2302 (TLS overview).
 * Methodology synthesis §3 step 2 (homogenize to Mw, TLS, ISC-GEM/GCMT anchor, keep native + Mw).
 """
@@ -65,7 +65,7 @@ logger = logging.getLogger(__name__)
 # Magnitude-type normalization
 # ─────────────────────────────────────────────────────────────────────────────
 
-#: Provider authority order for dedupe — earlier = preferred preferred-origin/id. ISC-GEM and GCMT
+#: Provider authority order for dedupe, earlier = preferred preferred-origin/id. ISC-GEM and GCMT
 #: are Mw-homogenized references and win on magnitude quality; the regional network wins on location
 #: completeness; ComCat is the global spine; EMSC is the independent cross-check.
 DEFAULT_SOURCE_PRIORITY: tuple[str, ...] = (
@@ -100,13 +100,13 @@ def normalize_mag_type(mag_type: object) -> str:
         return "mw"
     if mt.startswith("mb"):  # mb, mb_Lg, mbLg, mB
         return "mb"
-    if mt.startswith("ms"):  # Ms, Ms_20, MS, mB? — surface-wave
+    if mt.startswith("ms"):  # Ms, Ms_20, MS, mB?, surface-wave
         return "ms"
     if mt.startswith("ml") or mt in {"m", "ml(maxc)"}:  # ML, MLv, ml, MLr
         return "ml"
     if mt.startswith("md") or mt.startswith("mc"):  # duration / coda
         return "md"
-    if mt.startswith("me"):  # energy magnitude — rare; leave as its own family
+    if mt.startswith("me"):  # energy magnitude, rare; leave as its own family
         return "me"
     return "unknown"
 
@@ -130,7 +130,7 @@ class TLSFit:
         The line ``mw = slope * m_native + intercept``.
     delta:
         Error-variance ratio ``var(ε_native) / var(ε_mw)`` assumed in the Deming fit. ``1.0`` is the
-        orthogonal/TLS case (equal error on both axes) — the default the methodology specifies.
+        orthogonal/TLS case (equal error on both axes), the default the methodology specifies.
     n:
         Number of overlap pairs the line was fit on.
     rms:
@@ -169,13 +169,13 @@ class TLSFit:
 # ─────────────────────────────────────────────────────────────────────────────
 
 #: Published global empirical ``native → Mw`` conversions, used as a FALLBACK for any magnitude family
-#: that has no data-driven (ISC-GEM/GCMT-anchored) line in a given run — so a worldwide ComCat spine
+#: that has no data-driven (ISC-GEM/GCMT-anchored) line in a given run, so a worldwide ComCat spine
 #: (dominated by ``mb`` teleseismic readings, with no Mw reference fetched yet) is homogenized instead
 #: of having ~80% of its events dropped for a missing conversion. Data-driven fits, when available,
 #: always take precedence over these.
 #:
 #: * mb→Mw and Ms→Mw: Scordilis, E. M. (2006), *J. Seismology* 10, 225–236,
-#:   doi:10.1007/s10950-006-9012-4 — the canonical global relations (mb valid 3.5–6.2; the Ms low
+#:   doi:10.1007/s10950-006-9012-4, the canonical global relations (mb valid 3.5–6.2; the Ms low
 #:   branch 3.0–6.1 covers the bulk of an M≥4.5 spine; large events almost always carry a direct Mw).
 #: * ML→Mw / Md→Mw: a documented small-magnitude approximation (ML ≈ Mw to first order in this range;
 #:   Md treated as ML); refine per region when a regional Mw anchor is available.
@@ -206,14 +206,14 @@ def tls_regression(
 
         slope = ( s_yy - δ s_xx + sqrt( (s_yy - δ s_xx)² + 4 δ s_xy² ) ) / ( 2 s_xy )
 
-    and ``δ = 1`` recovers ordinary orthogonal (TLS) regression — the methodology default, since the
+    and ``δ = 1`` recovers ordinary orthogonal (TLS) regression, the methodology default, since the
     native and moment magnitudes have comparable scatter. Returns a :class:`TLSFit`.
 
     Raises
     ------
     ValueError
         If fewer than 3 finite, paired samples are available, or the points are degenerate
-        (``s_xy == 0`` — no covariance to define a slope).
+        (``s_xy == 0``, no covariance to define a slope).
     """
     xa = np.asarray(x, dtype=float)
     ya = np.asarray(y, dtype=float)
@@ -284,7 +284,7 @@ def build_mw_anchor(
     reference:
         Mw-homogenized reference catalog (ISC-GEM and/or GCMT; ``mw`` populated, ``mag_type`` moment).
     max_dt_s, max_dist_km:
-        Association gates — an event matches a reference only if within this origin-time and epicentral
+        Association gates, an event matches a reference only if within this origin-time and epicentral
         distance. Defaults are deliberately tight (global Mw references are sparse and well-located).
 
     Notes
@@ -312,7 +312,7 @@ def fit_conversions(
     with too few pairs are skipped (the homogenizer then leaves those native readings without a
     conversion and flags them, rather than fitting a noisy, untrustworthy line).
 
-    Moment-magnitude readings (family ``"mw"``) are intentionally **not** fit — they are already Mw.
+    Moment-magnitude readings (family ``"mw"``) are intentionally **not** fit, they are already Mw.
     """
     fits: dict[str, TLSFit] = {}
     if anchor_pairs.empty:
@@ -363,7 +363,7 @@ def homogenize_to_mw(
     * else → ``mw`` is left ``NaN`` (no trustworthy conversion; the row is flagged, never silently
       mis-converted).
 
-    The native ``mag`` and ``mag_type`` columns are **preserved** (``keep_native=True``) — the
+    The native ``mag`` and ``mag_type`` columns are **preserved** (``keep_native=True``), the
     contract requires both the native value+type and the homogenized ``mw`` to survive (a wrong or
     missing conversion must remain auditable). Returns a **new** validated DataFrame.
 
@@ -413,9 +413,9 @@ def dedupe_events(
 
     Two passes, in order:
 
-    1. **Exact id** — rows sharing ``event_id`` are duplicates (e.g. overlapping fetch tiles); keep
+    1. **Exact id**: rows sharing ``event_id`` are duplicates (e.g. overlapping fetch tiles); keep
        the highest-priority provider's row.
-    2. **Spatio-temporal** — across providers an earthquake has *different* ids, so we cluster rows
+    2. **Spatio-temporal**: across providers an earthquake has *different* ids, so we cluster rows
        whose origin times are within ``max_dt_s`` and epicentres within ``max_dist_km`` and keep one
        representative per cluster.
 
@@ -440,14 +440,14 @@ def dedupe_events(
     df["_mag_rank"] = np.where(fam.eq("mw"), 0, 1)  # prefer rows already in Mw
     df["_has_mag"] = (~pd.to_numeric(df["mag"], errors="coerce").isna()).astype(int)
 
-    # Pass 1 — exact id.
+    # Pass 1: exact id.
     df = df.sort_values(
         ["event_id", "_src_rank", "_mag_rank", "_has_mag"],
         ascending=[True, True, True, False],
     )
     df = df.drop_duplicates(subset="event_id", keep="first")
 
-    # Pass 2 — spatio-temporal clustering across providers.
+    # Pass 2: spatio-temporal clustering across providers.
     df = df.sort_values("time").reset_index(drop=True)
     keep_mask = _spatiotemporal_dedupe_mask(df, max_dt_s=max_dt_s, max_dist_km=max_dist_km)
     df = df.loc[keep_mask].copy()
@@ -465,7 +465,7 @@ def _spatiotemporal_dedupe_mask(
     Sweeps the time-sorted catalog. For each not-yet-assigned event it gathers all later events within
     ``max_dt_s`` (the sweep can stop early on time) and ``max_dist_km``, picks the best-ranked member
     of that cluster as the survivor, and marks the rest as duplicates. ``O(N·k)`` with ``k`` the local
-    temporal neighbourhood — cheap for daily regional catalogs.
+    temporal neighbourhood, cheap for daily regional catalogs.
     """
     from ..model._common import haversine_km
 
@@ -510,11 +510,11 @@ def _spatiotemporal_dedupe_mask(
 def merge_providers(*frames: pd.DataFrame) -> pd.DataFrame:
     """Concatenate per-provider catalogs into the single merged stream the dedupe consumes.
 
-    The global pipeline pulls several providers independently — the worldwide ComCat spine, each
+    The global pipeline pulls several providers independently, the worldwide ComCat spine, each
     country **view**'s regional network (CSN/SCEDC/GeoNet/INGV), the EMSC cross-check, and the
     ISC-GEM/GCMT Mw anchors. Each returns a CATALOG_COLUMNS frame; this stacks them (dropping empties),
     coerces ``time`` to UTC, and returns one validated frame ready for :func:`dedupe_events`. It does
-    **not** dedupe — that is dedupe's job, after the merge, using the provider authority order.
+    **not** dedupe, that is dedupe's job, after the merge, using the provider authority order.
 
     Empty / all-empty inputs return a typed-empty CATALOG_COLUMNS frame.
     """
@@ -548,7 +548,7 @@ def global_mc_grid(
     min_events: int = 50,
     global_default: float | None = 4.5,
 ) -> pd.DataFrame:
-    """Estimate ``Mc(x, y, t)`` on a coarse GLOBAL space-time grid — the global completeness hook.
+    """Estimate ``Mc(x, y, t)`` on a coarse GLOBAL space-time grid, the global completeness hook.
 
     A worldwide catalog has wildly non-stationary completeness: ``Mc`` differs by network era and by
     region (a dense regional view sees ``Mc≈1``; the open ocean only ``Mc≈4.5+``). A single global
@@ -559,7 +559,7 @@ def global_mc_grid(
 
     The result is the per-cell-per-epoch ``Mc`` table that stage (C) cuts events below before
     declustering/feature-building. It is a *hook*: a coarse, leakage-safe (right-labelled windows)
-    first cut that the full stage (C) Mc artifact refines per region view — here we provide the global
+    first cut that the full stage (C) Mc artifact refines per region view, here we provide the global
     field so the spine is never cut at a single planet-wide ``Mc``.
 
     Parameters
@@ -567,13 +567,13 @@ def global_mc_grid(
     catalog:
         A clean (Mw-homogenized) global catalog with ``time``/``latitude``/``longitude``/``mw``.
     cell_deg:
-        Spatial cell size in degrees (default 5° — coarse on purpose; the global field is smooth and a
+        Spatial cell size in degrees (default 5°, coarse on purpose; the global field is smooth and a
         finer grid starves cells of the ``min_events`` an Mc estimate needs).
     window_days, step_days, dm, correction, min_events:
         Passed through to the per-cell rolling Mc estimator.
     global_default:
         Conservative worldwide floor used where a cell-epoch has too few events to estimate ``Mc``
-        (default 4.5 — the same homogeneity floor the global ComCat spine is pulled at).
+        (default 4.5, the same homogeneity floor the global ComCat spine is pulled at).
 
     Returns
     -------
@@ -679,7 +679,7 @@ def clean_catalog(
 
     1. de-duplicates the merged multi-provider catalog by preferred id + spatio-temporal proximity
        (:func:`dedupe_events`);
-    2. obtains the ``native → Mw`` TLS conversions — either the pre-fitted ``conversions`` passed in,
+    2. obtains the ``native → Mw`` TLS conversions: either the pre-fitted ``conversions`` passed in,
        or fit fresh from the ISC-GEM/GCMT ``reference`` overlap (:func:`build_mw_anchor` +
        :func:`fit_conversions`); both axes have error, so the fit is orthogonal/TLS, never OLS;
     3. fills ``mw`` per row (:func:`homogenize_to_mw`), keeping the native ``mag``/``mag_type``;
@@ -695,7 +695,7 @@ def clean_catalog(
         ``conversions`` is not supplied. If both are ``None``, only already-moment magnitudes get a
         ``mw`` value (everything else stays ``NaN`` and is counted in ``stats``).
     conversions:
-        Pre-fitted conversions (e.g. versioned from a previous run's manifest) to reuse verbatim — the
+        Pre-fitted conversions (e.g. versioned from a previous run's manifest) to reuse verbatim, the
         production path so the daily delta is converted with the *same* line as the base catalog.
     """
     n_in = int(len(catalog))
@@ -710,7 +710,7 @@ def clean_catalog(
     fits: dict[str, TLSFit] = dict(conversions) if conversions else {}
     if not fits and reference is not None and not reference.empty:
         # Fit the conversion from the *native-magnitude network rows of the full input* matched to the
-        # reference — NOT the deduped catalog. Dedupe replaces a network ML reading with its better
+        # reference: NOT the deduped catalog. Dedupe replaces a network ML reading with its better
         # (reference Mw) row, which would erase exactly the native→Mw overlap pairs the line needs.
         # We exclude rows that are themselves from the reference's source(s) so we only learn the
         # network → reference relation.
@@ -723,7 +723,7 @@ def clean_catalog(
 
     # Fallback so NO event is dropped for a missing conversion: fill any non-moment family that has no
     # data-driven (ISC-GEM/GCMT-anchored) line with a published global default (Scordilis 2006; see
-    # LITERATURE_DEFAULTS). Data-driven fits always take precedence — `setdefault` only fills the gaps.
+    # LITERATURE_DEFAULTS). Data-driven fits always take precedence: `setdefault` only fills the gaps.
     # This is what turns a worldwide ComCat spine (≈80% `mb`, with no Mw reference fetched yet) from a
     # decimated 16k-event catalog into the full ~hundreds-of-thousands the GR tail and ETAS need.
     if use_literature_defaults:
@@ -758,14 +758,14 @@ def clean_catalog(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Clean-catalog store (gitignored Parquet) — the handoff to inference/back-analysis
+# Clean-catalog store (gitignored Parquet): the handoff to inference/back-analysis
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 def clean_catalog_path(region_id: str, base_dir=None):
     """Path of the cleaned-catalog Parquet store for a region (``data/clean/<region>.parquet``).
 
-    The store is gitignored — only configs + manifests + code are versioned; the catalog is
+    The store is gitignored, only configs + manifests + code are versioned; the catalog is
     rebuildable from them. Kept here so the fetch→clean stage and the inference loader agree on
     one location.
     """
@@ -797,7 +797,7 @@ def load_clean_catalog(region, base_dir=None) -> pd.DataFrame:
 
     ``region`` may be a :class:`~caos_seismic.contracts.Region` or a region id string. Raises a
     clear :class:`FileNotFoundError` (pointing at ``caos-seismic fetch`` + ``build-features``) when
-    the store has not been built yet — the inference stage surfaces that as an actionable message.
+    the store has not been built yet, the inference stage surfaces that as an actionable message.
     Returns a validated catalog DataFrame with a tz-aware UTC ``time`` column.
     """
     region_id = region.id if hasattr(region, "id") else str(region)

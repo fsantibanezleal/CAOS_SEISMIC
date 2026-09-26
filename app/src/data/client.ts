@@ -1,25 +1,25 @@
 /**
- * CAOS_SEISMIC — static data client.
+ * CAOS_SEISMIC: static data client.
  *
  * The SPA is STATIC-FIRST, stateless, read-only (web-app-spec.md §8.3): there is NO
  * backend call here. The client reads two static assets from the data host:
- *   1. `<base>/data/index.json`            — the latest pointer + rolling history
- *   2. `<base>/data/forecast-<date>.json`  — the compact daily artifact (optionally `.gz`)
+ *   1. `<base>/data/index.json`           : the latest pointer + rolling history
+ *   2. `<base>/data/forecast-<date>.json` : the compact daily artifact (optionally `.gz`)
  *
  * Both are produced offline by the daily git-as-data publish job
  * (data-and-pipelines.md §4 (G)). Until real artifacts exist, the bundled SAMPLE
- * artifact in `public/data/` is served by the same code path — the mock lives ONLY at
+ * artifact in `public/data/` is served by the same code path: the mock lives ONLY at
  * the data boundary, behind this real interface; swapping in real artifacts requires no
  * client change.
  *
  * Decoding: artifacts may be served either as plain JSON (host applies
  * Content-Encoding: gzip transparently) OR as a raw `.json.gz` blob (static hosts that
- * do not negotiate gzip for `.gz` files). This client handles BOTH — if the bytes look
+ * do not negotiate gzip for `.gz` files). This client handles BOTH: if the bytes look
  * gzip-compressed (magic 0x1f 0x8b) it inflates them via DecompressionStream before
  * parsing, otherwise it parses the text directly.
  *
  * Selectors expose the artifact by horizon, by threshold, and by bound (lo / expected /
- * hi — the honesty triad), and compute the mandatory ratio-to-baseline companion. They
+ * hi: the honesty triad), and compute the mandatory ratio-to-baseline companion. They
  * never invent values: a missing cell is implicit long-term baseline, not "safe".
  */
 
@@ -61,7 +61,7 @@ function defaultBaseUrl(): string {
     const env = (import.meta as unknown as { env?: { BASE_URL?: string } }).env;
     if (env?.BASE_URL) return env.BASE_URL;
   } catch {
-    /* import.meta not available (e.g. CommonJS test runner) — fall through */
+    /* import.meta not available (e.g. CommonJS test runner), fall through */
   }
   return '/';
 }
@@ -184,7 +184,7 @@ export class ForecastClient {
 
   /**
    * Load the artifact for a specific issue date ("YYYY-MM-DD") from the rolling `forecasts`
-   * history — the "forecast from {past date}" selector. Matches on the entry's `issued_at` UTC
+   * history: the "forecast from {past date}" selector. Matches on the entry's `issued_at` UTC
    * day; falls back to the conventional global filename `forecast-global-<date>.json.gz` if the
    * date is not present in the index.
    */
@@ -259,7 +259,7 @@ export function thresholdKey(mThreshold: number): string {
 
 /**
  * Read one leaf `CellValue` for a (cell, horizon, threshold), or `undefined` if the cell
- * is absent (implicit long-term baseline — NOT "safe"; the UI must render "no forecast").
+ * is absent (implicit long-term baseline: NOT "safe"; the UI must render "no forecast").
  */
 export function getCellValue(
   artifact: ForecastArtifact,
@@ -272,13 +272,13 @@ export function getCellValue(
 
 /**
  * Project the sparse artifact to a flat per-cell selection for one
- * (horizon, threshold, bound) slice — the array the deck.gl H3 layer / no-map summary
+ * (horizon, threshold, bound) slice: the array the deck.gl H3 layer / no-map summary
  * consumes. Cells in `coverage_mask` are excluded (they render as an explicit hatch,
  * handled separately by `getCoverageMask`).
  *
  * Global re-scope (web-app-spec.md §7.1): pass `restrictToCells` to surface only one country VIEW's
  * slice of the single global field (the cell-key index from `ViewIndexEntry.cells`). Omit it (or pass
- * `null`/the WORLD view) to surface the whole global field — the default world probability field.
+ * `null`/the WORLD view) to surface the whole global field: the default world probability field.
  * The forecast dict is the same one global field in both cases; the view only narrows which cells are
  * returned, never re-computes anything.
  */
@@ -321,7 +321,7 @@ export function selectField(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Country VIEW helpers (slices of the single global field) — web-app-spec.md §7.1
+// Country VIEW helpers (slices of the single global field), web-app-spec.md §7.1
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** The configured country views (slices of the global field). Empty for a single-region artifact. */
@@ -342,7 +342,7 @@ export function findView(artifact: ForecastArtifact, viewId: string): ViewIndexE
 
 /**
  * The flat per-cell field for the currently-selected country view (or the whole world when `viewId`
- * is the WORLD view / unknown). Restricts to the view's cell-key index — the cheap slice of the one
+ * is the WORLD view / unknown). Restricts to the view's cell-key index: the cheap slice of the one
  * global field, never a re-fit.
  */
 export function selectViewField(
@@ -356,14 +356,14 @@ export function selectViewField(
   return selectField(artifact, horizonDays, mThreshold, bound, view ? view.cells : null);
 }
 
-/** Centre `[lon, lat]` of a bbox — the map's initial centre for a view (or the world). */
+/** Centre `[lon, lat]` of a bbox, the map's initial centre for a view (or the world). */
 export function bboxCenter(bbox: BBox): [number, number] {
   return [(bbox.lon_min + bbox.lon_max) / 2, (bbox.lat_min + bbox.lat_max) / 2];
 }
 
 /**
  * A rough MapLibre zoom level that frames a bbox (degrees of span → zoom). The world view sits near
- * zoom 1; a country view zooms in. Heuristic only — the map is interactive after the initial frame.
+ * zoom 1; a country view zooms in. Heuristic only: the map is interactive after the initial frame.
  */
 export function bboxZoom(bbox: BBox): number {
   const spanLat = Math.abs(bbox.lat_max - bbox.lat_min);

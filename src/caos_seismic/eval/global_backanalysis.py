@@ -1,4 +1,4 @@
-"""Global, multi-view pseudo-prospective CSEP back-analysis — the THESIS measurement.
+"""Global, multi-view pseudo-prospective CSEP back-analysis, the THESIS measurement.
 
 The re-scoped product is a single **global** context-conditioned forecaster; any country is a *view*
 into that global field (see :mod:`caos_seismic.eval.views`). This driver runs the leakage-free
@@ -6,25 +6,25 @@ forecast-clock back-analysis (:func:`caos_seismic.eval.backanalysis.run_back_ana
 pre-registered country view AND a global view, then reduces the per-view ledgers to the two headline
 numbers the whole re-scoping exists to report:
 
-1. **Context gain over catalog-only ETAS** — per view × horizon and pooled globally. ETAS already
+1. **Context gain over catalog-only ETAS**: per view × horizon and pooled globally. ETAS already
    reproduces Omori/Utsu clustering, so a positive, significant information gain (in **nats**) over
-   it is *not* "I predicted aftershocks" — it quantifies how much the **global context** (worldwide
+   it is *not* "I predicted aftershocks", it quantifies how much the **global context** (worldwide
    seismicity + complementary covariates) adds to the *local* short-term forecast. This is the direct
    answer to "how much does context contribute?". When the context channel has not yet landed (the
    enricher stack is feature-flagged off, model-design §6.2), this gain is ~0 by construction and the
-   summary says so honestly via ``context_channel_active`` — it is never faked into a positive value.
+   summary says so honestly via ``context_channel_active``, it is never faked into a positive value.
 
-2. **High-vs-low-seismicity bias** — the same skill/calibration metrics computed separately over the
+2. **High-vs-low-seismicity bias**: the same skill/calibration metrics computed separately over the
    HIGH-seismicity views (active plate boundaries: Chile, Japan, California, NZ) and the
    LOW-seismicity views (stable interiors: C&E US, W Europe, E Australia), with their difference. A
    single pooled global number is dominated by the loud subduction margins; this partition asks the
-   adversarial question — *does the model only look good because it over-fits high-seismicity zones?*
+   adversarial question, *does the model only look good because it over-fits high-seismicity zones?*
    The gap (``high − low``) in N-test pass rate, IGPE vs null, context gain, and Brier is the bias
    metric. A large positive gap is a red flag the summary surfaces rather than hides.
 
 Everything is reported honestly including failures and underperformance (evaluation-plan §4.5/§7):
 a view × horizon where the model fails to beat its baselines, or where the context gain is negative,
-is emitted as such — selective reporting is the exact selection-bias trap CSEP exists to prevent.
+is emitted as such, selective reporting is the exact selection-bias trap CSEP exists to prevent.
 
 The driver imports only core deps at module top level; the per-view back-analysis (which lazily
 imports the inference machinery) is called inside :func:`run_global_back_analysis`, so importing this
@@ -77,7 +77,7 @@ class GlobalBackAnalysisConfig:
         First and last issue dates (UTC), shared by every view so the comparison is apples-to-apples.
     horizons_days, magnitude_thresholds, reliability_threshold:
         Forwarded to each per-view :class:`~caos_seismic.eval.backanalysis.BackAnalysisConfig`. Frozen
-        across all views and the whole test split (evaluation-plan §2 — no per-view snooping).
+        across all views and the whole test split (evaluation-plan §2, no per-view snooping).
     include_global:
         Run the GLOBAL view (the whole field) in addition to the country views (default on).
     views:
@@ -97,7 +97,7 @@ class GlobalBackAnalysisConfig:
     issue_hour_utc: int = 0
     rng_seed: int = 20260616
     #: Per-view back-analysis SCORING grid size (degrees). ``None`` ⇒ :data:`DEFAULT_SCORING_CELL_DEG`
-    #: (0.5°, coarser than the 0.1° production fit grid — M≥5 events are sparse, so a coarser scoring
+    #: (0.5°, coarser than the 0.1° production fit grid, M≥5 events are sparse, so a coarser scoring
     #: grid gives better-powered CSEP tests AND ~25× cheaper daily inference). The global view coarsens
     #: further automatically. Set finer (e.g. 0.25) for a denser study at a higher per-day cost.
     scoring_cell_deg: float | None = None
@@ -210,7 +210,7 @@ def run_global_back_analysis(
                 issue_hour_utc=int(config.issue_hour_utc),
                 rng_seed=int(config.rng_seed),
                 # Back-analysis SCORING grid (DEFAULT_SCORING_CELL_DEG = 0.5°, coarser than the 0.1°
-                # production fit grid — M≥5 events are sparse, so a coarser grid powers the CSEP tests
+                # production fit grid: M≥5 events are sparse, so a coarser grid powers the CSEP tests
                 # better AND cuts the dominant per-day inference cost ~25×). The whole-Earth GLOBAL window
                 # coarsens further (the dense 0.1° global grid is ~6.5M cells, never materialized).
                 cell_deg=view_cell_deg,
@@ -226,7 +226,7 @@ def run_global_back_analysis(
                 results_dir=results_dir or RESULTS_DIR,
             )
             pycsep_used = pycsep_used or bool(vr.result.pycsep_used)
-        except Exception as exc:  # a view we could not score at all — RECORD it, never drop it
+        except Exception as exc:  # a view we could not score at all, RECORD it, never drop it
             logger.warning("view %s could not be scored: %s", reg.id, exc)
             vr.error = f"{type(exc).__name__}: {exc}"
         view_results.append(vr)
@@ -261,7 +261,7 @@ def run_global_backanalysis(
     include_global: bool = True,
     **kwargs: Any,
 ) -> GlobalBackAnalysisResult:
-    """CLI-friendly entry point — build a :class:`GlobalBackAnalysisConfig` and run.
+    """CLI-friendly entry point, build a :class:`GlobalBackAnalysisConfig` and run.
 
     Horizons / thresholds default to ``configs/forecast.yaml`` when not given.
     """
@@ -377,7 +377,7 @@ def _reduce_context_gain(view_results: list[ViewResult], horizons: list[int]) ->
             "context channel active in at least one view"
             if any_active
             else "context channel NOT yet landed (enricher stack feature-flagged off, model-design "
-            "§6.2): gain is ~0 by construction, not a measured null — reported honestly"
+            "§6.2): gain is ~0 by construction, not a measured null, reported honestly"
         ),
         "per_view": per_view,
         "pooled": pooled,
@@ -391,13 +391,13 @@ def _reduce_high_low_bias(view_results: list[ViewResult], horizons: list[int]) -
     (N-test pass rate, IGPE vs null, context gain, Brier) as a scored-day-weighted mean, then report
     the gap ``high − low``. The direction of "good" is encoded per field (Brier is lower-is-better):
     a large positive *advantage* of high over low (skill higher / Brier lower in high) is the
-    over-fit-to-high-seismicity signal — surfaced, not hidden.
+    over-fit-to-high-seismicity signal, surfaced, not hidden.
     """
     classes = {"high": [], "low": []}  # type: dict[str, list[ViewResult]]
     for vr in view_results:
         if vr.result is None:
             continue
-        # The whole-Earth GLOBAL view is the aggregate field, NOT a regional class member — it must not
+        # The whole-Earth GLOBAL view is the aggregate field, NOT a regional class member: it must not
         # pollute the high-vs-low COUNTRY comparison (it carries the highest IGPE by construction and
         # would inflate the "high" pool). Its own skill is reported in per_view / context_gain instead.
         if vr.view_id == "global":
@@ -441,7 +441,7 @@ def _reduce_high_low_bias(view_results: list[ViewResult], horizons: list[int]) -
             "Skill/calibration computed separately over the pre-registered HIGH-seismicity views "
             "(active plate boundaries) and LOW-seismicity views (stable interiors), with the gap. A "
             "large advantage of HIGH over LOW (higher pass rate / IGPE / context gain, lower Brier) "
-            "is the 'model over-fits high-seismicity zones' signal — pre-registered partition, not a "
+            "is the 'model over-fits high-seismicity zones' signal, pre-registered partition, not a "
             "post-hoc split."
         ),
         "field_directions": {k: ("higher_better" if v[1] else "lower_better") for k, v in _BIAS_FIELDS.items()},
@@ -488,7 +488,7 @@ def _pool_class_by_horizon(members: list[ViewResult], horizons: list[int]) -> di
 
 #: Scoring-grid cell size (degrees) for the pseudo-prospective back-analysis. Deliberately COARSER than
 #: the 0.1° production fit grid: the back-analysis scores M≥5 events, which are spatially sparse, so a
-#: 0.1° grid is almost entirely empty cells — the CSEP S/L spatial tests are then under-powered AND there
+#: 0.1° grid is almost entirely empty cells, the CSEP S/L spatial tests are then under-powered AND there
 #: are ~25× more cells to infer over EVERY issue day (the dominant cost once the MLE is cadenced). A 0.5°
 #: (~55 km) grid gives better-populated cells (sounder CSEP tests for sparse large events) and a ~25×
 #: cheaper daily inference. The published daily FORECAST still uses the fine grid; only multi-day skill
@@ -499,10 +499,10 @@ DEFAULT_SCORING_CELL_DEG: float = 0.5
 def _grid_cell_deg_resolver(max_country_cells: int = 200_000, scoring_cell_deg: float | None = None):
     """Return ``region -> cell_deg`` giving each view its back-analysis SCORING grid size.
 
-    A bounded country view scores on ``scoring_cell_deg`` (:data:`DEFAULT_SCORING_CELL_DEG` = 0.5°) —
+    A bounded country view scores on ``scoring_cell_deg`` (:data:`DEFAULT_SCORING_CELL_DEG` = 0.5°), 
     coarser than the 0.1° production fit grid on purpose (see that constant). The whole-Earth GLOBAL
-    view — and any view whose cell count at ``scoring_cell_deg`` would still exceed ``max_country_cells``
-    — coarsens further toward ``grid.yaml: fit.global_fit.world_cell_deg`` (1.0°) and beyond, so the
+    view, and any view whose cell count at ``scoring_cell_deg`` would still exceed ``max_country_cells``
+   , coarsens further toward ``grid.yaml: fit.global_fit.world_cell_deg`` (1.0°) and beyond, so the
     global window never materializes the ~6.5M-cell dense world grid (grid.yaml).
     """
     from ..config import load
@@ -520,7 +520,7 @@ def _grid_cell_deg_resolver(max_country_cells: int = 200_000, scoring_cell_deg: 
         deg = base_deg
         if _n_cells(region, deg) > max_country_cells:
             # Large-bbox view (the whole-Earth window): coarsen toward the world grid and beyond until
-            # the cell count is under the cap — a safety valve so the global window never explodes.
+            # the cell count is under the cap: a safety valve so the global window never explodes.
             deg = max(deg, world_deg)
             while _n_cells(region, deg) > max_country_cells and deg < 90.0:
                 deg *= 2.0
@@ -533,7 +533,7 @@ def _slice_to_view(master: pd.DataFrame, region: Region) -> pd.DataFrame:
     """Slice the global master catalog to a view's bounding box (a window into the global field).
 
     Keeps every event inside ``[lat_min, lat_max] × [lon_min, lon_max]``. The longitude test is the
-    plain inclusive interval — the pre-registered view boxes do not cross the antimeridian, so no
+    plain inclusive interval, the pre-registered view boxes do not cross the antimeridian, so no
     wrap-around handling is needed (the GLOBAL view's box stops just short of ±180°).
     """
     validate_catalog(master)
@@ -570,7 +570,7 @@ def _write_global_summary(
         "framing": (
             "Global, leakage-free pseudo-prospective back-analysis (forecast clock). One global "
             "context-conditioned model is scored through each country VIEW and globally. The "
-            "headline measurement is the information gain over catalog-only ETAS (context_gain) — "
+            "headline measurement is the information gain over catalog-only ETAS (context_gain), "
             "how much the global context adds to the local forecast. The high_vs_low_bias block is "
             "the adversarial check: does the model only look good on high-seismicity margins? Every "
             "view × horizon is reported including failures and underperformance (no post-hoc "

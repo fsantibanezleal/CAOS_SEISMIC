@@ -1,7 +1,7 @@
 name: Deploy web to GitHub Pages
 
 # Builds the static SPA in app/ (Vite) and publishes it to GitHub Pages on the
-# custom domain seismic.fasl-work.com. The site is a pure static viewer — no backend.
+# custom domain seismic.fasl-work.com. The site is a pure static viewer: no backend.
 # The daily forecast artifact is committed under results/ and read by the SPA.
 
 on:

@@ -190,7 +190,7 @@ export function ArchitectureDiagram() {
           </text>
         </g>
 
-        {/* core → challenger (gates: challenger inherits the Hawkes skeleton) — dashed */}
+        {/* core → challenger (gates: challenger inherits the Hawkes skeleton), dashed */}
         <g className="arch-connector">
           <line
             x1={bottom(core).x}
@@ -210,7 +210,7 @@ export function ArchitectureDiagram() {
           </text>
         </g>
 
-        {/* core → output (the λ that ships) — solid */}
+        {/* core → output (the λ that ships), solid */}
         <g className="arch-connector">
           <path
             d={`M ${bottom(core).x} ${bottom(core).y} V 364 H ${top(output).x} V ${top(output).y - 2}`}
@@ -223,7 +223,7 @@ export function ArchitectureDiagram() {
           </text>
         </g>
 
-        {/* challenger → output (only if it wins) — dashed */}
+        {/* challenger → output (only if it wins), dashed */}
         <g className="arch-connector">
           <path
             d={`M ${bottom(challenger).x} ${bottom(challenger).y} V 372 H ${output.x + output.w - 60} V ${top(output).y - 2}`}

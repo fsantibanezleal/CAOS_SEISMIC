@@ -1,10 +1,10 @@
-"""ETAS branching-process forward simulation — the over-dispersion-honest count distribution (E13).
+"""ETAS branching-process forward simulation, the over-dispersion-honest count distribution (E13).
 
 The deterministic ETAS forecast integrates the conditional intensity with the parent set **frozen at the
 issue time**: ``N_fore = ∫ μ + Σ_parents k(m_j)[G(age_j+H) − G(age_j)]``. That counts only the background
 plus the FIRST generation of offspring from already-observed events. The *realised* count also includes
-**within-window secondary triggering** — an offspring early in the window triggers its own offspring
-before the window closes — and the realised total is over-dispersed (a branching process has
+**within-window secondary triggering**, an offspring early in the window triggers its own offspring
+before the window closes, and the realised total is over-dispersed (a branching process has
 ``Var[N] ≫ E[N]``). The Poisson N-test assumes ``Var[N] = E[N]`` and therefore over-rejects vigorous-but-
 plausible sequences (Werner 2010; Kagan 2017; Savran 2020).
 
@@ -12,7 +12,7 @@ This module forward-simulates the full ETAS cascade to produce the honest distri
 ``M ≥ mc`` count. Locations are irrelevant to the *count*, so only the temporal/productivity kernels are
 simulated (cheap). The mean of the simulated counts exceeds ``N_fore`` by exactly the secondary-cascade
 contribution; the spread is the over-dispersion. Comparing the observed total to this distribution is the
-catalog-based N-test (pyCSEP's number test on simulated catalogs) — it separates three causes of an
+catalog-based N-test (pyCSEP's number test on simulated catalogs), it separates three causes of an
 apparent under-forecast: (a) secondary cascade the frozen intensity omits, (b) over-dispersion, and
 (c) genuine rate bias that even the heavy-tailed simulation cannot reach.
 """
@@ -27,7 +27,7 @@ from .etas import omori_utsu_cumulative, utsu_productivity
 
 
 def _omori_cumulative(tau: np.ndarray, c: float, p: float) -> np.ndarray:
-    """G(τ) = 1 − (1 + τ/c)^{−(p−1)} — the fraction of Omori-Utsu offspring with elapsed time ≤ τ."""
+    """G(τ) = 1 − (1 + τ/c)^{−(p−1)}, the fraction of Omori-Utsu offspring with elapsed time ≤ τ."""
     return omori_utsu_cumulative(tau, c, p)
 
 
@@ -56,7 +56,7 @@ class SimulatedCounts:
     forecast_first_gen: float  # the deterministic frozen-intensity expectation (background + first gen)
     simulated_mean: float  # E[N] incl. secondary cascade
     simulated_var: float
-    fano: float  # Var/mean — the over-dispersion factor (1 = Poisson)
+    fano: float  # Var/mean, the over-dispersion factor (1 = Poisson)
 
 
 def simulate_window_counts(
@@ -102,7 +102,7 @@ def simulate_window_counts(
     # ── generation 0: first offspring of the REAL (pre-issue) parents ───────────────────────────────
     ages = np.asarray(parent_ages, dtype=float)
     pm = np.asarray(parent_mags, dtype=float)
-    # per-parent expected first-gen offspring in the window = k(m)[G(age+H) − G(age)] — matches the
+    # per-parent expected first-gen offspring in the window = k(m)[G(age+H) − G(age)]: matches the
     # frozen-intensity forecast term exactly.
     kt = utsu_productivity(pm, K, alpha, m0) * (
         _omori_cumulative(ages + H, c, p) - _omori_cumulative(ages, c, p)

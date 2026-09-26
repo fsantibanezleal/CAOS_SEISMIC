@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from "react";
 
 /**
- * Second-level tabs nested INSIDE a top-level `Tabs` panel — e.g. the individual classical
+ * Second-level tabs nested INSIDE a top-level `Tabs` panel: e.g. the individual classical
  * models within Methodology's "Theoretical approaches" tab, or sub-sections within the ML
  * tab. Rendered as a compact set of pill / chip controls (accent-soft active), optionally
  * stacked vertically as a left rail on wide viewports (`orientation="vertical"`).

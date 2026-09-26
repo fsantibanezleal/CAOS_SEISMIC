@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dev.sh — serve the static web app locally (preview the SPA; NOT a processing backend).
+# dev.sh: serve the static web app locally (preview the SPA; NOT a processing backend).
 #
 # The web app is a pure static viewer: it reads the precomputed daily forecast artifact from
 # app/public/data/ (or results/ at deploy time). There is NO server-side computation. This script just
@@ -45,7 +45,7 @@ serve_static() {
   fi
   [ -n "${py}" ] || { err "no Python for the static server. Run scripts/setup.sh, or install Node and use npm."; exit 1; }
   step "Static server: http://127.0.0.1:${serve_port}  (serving ${dir})"
-  info "This is a STATIC viewer — it computes nothing. Ctrl+C to stop."
+  info "This is a STATIC viewer, it computes nothing. Ctrl+C to stop."
   ( cd "${dir}" && exec "${py}" -m http.server "${serve_port}" --bind 127.0.0.1 )
 }
 
@@ -70,11 +70,11 @@ fi
 # Default: Vite dev server (HMR) if Node is available; otherwise degrade to the static server.
 if command -v npm >/dev/null 2>&1; then
   step "Vite dev server (npm run dev) on http://127.0.0.1:${PORT}"
-  info "Static viewer with HMR — no processing backend. Ctrl+C to stop."
+  info "Static viewer with HMR, no processing backend. Ctrl+C to stop."
   ( cd "${APP_DIR}" \
       && { [ -d node_modules ] || { info "installing app dependencies (first run)..."; npm install; }; } \
       && npm run dev -- --port "${PORT}" --strictPort --host 127.0.0.1 )
 else
-  warn "npm not found — falling back to the dependency-free static server."
+  warn "npm not found, falling back to the dependency-free static server."
   serve_static "$(serve_dir)" "${PORT}"
 fi

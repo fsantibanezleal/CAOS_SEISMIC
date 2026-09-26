@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# setup.sh — create the project virtualenv and install the Python dependencies.
+# setup.sh: create the project virtualenv and install the Python dependencies.
 #
 #   scripts/setup.sh           # create .venv (python3.12 if available) + pip install -r requirements.txt
 #   scripts/setup.sh --force   # recreate the .venv from scratch

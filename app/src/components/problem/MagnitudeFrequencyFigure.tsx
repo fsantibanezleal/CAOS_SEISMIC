@@ -2,13 +2,13 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 
 /**
- * Figure (b) — the Gutenberg–Richter magnitude–frequency law as a log-linear plot.
+ * Figure (b): the Gutenberg–Richter magnitude–frequency law as a log-linear plot.
  *
  * Plots log10 N(>= M) against magnitude M. The defining feature is the straight descending line
  * of slope -b (the "b-value", here b ~= 1): a one-unit increase in magnitude divides the event
  * count by ~10. Scattered markers around the line evoke a real catalog's empirical points (denser
  * and noisier at small M, sparse at large M). This is the population statistic that lets the
- * forecast carry a magnitude term — and the same scale-invariance (no characteristic event size)
+ * forecast carry a magnitude term: and the same scale-invariance (no characteristic event size)
  * that is the empirical fingerprint of self-organized criticality and the reason the *timing* of
  * the next large event is not encoded here.
  *

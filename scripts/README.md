@@ -1,5 +1,5 @@
 <!-- markdownlint-disable MD013 -->
-# `scripts/` — operator entry points
+# `scripts/`: operator entry points
 
 Thin, parallel **PowerShell (`*.ps1`)** and **bash (`*.sh`)** wrappers around the `caos-seismic` CLI
 (`src/caos_seismic/cli.py`). Each subcommand exists in **both** flavours with identical behaviour, so the
@@ -8,7 +8,7 @@ shared helper (`_common.ps1` / `_common.sh`) that resolves the repo root, locate
 interpreter, and invokes the package as a module (`python -m caos_seismic.cli …`).
 
 > **Forecasts, never predictions.** Everything here produces *bounded, calibrated, CSEP-scored
-> probabilities* — never alarms, countdowns, or a "safe" state. See the repo `README.md`.
+> probabilities*, never alarms, countdowns, or a "safe" state. See the repo `README.md`.
 
 All paths are resolved **relative to the repo root**; there are **no machine-specific absolute paths and
 no secrets** in any script (public-safe).
@@ -17,7 +17,7 @@ no secrets** in any script (public-safe).
 
 | Script | What it does | Underlying CLI |
 |---|---|---|
-| `setup` | Create the `.venv` (Python 3.12 if available), `pip install -r requirements.txt`, install the package editable, smoke-test. | — (env bootstrap) |
+| `setup` | Create the `.venv` (Python 3.12 if available), `pip install -r requirements.txt`, install the package editable, smoke-test. |, (env bootstrap) |
 | `fetch` | Pull the recent + historical catalog (USGS ComCat spine + regional/anchor sources) and write a provenance manifest. | `caos-seismic fetch --region <id>` |
 | `build-features` | `M_c` + b-value, Mw homogenization, **dual-catalog** declustering, feature extraction. | `caos-seismic build-features --region <id>` |
 | `train` | Fit the stationary smoothed-seismicity null + space–time **ETAS** (+ Reasenberg–Jones fallback); reject fits that violate the stability gates. | `caos-seismic train --region <id>` |
@@ -27,7 +27,7 @@ no secrets** in any script (public-safe).
 | `outlook` (`.ps1`) | **The weekly job:** fit the 30-day geodetic background, validate, scoped publish. Scheduled through `job -Job outlook`. | `caos-seismic outlook --region <id>` |
 | `job` | **The scheduled entry point**, only in the dedicated job checkout: lock, `job-sync`, then `daily` or `outlook`, with a log per run under `logs/`. | `caos-seismic job-sync` + `daily` / `outlook` |
 | `setup-job-checkout` | Create the dedicated job checkout (a detached worktree at `origin/main` with the `.caos-seismic-job` marker) and copy the gitignored data stores into it. | (git worktree only) |
-| `dev` | Serve the **static** web app locally for preview (Vite HMR, or a dependency-free static server). **No processing backend.** | — (static server) |
+| `dev` | Serve the **static** web app locally for preview (Vite HMR, or a dependency-free static server). **No processing backend.** |, (static server) |
 | `check` | Environment + repo + config **sanity checks** (no network, no science deps). Exits non-zero on hard failure. | `caos-seismic check --region <id>` |
 
 ### Examples
@@ -58,28 +58,28 @@ scripts/daily.sh --no-publish       # full pipeline, local dry run
 
 > First use on Linux/macOS: `chmod +x scripts/*.sh` (Git Bash on Windows runs them without the bit).
 
-## `dev` — static preview, never a backend
+## `dev`: static preview, never a backend
 
 The web app (`app/`) is a **pure static viewer**: at runtime it only reads the precomputed daily forecast
 artifact (`app/public/data/` in preview; the committed `results/` JSON in production). It computes
 nothing. `dev` therefore just serves files:
 
-- with **npm/Vite** (HMR) if `node`/`npm` is available — `dev` runs `npm run dev`;
+- with **npm/Vite** (HMR) if `node`/`npm` is available: `dev` runs `npm run dev`;
 - otherwise it falls back to a **dependency-free** `python -m http.server` over `app/dist/` (or
   `app/public/`), so a preview is possible with only the Python `.venv`.
 
 Flags: `-Build`/`--build` (build the SPA first, then serve `app/dist/`), `-Static`/`--static` (force the
 plain static server), `-Port`/`--port` (default `5173`). It binds to `127.0.0.1` only.
 
-## `daily` — the production job (scoped, git-as-data)
+## `daily`: the production job (scoped, git-as-data)
 
 `daily` is the once-per-day production job (scheduled 03:00 local through `job`, see below):
 
-1. **`fetch`** once — the freshest catalog covers every issue date in the batch.
+1. **`fetch`** once: the freshest catalog covers every issue date in the batch.
 2. **`infer`** for **today plus any missed prior days** (catch-up, bounded to the last 7 days so a
    long-dormant laptop does not try to backfill months of non-honest forecasts). A day already present
    under `results/` is skipped.
-3. **Scoped publish** — stage **only** the `configs/publish.yaml` `git.add_allowlist` paths
+3. **Scoped publish**: stage **only** the `configs/publish.yaml` `git.add_allowlist` paths
    (`results/`, `manifests/`), **abort** if anything outside the allowlist is staged, commit with the
    configured `commit_message_prefix`, and fast-forward push that commit to `main`. This happens only in
    the dedicated job checkout (see "The job checkout" below); in a developer checkout the CLI warns and
@@ -91,7 +91,7 @@ This machine also holds `data/`, `models/`, `.venv/`, and `.env`. The publish st
 
 - **NEVER** runs `git add -A` / `git add .`. It stages **only** the explicit allowlist entries.
 - **Resets the index first** so a pre-existing staged change cannot ride along.
-- **Aborts** (and resets the index) if any staged path is outside the allowlist — nothing is committed.
+- **Aborts** (and resets the index) if any staged path is outside the allowlist: nothing is committed.
 - Reads the allowlist, commit prefix, remote, and branch from `configs/publish.yaml` (`git.*`).
 
 The push credential is a **least-privilege deploy key / fine-grained PAT scoped to THIS repo**, kept in

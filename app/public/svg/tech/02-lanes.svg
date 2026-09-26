@@ -72,7 +72,7 @@
 
   <!-- web -->
   <rect class="bx bx-web" x="580" y="170" width="286" height="150" rx="10"/>
-  <text class="ttl" x="592" y="192">SPA replay — read-only</text>
+  <text class="ttl" x="592" y="192">SPA replay, read-only</text>
   <text class="sub" x="592" y="207">Vite + React · zero server</text>
   <rect class="bx" x="592" y="218" width="262" height="40" rx="6"/>
   <text class="it" x="602" y="234">load + decode the committed field</text>
@@ -88,5 +88,5 @@
   <path class="flow" d="M552,245 L580,245" marker-end="url(#ln-ar)"/>
   <text class="lbl" x="556" y="238">serve</text>
 
-  <text class="mu" x="14" y="462">The heavy science runs offline on the GPU; the browser only animates the committed, sha-auditable artifacts — what proves this is real.</text>
+  <text class="mu" x="14" y="462">The heavy science runs offline on the GPU; the browser only animates the committed, sha-auditable artifacts, what proves this is real.</text>
 </svg>

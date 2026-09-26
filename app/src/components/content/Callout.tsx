@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
  * "complement not compete" stance, the "still small in absolute terms" reminders, the
  * banned-anti-pattern callouts).
  *
- * Tone maps to a left-border accent ONLY — never a filled red/green panel — so the page
+ * Tone maps to a left-border accent ONLY: never a filled red/green panel, so the page
  * never inadvertently reads as a traffic-light alarm. `tone: "honest"` is the default warm
  * accent; `"note"` is neutral; `"strong"` uses the accent blue for the load-bearing creed.
  */

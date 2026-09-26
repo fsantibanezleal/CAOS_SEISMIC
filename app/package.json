@@ -1,9 +1,9 @@
 {
   "name": "caos-seismic-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.2",
   "type": "module",
-  "description": "Static SPA for CAOS_SEISMIC — conditional probabilistic seismic forecasting (forecasts, never predictions).",
+  "description": "Static SPA for CAOS_SEISMIC, conditional probabilistic seismic forecasting (forecasts, never predictions).",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

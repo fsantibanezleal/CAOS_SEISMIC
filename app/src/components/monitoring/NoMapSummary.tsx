@@ -6,11 +6,11 @@ import type { CellSelection } from "@/data/types";
 
 /**
  * No-map summary view (web-app-spec.md §7.1, §7.2, §8.3). This is a FIRST-CLASS, honesty-first
- * alternative to the WebGL field — and the no-WebGL / accessibility fallback. It uses zero
+ * alternative to the WebGL field: and the no-WebGL / accessibility fallback. It uses zero
  * map-library bytes: a ranked horizontal-bar table of the most-elevated cells, each coloured
  * on the SAME perceptually-uniform sequential ramp the map uses, with the MANDATORY baseline
  * companion shown BOTH ways:
- *   - ratio R = p / baseline (e.g. "≈ 4× the usual rate") — the "elevated" notion, never an alarm;
+ *   - ratio R = p / baseline (e.g. "≈ 4× the usual rate"): the "elevated" notion, never an alarm;
  *   - absolute expected probability p (so a 10× ratio on a near-zero baseline still reads
  *     "still very unlikely").
  *
@@ -28,7 +28,7 @@ export interface NoMapSummaryProps {
 }
 
 function fmtPct(v: number): string {
-  if (!Number.isFinite(v)) return "—";
+  if (!Number.isFinite(v)) return "–";
   if (v < 0.001) return `${(v * 100).toFixed(3)}%`;
   if (v < 0.01) return `${(v * 100).toFixed(2)}%`;
   return `${(v * 100).toFixed(1)}%`;

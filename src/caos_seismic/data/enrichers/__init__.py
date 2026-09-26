@@ -1,4 +1,4 @@
-"""Global geophysical enrichers — the worldwide static-context covariate loaders.
+"""Global geophysical enrichers, the worldwide static-context covariate loaders.
 
 Core thesis of CAOS_SEISMIC: **global context conditions short-term local forecasts.** The model
 trains on worldwide seismicity plus complementary *global* covariate fields, and any country is a
@@ -7,12 +7,12 @@ spatial *view* into that one global field. Each enricher here loads a worldwide 
 
 Each enricher module exposes the same two-function contract (data-and-pipelines.md §1.3/§1.4):
 
-* ``download(...) -> Provenance`` — fetch the raw global dataset into the gitignored
+* ``download(...) -> Provenance``: fetch the raw global dataset into the gitignored
   ``data/enrichers/<dataset>/`` cache and return a license/citation/provenance record for the public
   credits page. (``tides`` is *computed*, so its ``download`` returns only the tool provenance.)
-* ``features_at(lat, lon, ...) -> dict[str, float | None]`` — the per-coordinate covariate(s) for one
+* ``features_at(lat, lon, ...) -> dict[str, float | None]``: the per-coordinate covariate(s) for one
   forecast cell (``None`` where the cell falls outside the dataset's footprint, e.g. a slab grid only
-  covers subduction margins — which is information, not an error).
+  covers subduction margins, which is information, not an error).
 
 The enrichers, ranked by expected lift for a conditional short-term forecast (Slab2 > faults +
 plates > GNSS strain > stress > tides; the ranking is a hypothesis, each must clear a prospective

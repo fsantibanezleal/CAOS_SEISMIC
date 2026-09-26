@@ -5,10 +5,10 @@ or forecast-clock step (those are exercised end-to-end elsewhere and need a cata
 builds tiny in-memory :class:`BackAnalysisResult` objects with hand-set ``per_horizon`` blocks and
 checks that the cross-view reductions compute the right thing:
 
-1. **Context gain over catalog-only ETAS** — per view × horizon and the scored-day-weighted pool.
-2. **HIGH-vs-LOW-seismicity bias** — per-class pools and the ``high − low`` gap, with the bias
+1. **Context gain over catalog-only ETAS**: per view × horizon and the scored-day-weighted pool.
+2. **HIGH-vs-LOW-seismicity bias**: per-class pools and the ``high − low`` gap, with the bias
    direction respected (Brier is lower-is-better).
-3. **Config-driven views** — the pre-registered high/low partition loads from ``configs/views.yaml``
+3. **Config-driven views**: the pre-registered high/low partition loads from ``configs/views.yaml``
    and the whole-Earth GLOBAL view coarsens its fit grid (never the dense ~6.5M-cell world grid).
 """
 
@@ -28,7 +28,7 @@ from caos_seismic.eval.global_backanalysis import (
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Fixtures — hand-built per-horizon blocks (the shape backanalysis._reduce_per_horizon emits)
+# Fixtures: hand-built per-horizon blocks (the shape backanalysis._reduce_per_horizon emits)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -204,7 +204,7 @@ def test_pre_registered_views_partition_from_config():
 def test_backanalysis_scoring_grid_coarsens_views_and_global_further():
     resolve = _grid_cell_deg_resolver()
     # A bounded country view scores on the coarse back-analysis grid (DEFAULT_SCORING_CELL_DEG = 0.5°):
-    # coarser than the 0.1° production fit grid on purpose (M≥5 is spatially sparse — coarser cells give
+    # coarser than the 0.1° production fit grid on purpose (M≥5 is spatially sparse: coarser cells give
     # better-powered CSEP tests AND a ~25× cheaper per-day inference), but still spatially bounded.
     cl = views.view_by_id("CL")
     cl_deg = resolve(cl.region)

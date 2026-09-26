@@ -8,14 +8,14 @@ import { SubTabs, type SubTabDef } from "@/components/content/SubTabs";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Methodology — Tab 3: "Data & features".
+ * Methodology: Tab 3: "Data & features".
  *
  * The EXPLICIT data layer Felipe asked for, split into two DEEP sub-tabs:
  *
  *  1. "Sources"           → the catalogs that drive the forecast (USGS ComCat, ISC / ISC-GEM,
  *                           GCMT, EMSC, regional networks) and the global enrichers that may add
  *                           context (Slab2, GEM faults, Bird plates, NGL GNSS, World Stress Map,
- *                           tides) — each with what it gives, its license, and its cadence.
+ *                           tides): each with what it gives, its license, and its cadence.
  *  2. "Data types & features" → the catalog record, Mw homogenization, completeness Mc(x,y,t), the
  *                           catalog-derived features (recent rates, ETAS intensities, Zaliapin–
  *                           Ben-Zion η/T/R) and the context covariates as a real feature table.
@@ -46,7 +46,7 @@ function Refs({ ids }: { ids: CitationId[] }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Figure 1 — the catalog data-flow: raw multi-provider events → clean/dedupe →
+   Figure 1, the catalog data-flow: raw multi-provider events → clean/dedupe →
    Mc + homogenize to Mw → declustering split → feature store. Reuses the `.th-box`
    / `.th-flow` / `.th-arrowhead` palette so it follows the theme automatically.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -97,7 +97,7 @@ function DataFlowSvg() {
         </marker>
       </defs>
 
-      {/* Row 1 — multi-provider raw catalogs */}
+      {/* Row 1, multi-provider raw catalogs */}
       {box(14, 14, 122, 48, "ComCat", t("method.data.sources.flowSpine"))}
       {box(150, 14, 122, 48, "Regional FDSN", t("method.data.sources.flowRegional"))}
       {box(286, 14, 122, 48, "ISC-GEM / GCMT", t("method.data.sources.flowAnchor"))}
@@ -109,18 +109,18 @@ function DataFlowSvg() {
       {arrow(347, 62, 290, 86)}
       {arrow(484, 62, 310, 86)}
 
-      {/* Row 2 — clean + dedupe + keep magType */}
+      {/* Row 2, clean + dedupe + keep magType */}
       {box(160, 88, 240, 48, t("method.data.sources.flowClean"), "magType " + t("method.data.sources.flowKept"))}
       {arrow(280, 136, 280, 158)}
 
-      {/* Row 3 — Mc + homogenize to Mw */}
+      {/* Row 3, Mc + homogenize to Mw */}
       {box(160, 160, 240, 48, t("method.data.sources.flowMcMw"), "Mc(x,y,t) · → Mw (TLS)", true)}
 
       {/* split into the dual catalogs */}
       {arrow(220, 208, 120, 232)}
       {arrow(340, 208, 440, 232)}
 
-      {/* Row 4 — dual-catalog split */}
+      {/* Row 4, dual-catalog split */}
       {box(20, 234, 220, 40, t("method.data.sources.flowDecl"), "Gardner–Knopoff → μ(x,y)")}
       {box(320, 234, 226, 40, t("method.data.sources.flowFull"), "ZBZ η/T/R → " + t("method.data.sources.flowFeatures"))}
     </svg>
@@ -128,7 +128,7 @@ function DataFlowSvg() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Figure 2 — the global context feature stack: the catalog foundation at the
+   Figure 2, the global context feature stack: the catalog foundation at the
    base, each enricher a thinner layer above it, ordered by expected lift, with
    the honest "upside, not foundation" reading. Reuses `.th-field` / `.th-box`.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -191,7 +191,7 @@ function ContextStackSvg() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Sub-tab 1 — Sources.
+   Sub-tab 1, Sources.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type SourceRow = {
@@ -281,7 +281,7 @@ function PanelSources() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Sub-tab 2 — Data types & features.
+   Sub-tab 2, Data types & features.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type FeatureRow = {

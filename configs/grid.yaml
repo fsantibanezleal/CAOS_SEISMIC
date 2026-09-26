@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — spatial discretization. Fit fine (CSEP-testable), display coarse.
+# CAOS_SEISMIC: spatial discretization. Fit fine (CSEP-testable), display coarse.
 # The GLOBAL field is conditioned over the whole Earth then aggregated to multi-resolution H3
 # (coarse world overview + finer per-region tiles) and SPARSIFIED so the worldwide artifact stays a
 # few hundred KB – few MB. The dense single-resolution global CSEP grid (~6.48M cells) is NEVER
@@ -9,12 +9,12 @@ fit:
   mag_bin: 0.1            # 0.1 magnitude bins
   # For the GLOBAL field the dense 0.1° grid over the whole Earth is ~6.5M cells and is never
   # materialized in full at once: the global fit grid is built coarsely worldwide and refined only
-  # inside coverage tiles (active provinces) — see global_fit below.
+  # inside coverage tiles (active provinces): see global_fit below.
   global_fit:
     world_cell_deg: 1.0    # coarse worldwide fit cells (the quiet-everywhere baseline ~61k cells)
     tile_cell_deg: 0.5     # finer cells inside active coverage tiles (recent seismicity provinces)
     tile_pad_deg: 1.0      # pad (deg) around recent events when carving coverage tiles
-    tile_min_mag: 6.0      # only sizeable events seed a fine tile — keeps the global fit grid to ~10^5
+    tile_min_mag: 6.0      # only sizeable events seed a fine tile, keeps the global fit grid to ~10^5
                            # cells (M>=4.5 with a 2° pad explodes it to ~10^6, untenable to score)
 display:
   # The UI aggregates the fine grid into H3 hexbins (multi-resolution LOD via deck.gl).

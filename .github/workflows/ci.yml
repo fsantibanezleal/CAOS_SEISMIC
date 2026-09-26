@@ -1,0 +1,29 @@
+name: CI
+
+# ADR-0074: cheap checks only, trunk-only triggers, a concurrency group, a timeout on every job.
+# The forecasts themselves are computed by the scheduled job in its own checkout and published as
+# data commits; CI never trains or forecasts. The Pages deploy is a separate workflow on main.
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: No em-dash or emoji in content (ADR-0067; records are excluded, they are results)
+        run: python scripts/check_content_standards.py
+      - name: CI budget, no training, trunk-only triggers (ADR-0074)
+        run: python scripts/check_ci_budget.py
+      - name: The Python package compiles
+        run: python -m compileall -q src scripts

@@ -1,20 +1,20 @@
 /**
- * CAOS_SEISMIC — Back-analysis result types + loader.
+ * CAOS_SEISMIC: Back-analysis result types + loader.
  *
  * The Back-analysis page (web-app-spec.md §6, evaluation-plan.md §7/§9) renders the
  * retrospective, pseudo-prospective CSEP results across regions × periods × horizons. Those
  * results are produced offline by the evaluation job (pyCSEP) and committed as a single
- * static JSON (`data/back-analysis.json`) — the same static-first, read-only contract as the
+ * static JSON (`data/back-analysis.json`): the same static-first, read-only contract as the
  * daily forecast artifact.
  *
  * This module mirrors that JSON's shape and provides a tiny loader. Until real pyCSEP results
  * exist, a bundled SAMPLE (`public/data/back-analysis-sample.json`, written by
- * `app/scripts/gen_backanalysis_sample.py`) is served by the same code path — the mock lives
+ * `app/scripts/gen_backanalysis_sample.py`) is served by the same code path: the mock lives
  * ONLY at the data boundary. The sample is honest: it includes cells where the model does NOT
  * beat ETAS (a published failure), as required by the multiple-testing discipline.
  *
  * The report follows evaluation-plan.md §7's table:
- *   Consistency: N-test (δ1, δ2), M-test (κ), S-test (ζ), L/CL-test (γ) — gridded AND catalog.
+ *   Consistency: N-test (δ1, δ2), M-test (κ), S-test (ζ), L/CL-test (γ): gridded AND catalog.
  *   Comparison:  IGPE (nats) vs smoothed-seismicity AND vs ETAS, with T-test CI + W-test p.
  *   Calibration: reliability diagram + pyCSEP calibration test.
  *   Communication / scoring rules: Area Skill Score, Brier, Log score, CRPS.
@@ -136,7 +136,7 @@ export interface BackAnalysisReport {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Loader (static-first, read-only — same contract as the forecast client)
+// Loader (static-first, read-only, same contract as the forecast client)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Default location of the committed report under the static data host. */

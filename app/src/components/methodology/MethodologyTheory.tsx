@@ -9,7 +9,7 @@ import { SubTabs, type SubTabDef } from "@/components/content/SubTabs";
 import type { CitationId } from "@/lib/citations";
 
 /**
- * Methodology — Tab 1: "Theoretical approaches".
+ * Methodology: Tab 1: "Theoretical approaches".
  *
  * This is the encyclopedic STATE-OF-THE-ART / BACKGROUND layer: the classical statistical and
  * physics-based models that form the field-standard baseline a forecaster must beat. It is NOT
@@ -56,7 +56,7 @@ function Assumptions({ items, title }: { items: ReactNode[]; title: string }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Inline SVG analysis figures — one per model. All read the CSS palette via the
+   Inline SVG analysis figures, one per model. All read the CSS palette via the
    `.th-fig-*` classes in globals.css, so they follow light/dark automatically.
    Each is a schematic of the model's load-bearing behaviour, not a fitted plot.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -112,7 +112,7 @@ function GrFigureSvg() {
   );
 }
 
-/** Omori power-law decay n(t) = K/(t+c)^p — fast initial decay relaxing to background. */
+/** Omori power-law decay n(t) = K/(t+c)^p, fast initial decay relaxing to background. */
 function OmoriFigureSvg() {
   const { t } = useTranslation();
   const x0 = 40;

@@ -8,7 +8,7 @@ export function readTheme(): Theme {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "light" || saved === "dark") return saved;
   } catch {
-    // storage disabled — fall through to media query
+    // storage disabled, fall through to media query
   }
   if (
     typeof window !== "undefined" &&
@@ -28,6 +28,6 @@ export function applyTheme(theme: Theme): void {
   try {
     localStorage.setItem(STORAGE_KEY, theme);
   } catch {
-    // ignore — storage disabled
+    // ignore, storage disabled
   }
 }

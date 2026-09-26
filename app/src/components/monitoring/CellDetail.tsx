@@ -6,11 +6,11 @@ import type { Bound, CellSelection } from "@/data/types";
  * Per-cell drill-down panel shown when a hexagon is picked on the field
  * (web-app-spec.md §7.1 drill-down, §7.3 baseline companion).
  *
- * It surfaces the honesty triad for the picked cell — the optimistic (P10), expected (median),
- * and pessimistic (P90) bounds together — plus the MANDATORY baseline companion BOTH ways:
+ * It surfaces the honesty triad for the picked cell: the optimistic (P10), expected (median),
+ * and pessimistic (P90) bounds together: plus the MANDATORY baseline companion BOTH ways:
  * the ratio-to-baseline AND the absolute expected probability, so an "N× elevated" number on a
  * near-zero baseline still reads "still very unlikely". The expected event count (rate) is
- * shown alongside. No alarm language, no "danger" colour — the panel is neutral.
+ * shown alongside. No alarm language, no "danger" colour: the panel is neutral.
  */
 export interface CellDetailProps {
   cell: CellSelection | null;
@@ -22,7 +22,7 @@ export interface CellDetailProps {
 }
 
 function pct(v: number): string {
-  if (!Number.isFinite(v)) return "—";
+  if (!Number.isFinite(v)) return "–";
   if (v < 0.001) return `${(v * 100).toFixed(3)}%`;
   if (v < 0.01) return `${(v * 100).toFixed(2)}%`;
   return `${(v * 100).toFixed(1)}%`;

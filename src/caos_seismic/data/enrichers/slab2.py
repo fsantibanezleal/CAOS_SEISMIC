@@ -1,10 +1,10 @@
-"""Slab2 enricher — depth-to-slab, dip, strike, and interface distance at subduction margins.
+"""Slab2 enricher, depth-to-slab, dip, strike, and interface distance at subduction margins.
 
 Slab2 (Hayes et al., 2018, *Science*) is the USGS global subduction-zone geometry model: a set of
 per-region 0.05° NetCDF/GMT grids giving the depth, dip, and strike of the subducting slab interface.
 For a conditional short-term forecaster it is the **highest-lift static enricher in subduction
 regimes** (data-and-pipelines.md §1.3): great-earthquake triggering is anisotropic and slab-geometry
-controlled, so a point-source isotropic ETAS kernel under-models it — the slab geometry lets the
+controlled, so a point-source isotropic ETAS kernel under-models it, the slab geometry lets the
 model condition on *where in the megathrust* a cell sits.
 
 Per-cell features
@@ -15,14 +15,14 @@ Per-cell features
 ``slab_strike_deg``     local slab strike (degrees clockwise from north).
 ``slab_interface_dist_km``
                         3-D distance from a *surface* cell to the nearest slab interface point
-                        (great-circle horizontal combined with the vertical depth) — a proxy for how
+                        (great-circle horizontal combined with the vertical depth), a proxy for how
                         close a shallow cell is to the locked megathrust.
 
 Data & license
 --------------
-* Source: ScienceBase item ``5aa1b00ee4b0b1c392e86467`` ("Slab2 — A Comprehensive Subduction Zone
+* Source: ScienceBase item ``5aa1b00ee4b0b1c392e86467`` ("Slab2: A Comprehensive Subduction Zone
   Geometry Model"); mirror at ``github.com/usgs/slab2``. 0.05° grids, NetCDF (``.grd``).
-* License: USGS work — **public domain** (cite Hayes et al., 2018). No redistribution restriction.
+* License: USGS work: **public domain** (cite Hayes et al., 2018). No redistribution restriction.
 
 Heavy deps (``xarray`` + a NetCDF backend, ``scipy`` for the local gradient) are imported lazily;
 the module imports on the core deps alone.
@@ -111,7 +111,7 @@ def download(
         raise ValueError(
             "download(slab2) requires an explicit `base_url` to the current Slab2 grid files. "
             f"Resolve the per-file URLs from the ScienceBase item {SCIENCEBASE_ITEM_URL} "
-            "(or the github.com/usgs/slab2 mirror) — they are versioned per release, so no URL is "
+            "(or the github.com/usgs/slab2 mirror), they are versioned per release, so no URL is "
             "hard-coded. Then call e.g. download(regions=['sam'], base_url=...)."
         )
 
@@ -129,10 +129,10 @@ def download(
 
     return Provenance(
         dataset=DATASET,
-        title="Slab2 — A Comprehensive Subduction Zone Geometry Model",
+        title="Slab2, A Comprehensive Subduction Zone Geometry Model",
         version="2018 (Hayes et al.)",
         source_url=SCIENCEBASE_ITEM_URL,
-        license="USGS — public domain (cite Hayes et al., 2018)",
+        license="USGS, public domain (cite Hayes et al., 2018)",
         attribution="Slab2 / U.S. Geological Survey (Hayes et al., 2018, Science 362:58-61)",
         citation=(
             "Hayes, G.P., et al. (2018). Slab2, a comprehensive subduction zone geometry model. "
@@ -154,7 +154,7 @@ class Slab2Enricher:
 
     Loads each cached ``.grd`` once (via ``xarray``) and caches the in-memory grids. ``features_at``
     finds the region whose footprint covers the query point and bilinearly samples depth/dip/strike;
-    cells outside every slab footprint return all-``None`` (correct — most of Earth is not a
+    cells outside every slab footprint return all-``None`` (correct, most of Earth is not a
     subduction interface).
     """
 
@@ -233,7 +233,7 @@ def features_at(lat: float, lon: float, **kwargs: Any) -> EnricherResult:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Grid helpers (xarray DataArray sampling) — no xarray import at module top level
+# Grid helpers (xarray DataArray sampling): no xarray import at module top level
 # ─────────────────────────────────────────────────────────────────────────────
 
 

@@ -5,7 +5,7 @@ no science: every heavy stage is delegated to a stage subpackage (`caos_seismic.
 `.model`, `.inference`, `.eval`), which are **imported lazily inside each command** so that:
 
   * the package stays importable with ONLY the core deps (numpy, pandas, scipy, requests, pyyaml,
-    pydantic, h3, scikit-learn) — heavy science deps (obspy, pycsep, geopandas, pygtide) are pulled in
+    pydantic, h3, scikit-learn), heavy science deps (obspy, pycsep, geopandas, pygtide) are pulled in
     only by the stage that needs them, and
   * a stage subpackage that a parallel build has not landed yet produces a single, clear, *actionable*
     error ("run `pip install -e .[science]`" / "stage not yet available") instead of an import-time crash.
@@ -54,8 +54,8 @@ from .config import (
 
 # Windows consoles default to a legacy code page (cp1252) that cannot encode the Unicode used in our
 # status lines and result `__str__` (e.g. the "→" date-range arrow). Reconfigure the standard streams
-# to UTF-8 (replacing anything truly unmappable) so the CLI — and the unattended daily job on this
-# Windows box — never dies on an echo. No-op where the stream lacks `reconfigure` (already-wrapped).
+# to UTF-8 (replacing anything truly unmappable) so the CLI: and the unattended daily job on this
+# Windows box: never dies on an echo. No-op where the stream lacks `reconfigure` (already-wrapped).
 for _stream in (sys.stdout, sys.stderr):
     try:
         _stream.reconfigure(encoding="utf-8", errors="replace")  # type: ignore[union-attr]
@@ -70,7 +70,7 @@ app = typer.Typer(
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Small console helpers (rich if present, plain otherwise — core dep, but degrade safely)
+# Small console helpers (rich if present, plain otherwise: core dep, but degrade safely)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -113,7 +113,7 @@ def _git(
 ) -> subprocess.CompletedProcess[str]:
     """Run a git command in the repo root, capturing text output.
 
-    ``env`` (when given) is merged over the process environment — used to point ``GIT_INDEX_FILE`` at a
+    ``env`` (when given) is merged over the process environment, used to point ``GIT_INDEX_FILE`` at a
     scratch index so the daily publish can build a commit on top of ``origin/main`` without touching the
     working tree or the real index.
     """
@@ -131,7 +131,7 @@ def _utc_now_iso() -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Pipeline stages — thin delegations to the stage subpackages
+# Pipeline stages: thin delegations to the stage subpackages
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -285,11 +285,11 @@ def backanalysis_global(
         False, "--no-global", help="Score only the country views, skip the whole-Earth GLOBAL view."
     ),
 ) -> None:
-    """Multi-view + global pseudo-prospective back-analysis — the THESIS measurement.
+    """Multi-view + global pseudo-prospective back-analysis, the THESIS measurement.
 
     Runs the leakage-free forecast-clock back-analysis through every pre-registered country VIEW
     (high- and low-seismicity sets) AND a global view, then reduces to (1) the information gain of
-    the context-conditioned model over catalog-only ETAS — how much the global context contributes —
+    the context-conditioned model over catalog-only ETAS, how much the global context contributes, 
     per view + pooled, and (2) the HIGH-vs-LOW-seismicity bias comparison (does the model over-fit
     high-seismicity zones?). Emits a compact global JSON into results/ for the web app.
     """
@@ -311,7 +311,7 @@ def backanalysis_global(
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# daily — the production job (fetch -> infer -> scoped publish). Owned here (ops layer).
+# daily: the production job (fetch -> infer -> scoped publish). Owned here (ops layer).
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -328,7 +328,7 @@ def daily(
     """The production daily job: fetch -> infer -> scoped publish.
 
     Publishing is **scoped**: only the configs/publish.yaml `git.add_allowlist` paths (results/,
-    manifests/) are staged — never `git add -A`/`.`. The commit aborts if anything outside the allowlist
+    manifests/) are staged, never `git add -A`/`.`. The commit aborts if anything outside the allowlist
     is staged. This command performs the whole job itself (the scripts only wrap it). In production it
     runs in the dedicated job checkout (scripts/job.*, after `job-sync`), where the data commit is
     fast-forward pushed to the publish branch; see :func:`_publish_scoped`. `--no-publish` computes only
@@ -409,7 +409,7 @@ def job_sync() -> None:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# check — environment + repo + config sanity (no network, no science deps)
+# check: environment + repo + config sanity (no network, no science deps)
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -590,14 +590,14 @@ def _smoke_pipeline(region_id: str) -> tuple[bool, str]:
         raise _SmokeSkip(f"ComCat unreachable: {type(exc).__name__}") from exc
 
     if raw.empty or len(raw) < 1:
-        return True, "fetch ok but window empty (no M>=4 events in the last 120d here) — pipeline not exercised"
+        return True, "fetch ok but window empty (no M>=4 events in the last 120d here), pipeline not exercised"
 
     # 2) Clean / homogenize to Mw (core deps only).
     clean_mod = importlib.import_module(f"{__package__}.data.clean")
     clean = clean_mod.clean_catalog(raw).catalog
     mw = clean["mw"].dropna()
     if mw.empty:
-        return True, f"fetched {len(raw)} events but none had a usable Mw (no conversion anchor) — Mc/ETAS skipped"
+        return True, f"fetched {len(raw)} events but none had a usable Mw (no conversion anchor), Mc/ETAS skipped"
 
     # 3) Mc + b (estimated).
     completeness = importlib.import_module(f"{__package__}.catalog.completeness")
@@ -655,7 +655,7 @@ def views_cmd(
         )
     if not all_views and len(configured) > len(loaded):
         extra = sorted(set(configured) - {v.id for v in loaded})
-        _echo(f"  (+{len(extra)} non-default: {extra} — pass --all to include)")
+        _echo(f"  (+{len(extra)} non-default: {extra}, pass --all to include)")
     _echo("  * = in default_views (materialized by `infer` unless --views overrides)")
 
 
@@ -730,7 +730,7 @@ def _missed_issue_dates(region_id: str, today: date, max_back: int = 7) -> list[
     """Catch-up: issue dates in the last `max_back` days that have no committed artifact yet.
 
     Bounded to a week so a long-dormant laptop does not attempt to backfill months at once (those would
-    not be honest pseudo-prospective forecasts anyway — the catalog has since been revised).
+    not be honest pseudo-prospective forecasts anyway, the catalog has since been revised).
     """
     have = _existing_issue_dates(region_id)
     missed: list[date] = []

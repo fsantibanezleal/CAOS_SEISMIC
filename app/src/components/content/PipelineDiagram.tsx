@@ -10,16 +10,16 @@ import { useTranslation } from "react-i18next";
  * itself uses CSS custom properties resolved at paint.
  *
  * The five stages (verbatim intent from §5.2):
- *  1. Data feeds (external, read-only, public) — USGS ComCat / ISC / IRIS-EarthScope FDSN.
- *  2. Offline daily job (single VPS, CPU) — ingest → QC/dedup → Mc & magnitude
+ *  1. Data feeds (external, read-only, public): USGS ComCat / ISC / IRIS-EarthScope FDSN.
+ *  2. Offline daily job (single VPS, CPU): ingest → QC/dedup → Mc & magnitude
  *     homogenization → declustering (dual-catalog) → fit/condition ETAS (+ R-J fallback) →
  *     simulate ensemble → per-cell rate field → optimistic/expected/pessimistic bounds →
  *     rolling CSEP stats.
- *  3. Artifact (committed/served static, gzipped) — forecast_YYYY-MM-DD.json(.gz) + H3 rate
+ *  3. Artifact (committed/served static, gzipped): forecast_YYYY-MM-DD.json(.gz) + H3 rate
  *     arrays for {1d,2d,7d} × {lo,exp,hi}; baseline; metadata; N/S/M/L summary; coverage mask.
- *  4. API (FastAPI, thin, stateless, read-only) — /forecast/latest, /forecast/{date},
+ *  4. API (FastAPI, thin, stateless, read-only): /forecast/latest, /forecast/{date},
  *     /region/{iso}, /calibration; ORJSON + GZip.
- *  5. SPA (Vite + React + TS) — the six pages incl. this diagram and the Monitoring field.
+ *  5. SPA (Vite + React + TS): the six pages incl. this diagram and the Monitoring field.
  *
  * All labels are translated (i18n `impl.diagram.*`); the SVG has an accessible title/desc.
  */

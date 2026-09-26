@@ -1,17 +1,17 @@
-"""30-day OUTLOOK generation — the geodetic-context background as a longer-horizon product surface.
+"""30-day OUTLOOK generation, the geodetic-context background as a longer-horizon product surface.
 
 The 1-7 day operational forecast is ETAS (``inference.daily``); the geodetic context does NOT help there
 (E11: -0.053 at 7 d). At the **30-day** horizon the strain-conditioned neural BACKGROUND measurably beats
 ETAS (E11: +0.078; E14 per-view). Because that background is **time-flat** (driven by slow GNSS strain),
-it is refit on a **weekly** cadence — not daily — and published as its own static artifact that the daily
+it is refit on a **weekly** cadence, not daily, and published as its own static artifact that the daily
 job serves unchanged.
 
 This module fits the neural once, (A) validates the 30-day win leakage-free across views (the published
 evidence), and (B) writes the current 30-day field artifact:
 
-  - ``results/outlook-30d-<date>.json.gz``  — the compact per-cell 30-day expected-count field
-  - ``results/outlook-index.json``          — the latest pointer
-  - ``results/outlook-evidence-30d.json``   — per-view IGPE(neural, ETAS) at 30 d
+  - ``results/outlook-30d-<date>.json.gz`` : the compact per-cell 30-day expected-count field
+  - ``results/outlook-index.json``         : the latest pointer
+  - ``results/outlook-evidence-30d.json``  : per-view IGPE(neural, ETAS) at 30 d
 
 Intended to run from ``caos-seismic outlook`` on a weekly schedule, published via the same robust scoped
 git-as-data path as the daily job. Honest framing throughout: the outlook is the one horizon where a

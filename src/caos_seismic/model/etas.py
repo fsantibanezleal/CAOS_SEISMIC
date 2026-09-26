@@ -1,4 +1,4 @@
-"""Space-time ETAS (Ogata 1998) — the primary conditional estimator *and* the reference to beat.
+"""Space-time ETAS (Ogata 1998), the primary conditional estimator *and* the reference to beat.
 
 The Epidemic-Type Aftershock Sequence model is the physics-free, self-exciting Hawkes point process
 that is the de-facto operational baseline for short-horizon seismicity forecasting. Any candidate
@@ -17,7 +17,7 @@ with the canonical Ogata-1998 *separable* kernels:
                                zeta(m) = D e^{gamma (m - M0)}                  [integrates to 1 over plane]
 
 The background term ``mu(x, y)`` is supplied by the adaptive smoothed-seismicity field
-(:class:`~caos_seismic.model.smoothed.SmoothedSeismicityForecaster`) fit on a *declustered* catalog —
+(:class:`~caos_seismic.model.smoothed.SmoothedSeismicityForecaster`) fit on a *declustered* catalog, 
 the dual-catalog rule (model-design §5). The triggering sum uses the *full, un-declustered* catalog,
 because aftershock/foreshock triggering *is* the predictable signal.
 
@@ -27,7 +27,7 @@ fraction, and the public probability is the non-homogeneous Poisson exceedance
 ``P(>=1) = 1 - e^{-N}`` (model-design §3.2). This formula never changes; only the quality of the rate
 feeding ``N`` improves.
 
-**Stability — two distinct gates (kept separate, both enforced after the fit):**
+**Stability, two distinct gates (kept separate, both enforced after the fit):**
 
 1. ``alpha < beta`` with ``beta = b ln 10`` is required for the productivity x magnitude integral to
    converge (finite branching ratio ``n``).
@@ -99,7 +99,7 @@ class ETASStabilityError(ValueError):
 
 
 def utsu_productivity(m: np.ndarray | float, K: float, alpha: float, m0: float) -> np.ndarray:
-    """Utsu productivity ``k(m) = K e^{alpha (m - M0)}`` — expected direct aftershocks of an event ``m``.
+    """Utsu productivity ``k(m) = K e^{alpha (m - M0)}``, expected direct aftershocks of an event ``m``.
 
     This is the *number* of first-generation offspring an event of magnitude ``m`` triggers; the
     temporal and spatial kernels below distribute that number over time and space as densities.
@@ -171,7 +171,7 @@ def _unit_xyz(lat: np.ndarray | float, lon: np.ndarray | float) -> np.ndarray:
 
 @dataclass
 class ETASForecaster(BaseForecaster):
-    """Space-time ETAS (Ogata 1998) conditional forecaster — the production estimator and reference.
+    """Space-time ETAS (Ogata 1998) conditional forecaster, the production estimator and reference.
 
     Fit by maximum likelihood on the **full un-declustered** catalog slice before ``t_issue``; the
     background ``mu(x, y)`` is delegated to an adaptive smoothed-seismicity field fit on the
@@ -188,7 +188,7 @@ class ETASForecaster(BaseForecaster):
     mc, b_value:
         Magnitude of completeness and Gutenberg-Richter ``b``. If ``None`` they are estimated on the
         fit catalog (``b`` via the binning-corrected Aki-Utsu MLE; ``mc`` defaults to the catalog
-        minimum ``mw`` as a conservative proxy — the real pipeline passes the rolling per-region Mc).
+        minimum ``mw`` as a conservative proxy, the real pipeline passes the rolling per-region Mc).
     bounds:
         Optimizer box constraints per parameter (defaults to :data:`DEFAULT_BOUNDS`).
     require_alpha_lt_beta, reject_supercritical:
@@ -223,7 +223,7 @@ class ETASForecaster(BaseForecaster):
     reject_supercritical: bool = True
     background: SmoothedSeismicityForecaster | None = None
     integration_steps: int = 24
-    #: Triggering-sum neighbour cutoffs — the O(N^2) → O(N·k) accelerator that makes the global,
+    #: Triggering-sum neighbour cutoffs, the O(N^2) → O(N·k) accelerator that makes the global,
     #: multi-decade, 10^5-event MLE tractable. A parent older than ``max_parent_days`` or farther than
     #: ``max_parent_dist_km`` from a child has, by construction, a negligible Omori/spatial kernel value
     #: (both kernels have decayed to ~0 there), so it is dropped from that child's triggering sum. The
@@ -255,7 +255,7 @@ class ETASForecaster(BaseForecaster):
     _ev_m: np.ndarray | None = field(default=None, repr=False)
     # Precomputed neighbour pairs (parent→child, within the cutoffs) + per-event background, built ONCE
     # at fit time so every MLE evaluation is an O(pairs) vectorized numpy sum with NO per-event Python
-    # loop — the second half of the O(N^2)→O(N·k) acceleration (the cutoffs bound k; this removes the
+    # loop: the second half of the O(N^2)→O(N·k) acceleration (the cutoffs bound k; this removes the
     # Python overhead). ``_pair_child[p]`` is the child index of pair ``p``; the other arrays carry that
     # pair's parent magnitude, age gap (days) and epicentral distance (deg).
     _mu_ev: np.ndarray | None = field(default=None, repr=False)
@@ -353,7 +353,7 @@ class ETASForecaster(BaseForecaster):
         """Advance the conditioning to a new issue time WITHOUT re-running the MLE.
 
         The seven ETAS parameters (and ``Mc``/``b``) are physical and stable over a refit cadence
-        (configs/publish.yaml ``train_cadence.full_refit``); day-to-day only the *conditioning* changes —
+        (configs/publish.yaml ``train_cadence.full_refit``); day-to-day only the *conditioning* changes, 
         which events are parents and their ages. This re-slices the lawful past and refreshes just the
         parent arrays (``_ev_*``) against the new ``t_issue``, keeping the fitted ``params``/``Mc``/``b``
         AND the smoothed background (the long-term declustered rate barely moves within a cadence
@@ -413,7 +413,7 @@ class ETASForecaster(BaseForecaster):
         flattened into the ``_pair_*`` arrays and the per-event smoothed background cached in
         ``_mu_ev``. The likelihood then evaluates as one vectorized ``np.bincount`` over these pairs, so
         the O(N·k) neighbour search runs **once** instead of on every one of the optimizer's thousands
-        of steps — the change that turns a multi-decade global fit from intractable into seconds/tile.
+        of steps, the change that turns a multi-decade global fit from intractable into seconds/tile.
         """
         n = self._ev_t.size
         age = self._ev_t
@@ -463,14 +463,14 @@ class ETASForecaster(BaseForecaster):
         """Background + triggering intensity evaluated at each observed event time/place (the sum term).
 
         For event ``j`` only earlier events ``i < j`` (strictly older, larger age) contribute to the
-        triggering sum — the Hawkes causality constraint. ``mu`` is the smoothed background rate at the
+        triggering sum, the Hawkes causality constraint. ``mu`` is the smoothed background rate at the
         event location. Returns an array of ``lambda(t_j, x_j, y_j)`` values (events / day / deg^2-ish
         intensity in the planar approximation), used in the first (log) term of the log-likelihood.
         """
         K, alpha, c, pp, D, gamma, q = self._vector(p)
         # Vectorized over the precomputed parent→child pairs (built once by :meth:`_precompute_pairs`,
         # within the temporal + spatial cutoffs). Each pair's triggering contribution
-        # ``k(m_parent) g(dt) f(r | m_parent)`` is summed onto its child via ``np.bincount`` — an
+        # ``k(m_parent) g(dt) f(r | m_parent)`` is summed onto its child via ``np.bincount``: an
         # O(pairs) numpy reduction with no per-event Python loop. ``mu`` (the smoothed background) is
         # fixed during the fit, so it is added per event from the precomputed ``_mu_ev``.
         lam = self._mu_ev.copy()
@@ -482,7 +482,7 @@ class ETASForecaster(BaseForecaster):
         return lam
 
     def _integrated_intensity(self, p: dict[str, float], train_days: float) -> float:
-        """``∫_0^T ∫_A lambda dx dy dt`` — the compensator term of the log-likelihood.
+        """``∫_0^T ∫_A lambda dx dy dt``, the compensator term of the log-likelihood.
 
         With separable, individually-normalized kernels the triggering integral collapses in closed
         form: each parent contributes ``k(m_i) * G(T - t_i)`` expected offspring over the window
@@ -638,7 +638,7 @@ class ETASForecaster(BaseForecaster):
         if self.reject_supercritical and not (self._branching_ratio < 1.0):
             raise ETASStabilityError(
                 f"ETAS supercritical: branching ratio n={self._branching_ratio:.4f} >= 1 "
-                "(explosive cascade — rejected as a mis-fit).",
+                "(explosive cascade, rejected as a mis-fit).",
                 alpha=alpha,
                 beta=self._beta,
                 branching_ratio=self._branching_ratio,
@@ -713,7 +713,7 @@ class ETASForecaster(BaseForecaster):
         )
         integral = mu * H  # events / deg^2 over [0, H) from the background
 
-        # Triggering term — fully vectorized, with the SAME neighbour cutoff as the fit. The window
+        # Triggering term: fully vectorized, with the SAME neighbour cutoff as the fit. The window
         # integral of the Omori kernel is closed-form (no quadrature, and exact):
         #   ∫_0^H g(age_j + s) ds = G(age_j + H) - G(age_j)      with G the Omori-Utsu CDF,
         # so a parent j of (pre-issue) age ``age_j`` contributes a window-integrated productivity
@@ -747,11 +747,11 @@ class ETASForecaster(BaseForecaster):
         gamma: float,
         q: float,
     ) -> np.ndarray:
-        """Window-integrated triggering rate at every cell — vectorized over cell↔parent pairs.
+        """Window-integrated triggering rate at every cell, vectorized over cell↔parent pairs.
 
         Returns ``Σ_j kt_j · f(r_ij | m_j)`` per cell ``i`` (events / day / deg^2 already integrated
         over the window through ``kt_j``), where the sum runs over parent events within
-        ``max_parent_dist_km`` of the cell — the same spatial cutoff used by the fit. Pairs are found
+        ``max_parent_dist_km`` of the cell, the same spatial cutoff used by the fit. Pairs are found
         with a unit-sphere :class:`scipy.spatial.cKDTree` and a single ``sparse_distance_matrix`` call
         (chord radius), so there is no Python-level per-cell or per-parent loop; the per-pair spatial
         density and the scatter-add are both vectorized. Falls back to a bounded per-cell numpy sweep
@@ -817,7 +817,7 @@ class ETASForecaster(BaseForecaster):
         * **Background** events are drawn as a homogeneous Poisson process in time with the
           region-integrated background rate, placed spatially by sampling the smoothed field's parent
           events (each background event inherits a fitted-bandwidth Gaussian jitter around a randomly
-          chosen historical epicenter — a fast, normalization-consistent surrogate for the kernel).
+          chosen historical epicenter, a fast, normalization-consistent surrogate for the kernel).
         * **Aftershocks** of every existing parent (historical *and* newly simulated) are generated
           generation-by-generation: a parent of magnitude ``m`` spawns ``Poisson(k(m) * remaining
           Omori mass in window)`` offspring, each with an Omori-distributed time, an inverse-power

@@ -1,4 +1,4 @@
-"""Forecast-combination ensemble — a weighted linear opinion pool over component forecasters.
+"""Forecast-combination ensemble, a weighted linear opinion pool over component forecasters.
 
 The single most reliable lever for beating any one short-term seismicity model is **combining** them:
 the CSEP consensus across collaboratories is that a well-weighted ensemble (Bayesian model averaging /
@@ -15,10 +15,10 @@ linear opinion pool::
 
 Linear (not log-linear) pooling is the CSEP-standard rate combination: it is conservative (the ensemble
 rate never collapses to zero just because one component does), keeps the public exceedance formula
-``P(>=1) = 1 - e^{-lambda}`` unchanged, and — when the mandatory smoothed null is a component — guarantees
+``P(>=1) = 1 - e^{-lambda}`` unchanged, and, when the mandatory smoothed null is a component, guarantees
 the ensemble never reads below a floor of the long-term Poisson baseline. Weights default to equal; a
 caller may pass fixed weights or, later, weights learned from the rolling prospective log-score
-(score-weighted stacking — deferred to :meth:`fit_weights_from_history`).
+(score-weighted stacking, deferred to :meth:`fit_weights_from_history`).
 
 Skill is established only by the prospective back-analysis (:mod:`caos_seismic.eval.backanalysis`); this
 class is a forecaster like any other and is scored by the same harness, never asserted to be better.
@@ -43,7 +43,7 @@ class EnsembleForecaster(BaseForecaster):
     Parameters
     ----------
     components:
-        ``[(name, forecaster, weight), ...]`` — each ``forecaster`` exposes ``expected_counts`` and is
+        ``[(name, forecaster, weight), ...]``, each ``forecaster`` exposes ``expected_counts`` and is
         expected to be **already fitted** (the canonical use wraps a fitted model family whose ETAS and
         smoothed components were fit under the dual-catalog rule). :meth:`fit` will best-effort fit any
         component that is not yet fitted, on the catalog passed.
@@ -127,7 +127,7 @@ class EnsembleForecaster(BaseForecaster):
                 )
             except Exception:
                 # A component that cannot evaluate this slice is dropped from the pool for this call
-                # (its weight is not redistributed implicitly — total_w below renormalizes over the
+                # (its weight is not redistributed implicitly: total_w below renormalizes over the
                 # components that DID contribute, so the ensemble stays a proper convex combination).
                 continue
             if lam.shape != acc.shape:
@@ -171,13 +171,13 @@ class EnsembleForecaster(BaseForecaster):
         ``anchor_index``) is the shrinkage target ``e_0``, so the fitted weights never score worse than
         ``e_0`` *on the holdout objective they are fit to*, and on a sparse/quiet holdout collapse to
         ``w = e_0`` (E12 == base). **This is NOT a guarantee on the separately-scored out-of-sample
-        window** — that forecast is genuinely prospective and its IGPE vs base may be positive OR negative;
+        window**, that forecast is genuinely prospective and its IGPE vs base may be positive OR negative;
         only the pre-registered paired T/W test over many windows decides whether E12 has real skill.
 
         Parameters
         ----------
         holdout:
-            ``[(L_j, omega_j), ...]`` — one entry per past leakage-free window. ``L_j`` is the
+            ``[(L_j, omega_j), ...]``, one entry per past leakage-free window. ``L_j`` is the
             ``(n_cells, K)`` matrix of each component's expected counts for that window and ``omega_j``
             the ``(n_cells,)`` observed counts. The caller MUST build these from windows whose target
             period ends strictly before the forecast issue time (leakage is the caller's contract).
@@ -233,13 +233,13 @@ def _solve_stacking_weights(
     Maximizes the held-out Poisson joint log-score of the pooled rate ``lambda = L w`` with an L2 pull
     toward the anchor vertex ``e_0``: ``J(w) = sum [omega·log(L w) - (L w)] - (rho/2)||w - e_0||^2``.
     The Poisson log-score is concave in ``lambda`` and ``lambda`` is linear in ``w``, so ``J`` is concave
-    over the simplex — a small SLSQP solve (K is 2-4). Fail-safe ON THE FIT HOLDOUT: any solver failure,
+    over the simplex, a small SLSQP solve (K is 2-4). Fail-safe ON THE FIT HOLDOUT: any solver failure,
     an empty/sparse holdout (< ``n_min`` events), or a solution that does not beat the anchor on the
     holdout objective returns ``e_0`` exactly. This bounds the *fitted weights* by the anchor on the data
     they are fit to; it does NOT bound the out-of-sample IGPE of the resulting forecast (that is what the
     prospective back-analysis measures).
 
-    ``window_weights`` (one per holdout window) re-weights each window's log-score contribution — pass an
+    ``window_weights`` (one per holdout window) re-weights each window's log-score contribution, pass an
     exponential time-decay (recent windows heavier) for the **temporally-adaptive** variant, so the weights
     track the current sequence regime (short-memory at onset, long-memory in the tail). ``None`` ⇒ uniform
     (the static E12). The ``n_min`` cold-start uses the *effective* (weighted) event count.
@@ -319,7 +319,7 @@ def build_etas_stack_ensemble(
 
     **Structural guard against re-creating the E8-E9 dilution dead-end:** every weighted component MUST
     be a tiled-ETAS-family forecaster. The smoothed-seismicity null and Reasenberg-Jones are NOT weighted
-    members here — the null enters only as each member's ``mu(x,y)`` background and the downstream
+    members here, the null enters only as each member's ``mu(x,y)`` background and the downstream
     cold-start floor. Raises if a non-ETAS-family model is passed.
 
     Components start at equal weight; call :meth:`EnsembleForecaster.fit_weights_from_history` to set the
@@ -352,7 +352,7 @@ def build_default_ensemble(models: dict[str, Any], weights: dict[str, float] | N
     """Construct the default ensemble from a fitted model family (the ``_fit_model_family`` dict).
 
     Components, when present and fitted: the regime-tiled ETAS (``primary``/``etas``), the adaptive
-    smoothed-seismicity null (``smoothed`` — the mandatory stationary floor), and Reasenberg–Jones
+    smoothed-seismicity null (``smoothed``, the mandatory stationary floor), and Reasenberg–Jones
     (``reasenberg_jones``). Equal weights by default; pass ``weights`` (by component key) to override.
     A future score-weighted variant will set these from the rolling prospective log-score.
     """

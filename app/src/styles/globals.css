@@ -1,4 +1,4 @@
-/* CAOS_SEISMIC — global styles.
+/* CAOS_SEISMIC, global styles.
  *
  * Theming is driven by CSS custom properties keyed on `data-theme` on <html>.
  * The attribute is set before first paint by the inline script in index.html and
@@ -10,7 +10,7 @@
  * Light is a calm, legible companion palette.
  *
  * Honest-framing reminder for anyone styling here: the green/amber/red triad is
- * reserved for *model-quality* (calibration) state ONLY — never for earthquake
+ * reserved for *model-quality* (calibration) state ONLY: never for earthquake
  * danger. The forecast field uses a perceptually-uniform sequential ramp, not a
  * traffic-light. See web-app-spec §7.3.
  */
@@ -161,7 +161,7 @@ kbd {
   color: var(--color-fg-subtle);
 }
 
-/* Disclaimer banner — used in the footer to keep the honest framing always-on. */
+/* Disclaimer banner, used in the footer to keep the honest framing always-on. */
 .disclaimer {
   border-left: 3px solid var(--color-warn);
   background-color: var(--color-surface-2);
@@ -335,7 +335,7 @@ kbd {
   border: 0;
 }
 
-/* Keyboard focus ring — visible only on keyboard navigation. */
+/* Keyboard focus ring, visible only on keyboard navigation. */
 :where(a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])):focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
@@ -360,7 +360,7 @@ kbd {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Content pages (Introduction / Problem / Methodology / Implementation /
-   Back-analysis) — prose, callouts, tabs, equations, citations.
+   Back-analysis), prose, callouts, tabs, equations, citations.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .prose {
@@ -626,7 +626,7 @@ kbd {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Methodology — Tab 1 "Theoretical approaches": per-model sub-tab bodies,
+   Methodology, Tab 1 "Theoretical approaches": per-model sub-tab bodies,
    assumptions blocks, inline reference rows, and the theme-aware analysis SVGs.
    ═══════════════════════════════════════════════════════════════════════════ */
 .th-model {
@@ -674,7 +674,7 @@ kbd {
   color: var(--color-fg-faint);
 }
 
-/* ── Analysis SVGs (one per model) — read the palette, follow light/dark ── */
+/* ── Analysis SVGs (one per model), read the palette, follow light/dark ── */
 .th-svg {
   width: 100%;
   max-width: 460px;
@@ -1051,7 +1051,7 @@ kbd {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Pipeline SVG (Implementation §5.2) — dark-technical schematic.
+   Pipeline SVG (Implementation §5.2), dark-technical schematic.
    ═══════════════════════════════════════════════════════════════════════════ */
 .pipeline-figure {
   margin: 1.5rem 0;
@@ -1096,7 +1096,7 @@ kbd {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Architecture SVG (Methodology Tab 3 — "The version employed").
+   Architecture SVG (Methodology Tab 3, "The version employed").
    The two-layer estimator stack: inputs + CNN context encoder → ETAS-class core
    (ships v0, solid) + gated neural challenger (flagged, dashed) → exceedance.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -1759,7 +1759,7 @@ kbd {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Monitoring page — controls, field map, legend, summary, detail, staleness.
+   Monitoring page, controls, field map, legend, summary, detail, staleness.
    ═══════════════════════════════════════════════════════════════════════════ */
 .monitoring .lede {
   max-width: 70ch;
@@ -2075,7 +2075,7 @@ kbd {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Methodology Tab 2 (Analytical / ML) — sub-tab headers, assumption lists,
+   Methodology Tab 2 (Analytical / ML), sub-tab headers, assumption lists,
    tool table, and the theme-aware inline SVG method diagrams.
    ═══════════════════════════════════════════════════════════════════════════ */
 

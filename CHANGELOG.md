@@ -2,6 +2,23 @@
 
 All notable changes to this product. Format: `X.XX.XXX` (display, see the workspace `versioning.md`); stays `0.x` while pre-1.0. Tag every release.
 
+## [0.02.002] · 2026-09-26
+
+### Changed
+- No em-dash in the product's content (ADR-0067): the site's strings and pages, the Python package,
+  the docs, the experiment log the app serves, the configs and the scripts. The forecast records
+  (`manifests/`, `results/`, `data/` and the app's generated data fallback) are results, not content,
+  and keep the text their producers wrote; the content guard skips them and says so.
+- A CI workflow of cheap guards on the trunk branches (content standard, CI budget, the package
+  compiles); the Pages deploy stays its own workflow on `main`.
+- `app/package.json` carries the semver form of `VERSION` (it had stayed at `0.1.0`).
+
+### Housekeeping
+- `develop` and `main` held the same tree with divergent histories: the daily forecast data commits
+  had landed on both as different commits. Reconciled by merging `main` into `develop` and promoting
+  it; the job publishes to `main` alone, and `develop` must merge `main` before a release.
+- 12 merged task branches deleted.
+
 ## [0.02.001] · 2026-09-18
 
 ### Fixed

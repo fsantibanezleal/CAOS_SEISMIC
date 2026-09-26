@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# train.sh — fit the stationary smoothed-seismicity null + space-time ETAS (+ R-J fallback).
+# train.sh: fit the stationary smoothed-seismicity null + space-time ETAS (+ R-J fallback).
 #
 #   scripts/train.sh --region chile
 #

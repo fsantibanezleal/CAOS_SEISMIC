@@ -7,7 +7,7 @@ import type { CalibrationSummary, CsepScores } from "@/data/types";
  * N / M / S / L / CL quantile scores with their pass flags, plus the information-gain figures
  * (in NATS, never bits) vs the Poisson null and the ETAS reference.
  *
- * Honest framing carried in copy: passing consistency tests is necessary but NOT sufficient —
+ * Honest framing carried in copy: passing consistency tests is necessary but NOT sufficient, 
  * skill is established only by winning the comparison (T/W) tests against real baselines. The
  * info-gain-vs-ETAS line states this. The per-test pass uses the same model-quality semantics
  * as the calibration badge; it never colours earthquake danger.
@@ -26,7 +26,7 @@ export function CsepPanel({ calibration }: CsepPanelProps) {
   const allUntested = Object.keys(pass).length === 0;
 
   const fmtNats = (v: number | null | undefined): string => {
-    if (v === null || v === undefined) return "—";
+    if (v === null || v === undefined) return "–";
     const sign = v > 0 ? "+" : "";
     return `${sign}${v.toFixed(2)}`;
   };
@@ -51,7 +51,7 @@ export function CsepPanel({ calibration }: CsepPanelProps) {
                 <th scope="row" title={t(`csep.name.${k}`)}>
                   {t(`csep.short.${k}`)}
                 </th>
-                <td className="mono">{q === undefined ? "—" : q.toFixed(2)}</td>
+                <td className="mono">{q === undefined ? "–" : q.toFixed(2)}</td>
                 <td>
                   <span className={`csep-status status-${status}`}>{t(`csep.statusLabel.${status}`)}</span>
                 </td>

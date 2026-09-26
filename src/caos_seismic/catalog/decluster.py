@@ -1,19 +1,19 @@
-"""Stage C (declustering) — Gardner–Knopoff windows + Zaliapin–Ben-Zion nearest-neighbour proximity.
+"""Stage C (declustering), Gardner–Knopoff windows + Zaliapin–Ben-Zion nearest-neighbour proximity.
 
-This module implements the **DUAL-CATALOG RULE** — the single most common pipeline mistake, made
+This module implements the **DUAL-CATALOG RULE**, the single most common pipeline mistake, made
 explicit (``configs/declustering.yaml``; methodology §E.6; data-and-pipelines §3 step 3):
 
 * the **declustered** catalog (independent mainshocks only) feeds **ONLY** the stationary
   Poisson / smoothed-seismicity background ``μ(x,y)`` and the Poisson-baseline calibration;
 * the **FULL, un-declustered** catalog feeds the **conditional / ETAS** model, because
-  aftershock/foreshock **triggering is the predictable signal** — declustering the conditional
+  aftershock/foreshock **triggering is the predictable signal**, declustering the conditional
   input throws the signal away;
 * **scoring** is on the **non-declustered** catalog, because the product deliberately forecasts
   clustering.
 
 Two complementary methods are provided, as the config specifies:
 
-1. **Gardner–Knopoff (1974) windowing** — transparent space/time windows around each potential
+1. **Gardner–Knopoff (1974) windowing**: transparent space/time windows around each potential
    mainshock; events inside a larger event's window are flagged as dependent. Coefficients are the
    **OpenQuake hmtk** parameterization carried in ``configs/declustering.yaml``::
 
@@ -23,18 +23,18 @@ Two complementary methods are provided, as the config specifies:
 
    This yields the declustered **background** catalog.
 
-2. **Zaliapin–Ben-Zion nearest-neighbour proximity** (Baiesi–Paczuski metric) — for each event ``j``
+2. **Zaliapin–Ben-Zion nearest-neighbour proximity** (Baiesi–Paczuski metric): for each event ``j``
    its strongest parent ``i`` minimizes the rescaled proximity::
 
        η_ij = t_ij · (r_ij)^{d_f} · 10^{−b·m_i}                        (t_ij in years, r_ij in km, d_f fractal dim)
        T_j  = t_ij · 10^{−q·b·m_i},   R_j = (r_ij)^{d_f} · 10^{−(1−q)·b·m_i},   η_j = T_j · R_j   (q ≈ 0.5)
 
-   ``log10 η`` is **bimodal** — a clustered mode (small η, triggered) and a background mode (large η).
+   ``log10 η`` is **bimodal**, a clustered mode (small η, triggered) and a background mode (large η).
    We expose ``η/T/R`` (and ``log10`` of each) as **ML features** *and* derive **cluster labels** from
    a threshold on ``log10 η`` (the valley between the two modes), the principled labeler the synthesis
    asks for. This is a cross-check on Gardner–Knopoff and the feature source for the conditional model.
 
-Core deps only (``numpy``/``pandas``/``scipy``) — declustering runs on the ComCat spine without any
+Core deps only (``numpy``/``pandas``/``scipy``), declustering runs on the ComCat spine without any
 heavy geophysics stack.
 
 References
@@ -59,7 +59,7 @@ from ..model._common import haversine_km
 
 logger = logging.getLogger(__name__)
 
-#: Seconds per (Julian) year — η times are expressed in years per Zaliapin–Ben-Zion convention.
+#: Seconds per (Julian) year, η times are expressed in years per Zaliapin–Ben-Zion convention.
 _SECONDS_PER_YEAR = 365.25 * 86400.0
 #: Days per year, for the Gardner–Knopoff time windows (expressed in days).
 _DAYS_PER_YEAR = 365.25
@@ -275,7 +275,7 @@ class NearestNeighborResult:
         The proximity ``η_j`` and its time/space factors ``T_j`` / ``R_j`` (Zaliapin decomposition,
         ``q``). These are the **ML features** (also exposed as ``log10`` via :meth:`as_frame`).
     log_eta:
-        ``log10 η_j`` — the bimodal quantity whose valley separates clustered from background.
+        ``log10 η_j``, the bimodal quantity whose valley separates clustered from background.
     is_background:
         Boolean per event: ``True`` where ``log10 η`` is in the **background** mode (above the
         threshold), i.e. the declustered background; ``False`` for clustered (triggered) events.
@@ -334,7 +334,7 @@ def zaliapin_ben_zion(
 
     with ``t_ij`` the inter-event time **in years**, ``r_ij`` the epicentral distance **in km**,
     ``d_f`` the (region-tunable) fractal dimension, ``m_i`` the *parent* magnitude, and ``b`` the
-    Gutenberg–Richter slope (estimated upstream — never hard-coded). The minimizing ``i`` is the
+    Gutenberg–Richter slope (estimated upstream, never hard-coded). The minimizing ``i`` is the
     nearest-neighbour **parent**, and ``η_j = min_i η_ij`` decomposes into
 
         T_j = t_ij · 10^{−q·b·m_i},   R_j = (r_ij)^{d_f} · 10^{−(1−q)·b·m_i},   η_j = T_j · R_j
@@ -361,14 +361,14 @@ def zaliapin_ben_zion(
     -------
     NearestNeighborResult
         With ``η/T/R``, ``log10 η``, the nearest-neighbour ``parent`` index, the ``is_background``
-        labels, and the threshold actually used — all aligned to the input row order.
+        labels, and the threshold actually used, all aligned to the input row order.
 
     Notes
     -----
     ``O(N²)`` in the catalog size (each event scans its predecessors), which is fine for regional daily
     catalogs (10³–10⁵). The features feed the conditional model; the labels are a principled
     cross-check on Gardner–Knopoff. Per the dual-catalog rule, the **labels** never decluster the
-    conditional model's input — they are features/diagnostics.
+    conditional model's input, they are features/diagnostics.
     """
     validate_catalog(catalog)
     n = len(catalog)
@@ -494,7 +494,7 @@ def _bimodal_threshold(log_eta: np.ndarray) -> float:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# The dual-catalog assembler — the rule, enforced in one call
+# The dual-catalog assembler: the rule, enforced in one call
 # ─────────────────────────────────────────────────────────────────────────────
 
 
@@ -505,10 +505,10 @@ class DualCatalog:
     Attributes
     ----------
     full:
-        The **un-declustered** catalog (the input, validated) — feeds the conditional/ETAS model and
+        The **un-declustered** catalog (the input, validated), feeds the conditional/ETAS model and
         is the catalog the forecast is **scored** against.
     background:
-        The **declustered** catalog (Gardner–Knopoff independent mainshocks) — feeds the
+        The **declustered** catalog (Gardner–Knopoff independent mainshocks), feeds the
         smoothed-seismicity null and the Poisson baseline **only**.
     gk:
         The :class:`DeclusterResult` from Gardner–Knopoff (labels + mainshock mask + stats).
@@ -558,18 +558,18 @@ def dual_catalog(
     mag_col: str = "mw",
     time_col: str = "time",
 ) -> DualCatalog:
-    """Build BOTH catalog views from one input — the dual-catalog rule, enforced.
+    """Build BOTH catalog views from one input, the dual-catalog rule, enforced.
 
     Returns a :class:`DualCatalog` with:
 
-    * ``full`` — the un-declustered catalog (validated copy) for the **conditional/ETAS** model and
+    * ``full``: the un-declustered catalog (validated copy) for the **conditional/ETAS** model and
       for **scoring**;
-    * ``background`` — the **Gardner–Knopoff** declustered (independent-mainshock) catalog for the
+    * ``background``: the **Gardner–Knopoff** declustered (independent-mainshock) catalog for the
       **smoothed-seismicity background and Poisson baseline only**;
-    * ``gk`` / ``nnd`` — the Gardner–Knopoff result and (optionally) the Zaliapin–Ben-Zion η/T/R
+    * ``gk`` / ``nnd``: the Gardner–Knopoff result and (optionally) the Zaliapin–Ben-Zion η/T/R
       features + cluster labels.
 
-    The function never feeds the declustered catalog to a conditional model — that is the caller's
+    The function never feeds the declustered catalog to a conditional model, that is the caller's
     contract, made hard to get wrong by handing back both views clearly labelled (see
     :data:`DUAL_CATALOG_DOC`).
 
@@ -615,7 +615,7 @@ def _estimate_b(catalog: pd.DataFrame, *, mag_col: str = "mw") -> float:
     """Estimate ``b`` (binning-corrected Aki–Utsu MLE) for the ZBZ weighting; default 1.0 on failure.
 
     Uses the catalog's minimum finite ``mw`` as a conservative completeness proxy (the production
-    pipeline passes the per-region rolling ``Mc`` explicitly). ``b`` is **estimated**, never assumed —
+    pipeline passes the per-region rolling ``Mc`` explicitly). ``b`` is **estimated**, never assumed, 
     the 1.0 fallback is only for a degenerate catalog too small to fit, and is logged.
     """
     from .completeness import aki_utsu_b_value

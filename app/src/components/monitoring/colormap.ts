@@ -1,12 +1,12 @@
 /**
  * Perceptually-uniform SEQUENTIAL colormap for the probability field
  * (web-app-spec.md §7.3). This is the load-bearing visual-honesty decision: the forecast
- * field is coloured on a viridis/magma-class ramp — NEVER a red/orange traffic-light ramp.
+ * field is coloured on a viridis/magma-class ramp: NEVER a red/orange traffic-light ramp.
  * The red/amber/green triad is reserved exclusively for the calibration (model-quality) badge.
  *
  * We embed a small set of control colours sampled from the canonical viridis ramp and
  * linearly interpolate between them. Embedding the table (rather than pulling d3-scale-chromatic)
- * keeps the Monitoring bundle lean — the heavy bytes are MapLibre + deck.gl, not the colormap.
+ * keeps the Monitoring bundle lean: the heavy bytes are MapLibre + deck.gl, not the colormap.
  *
  * The field value is the chosen bound's exceedance PROBABILITY in (0, 1). Probabilities span
  * orders of magnitude (typically < 1% per day; ICEF/Jordan et al. 2011), so the default
@@ -20,7 +20,7 @@ export type RGBA = [number, number, number, number];
 /**
  * Viridis control points (t in [0,1] → sRGB). Sampled from the canonical matplotlib viridis
  * lookup table at 9 evenly spaced stops. Perceptually uniform, colour-vision-deficiency safe,
- * monotonic in lightness — the properties Schneider et al. (2022) call for.
+ * monotonic in lightness: the properties Schneider et al. (2022) call for.
  */
 const VIRIDIS: RGB[] = [
   [68, 1, 84],
@@ -37,7 +37,7 @@ const VIRIDIS: RGB[] = [
 /**
  * Magma control points (an alternative perceptually-uniform sequential ramp). Offered so the
  * dark-technical theme can use a ramp that reads well on a near-black base map without ever
- * being a traffic-light. NOTE: magma's high end is light-yellow, low end near-black — still
+ * being a traffic-light. NOTE: magma's high end is light-yellow, low end near-black: still
  * sequential, still NOT a danger ramp.
  */
 const MAGMA: RGB[] = [
@@ -76,7 +76,7 @@ export interface ScaleOptions {
   floor?: number;
   /** Upper bound of the value domain (probabilities at/above ceil map to t=1). */
   ceil?: number;
-  /** "log" (default — probabilities span orders of magnitude) or "linear". */
+  /** "log" (default, probabilities span orders of magnitude) or "linear". */
   mode?: "log" | "linear";
   ramp?: RampName;
   /** Alpha for the field polygons (0–255). */

@@ -1,4 +1,4 @@
-# caos-seismic-daily.service — the daily forecast job (fetch -> infer -> scoped publish).
+# caos-seismic-daily.service: the daily forecast job (fetch -> infer -> scoped publish).
 #
 # Portable VPS fallback for the Windows Task Scheduler task (scripts/schedule-daily.ps1). Triggered by
 # caos-seismic-daily.timer (OnCalendar=*-*-* 03:00:00, Persistent=true). This is a oneshot: it runs the

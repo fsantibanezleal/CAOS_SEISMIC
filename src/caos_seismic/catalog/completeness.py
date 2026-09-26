@@ -6,18 +6,18 @@ scipy) so this is importable on the ComCat spine without any heavy geophysics st
 
 What this module computes
 -------------------------
-* **Frequency–magnitude distribution (FMD)** — the binned incremental and cumulative counts
+* **Frequency–magnitude distribution (FMD)**: the binned incremental and cumulative counts
   underlying every ``Mc`` and ``b`` estimate.
-* **Maximum-curvature ``Mc`` (MAXC)** — the magnitude of the maximum of the *non-cumulative* FMD,
+* **Maximum-curvature ``Mc`` (MAXC)**: the magnitude of the maximum of the *non-cumulative* FMD,
   plus a configurable correction (default ``+0.2``).
   .. warning::
      The ``+0.2`` MAXC correction was calibrated on **California** (Wiemer & Wyss 2000) and is
      **not established as universal**. Re-validate it per region (GFT / EMR cross-check + FMD
      inspection) and take the conservative value. The correction is a config knob
      (``configs/completeness.yaml: mc.maxc_correction``), never a literal constant in the science.
-* **Goodness-of-fit ``Mc`` (GFT)** — Wiemer & Wyss (2000) goodness-of-fit cross-check: the lowest
+* **Goodness-of-fit ``Mc`` (GFT)**: Wiemer & Wyss (2000) goodness-of-fit cross-check: the lowest
   ``Mc`` whose modelled FMD explains ≥ ``target_R`` % of the observed event count (90 %/95 % levels).
-* **Rolling space–time ``Mc``** — re-estimation on a moving time window (and optionally per spatial
+* **Rolling space–time ``Mc``**: re-estimation on a moving time window (and optionally per spatial
   cell), because a single global ``Mc`` injects fake non-stationarity (synthesis §3, step 1).
 * **Aki–Utsu binning-corrected ``b``-value MLE** with Shi & Bolt (1982) uncertainty.
   ``b`` is **always estimated, never hard-coded to 1.0** (methodology §1.1).
@@ -56,7 +56,7 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
-# log10(e) — the constant numerator of the Aki–Utsu estimator. Spelled out so the equation in the
+# log10(e): the constant numerator of the Aki–Utsu estimator. Spelled out so the equation in the
 # docstring is literally the code below; never a magic 0.4343.
 _LOG10_E = math.log10(math.e)
 
@@ -103,7 +103,7 @@ class BValueEstimate:
     Attributes
     ----------
     b:
-        Maximum-likelihood Gutenberg–Richter slope. **Never hard-coded** — if you read ``1.0`` here
+        Maximum-likelihood Gutenberg–Richter slope. **Never hard-coded**, if you read ``1.0`` here
         it was *estimated* to be ~1, not assumed.
     b_uncertainty:
         Shi & Bolt (1982) 1-sigma standard error of ``b``.
@@ -118,7 +118,7 @@ class BValueEstimate:
     dm:
         Magnitude bin width assumed for the binning correction.
     beta:
-        ``beta = b * ln(10)`` — the exponential-tail rate used by ETAS stability gates (§1.3).
+        ``beta = b * ln(10)``, the exponential-tail rate used by ETAS stability gates (§1.3).
     """
 
     b: float
@@ -131,7 +131,7 @@ class BValueEstimate:
 
     @property
     def beta(self) -> float:
-        """``beta = b ln 10`` — the magnitude-density rate; ETAS requires ``alpha < beta``."""
+        """``beta = b ln 10``, the magnitude-density rate; ETAS requires ``alpha < beta``."""
         return self.b * math.log(10.0)
 
 
@@ -193,14 +193,14 @@ def maxc_mc(
 ) -> tuple[float, float]:
     """Maximum-curvature magnitude of completeness with the configurable correction.
 
-    MAXC takes ``Mc`` as the magnitude of the maximum of the *non-cumulative* FMD — the most
-    populated magnitude bin — which marks the roll-off below which detection becomes incomplete
+    MAXC takes ``Mc`` as the magnitude of the maximum of the *non-cumulative* FMD, the most
+    populated magnitude bin, which marks the roll-off below which detection becomes incomplete
     (Wiemer & Wyss 2000). A positive ``correction`` (default ``+0.2``) compensates for MAXC's known
     tendency to *under*-estimate ``Mc`` for curved/gradual FMDs.
 
     .. warning::
        The ``+0.2`` value is **California-tuned**; re-validate per region and take the conservative
-       value. Pass the region's configured ``mc.maxc_correction`` here — do not assume universality.
+       value. Pass the region's configured ``mc.maxc_correction`` here, do not assume universality.
 
     Returns
     -------
@@ -211,7 +211,7 @@ def maxc_mc(
     centers, incremental, _ = fmd(magnitudes, dm=dm)
     if centers.size == 0 or incremental.sum() == 0:
         return float("nan"), float("nan")
-    # argmax returns the first (lowest-magnitude) peak on ties — the conservative choice for Mc.
+    # argmax returns the first (lowest-magnitude) peak on ties: the conservative choice for Mc.
     maxc_raw = float(centers[int(np.argmax(incremental))])
     return maxc_raw + float(correction), maxc_raw
 
@@ -226,7 +226,7 @@ def gft_mc(
     dm: float = 0.1,
     levels: tuple[float, ...] = (90.0, 95.0),
 ) -> tuple[float | None, float | None]:
-    """Goodness-of-fit test (GFT) magnitude of completeness — the Wiemer & Wyss (2000) cross-check.
+    """Goodness-of-fit test (GFT) magnitude of completeness, the Wiemer & Wyss (2000) cross-check.
 
     For each candidate ``Mc`` (each FMD bin centre), the synthetic GR model is built from the
     Aki–Utsu ``b`` and the observed ``a`` *at that cutoff*, and the normalised absolute residual
@@ -366,13 +366,13 @@ def rolling_mc(
     mag_col: str = "mw",
     time_col: str = "time",
 ) -> pd.DataFrame:
-    """Rolling-time ``Mc(t)`` over a moving window — exposes ``Mc`` non-stationarity (synthesis §3).
+    """Rolling-time ``Mc(t)`` over a moving window, exposes ``Mc`` non-stationarity (synthesis §3).
 
     A single global ``Mc`` injects fake non-stationarity into the GR tail and every downstream rate.
     This re-estimates ``Mc`` (and the raw MAXC peak + event count) on a window of ``window_days``,
     advancing by ``step_days`` (default = ``window_days`` for non-overlapping windows; pass a smaller
     step for a smooth rolling curve). The window is **right-labelled at its end time**, so each row's
-    ``Mc`` uses only events ``<= window_end`` within the trailing window — leakage-safe for the
+    ``Mc`` uses only events ``<= window_end`` within the trailing window, leakage-safe for the
     forecast clock when consumed causally.
 
     Parameters
@@ -457,7 +457,7 @@ def aki_utsu_b_value(
 
     propagates into the forecast (``b`` uncertainty is a real component of the published bounds, §E.7).
 
-    ``b`` is **never hard-coded** — it is the MLE of the data above ``Mc``. A mis-estimated ``Mc``
+    ``b`` is **never hard-coded**, it is the MLE of the data above ``Mc``. A mis-estimated ``Mc``
     biases ``b`` strongly, which is why ``Mc`` is re-estimated on a rolling window (:func:`rolling_mc`)
     and its uncertainty carried alongside.
 
@@ -478,7 +478,7 @@ def aki_utsu_b_value(
     ------
     ValueError
         If ``mc`` is not finite, or if fewer than 2 events lie ``>= mc`` (the MLE is undefined), or if
-        the denominator ``mean_m - (mc - dm/2)`` is non-positive (degenerate FMD — typically ``mc``
+        the denominator ``mean_m - (mc - dm/2)`` is non-positive (degenerate FMD, typically ``mc``
         set too high).
     """
     if not math.isfinite(mc):

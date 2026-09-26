@@ -1,5 +1,5 @@
 /**
- * CAOS_SEISMIC — GLOBAL back-analysis (context-contribution) types + loader.
+ * CAOS_SEISMIC: GLOBAL back-analysis (context-contribution) types + loader.
  *
  * This is the front-end half of the THESIS measurement produced offline by
  * `src/caos_seismic/eval/global_backanalysis.py` (`_write_global_summary`). The re-scoped product is
@@ -8,23 +8,23 @@
  * pre-registered country view AND a global view, then reduces the per-view ledgers to the two
  * headline numbers the whole re-scoping exists to report:
  *
- *  1. **Context gain over catalog-only ETAS** (`context_gain`) — per view × horizon and pooled
+ *  1. **Context gain over catalog-only ETAS** (`context_gain`): per view × horizon and pooled
  *     globally, in NATS. ETAS already reproduces Omori/Utsu clustering, so a positive, significant
- *     gain over it is NOT "I predicted aftershocks" — it quantifies how much the GLOBAL context
+ *     gain over it is NOT "I predicted aftershocks": it quantifies how much the GLOBAL context
  *     (worldwide seismicity + complementary covariates) adds to the LOCAL short-term forecast. When
  *     the context channel has not yet landed (enricher stack feature-flagged off), the gain is ~0 by
- *     construction and `context_channel_active` says so honestly — it is never faked positive.
+ *     construction and `context_channel_active` says so honestly: it is never faked positive.
  *
- *  2. **High-vs-low-seismicity bias** (`high_vs_low_bias`) — the same skill/calibration metrics
+ *  2. **High-vs-low-seismicity bias** (`high_vs_low_bias`): the same skill/calibration metrics
  *     computed separately over the HIGH-seismicity views (active plate boundaries) and the
  *     LOW-seismicity views (stable interiors), with their gap. A single pooled global number is
- *     dominated by the loud subduction margins; this partition asks the adversarial question — does
+ *     dominated by the loud subduction margins; this partition asks the adversarial question: does
  *     the model only look good because it over-fits high-seismicity zones?
  *
  * Same static-first, read-only contract as the forecast artifact and the per-region back-analysis:
  * the page renders a bundled SAMPLE (`public/data/backanalysis-global-sample.json`, written by
  * `app/scripts/gen_global_backanalysis_sample.py`) until the real `results/backanalysis-global-*.json`
- * replaces it byte-for-byte — the mock lives ONLY at the data boundary, behind this real interface.
+ * replaces it byte-for-byte: the mock lives ONLY at the data boundary, behind this real interface.
  */
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ export type ReliabilityPoint = [forecastProb: number, observedFreq: number, n: n
 
 /**
  * One horizon's scored scalars for a view (mirrors `eval/backanalysis._reduce_per_horizon`). All
- * scalars may be `null` when a horizon could not be scored (kept, never dropped — honest reporting).
+ * scalars may be `null` when a horizon could not be scored (kept, never dropped: honest reporting).
  */
 export interface ViewHorizon {
   horizon_days: number;
@@ -45,7 +45,7 @@ export interface ViewHorizon {
   n_test_pass_rate: number | null;
   /** Mean information gain per earthquake over the null (smoothed-seismicity Poisson), in NATS. */
   mean_igpe_vs_null_nats: number | null;
-  /** Mean information gain over catalog-only ETAS, in NATS — the CONTEXT contribution. */
+  /** Mean information gain over catalog-only ETAS, in NATS, the CONTEXT contribution. */
   mean_context_gain_vs_etas_nats: number | null;
   /** Whether the context channel (enricher stack) was active for this view/horizon. */
   context_channel_active: boolean;
@@ -175,7 +175,7 @@ export interface GlobalBackAnalysis {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Loader (static-first, read-only — same contract as the forecast client)
+// Loader (static-first, read-only, same contract as the forecast client)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Default location of the committed global back-analysis summary under the static data host. Points at

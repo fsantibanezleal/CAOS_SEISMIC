@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import type { Staleness } from "@/data/types";
 
 /**
- * Staleness / last-run indicator (web-app-spec.md §7.3, §8.2). One inference per day — the
+ * Staleness / last-run indicator (web-app-spec.md §7.3, §8.2). One inference per day: the
  * reader must know the data's age. Renders "Forecast generated: {UTC} · next run: {UTC}".
  *
- * If the daily job failed (`ok === false`) the UI MUST degrade visibly — a warning banner
+ * If the daily job failed (`ok === false`) the UI MUST degrade visibly: a warning banner
  * here, plus the parent desaturates the field. A stale or corrupted artifact is worse than
  * honestly saying "unavailable", so the failed state is loud, not silent.
  */

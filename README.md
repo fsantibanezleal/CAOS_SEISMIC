@@ -1,37 +1,37 @@
 <!-- markdownlint-disable MD013 -->
-# CAOS_SEISMIC — Conditional Probabilistic Seismic Forecasting
+# CAOS_SEISMIC: Conditional Probabilistic Seismic Forecasting
 
 [![License](https://img.shields.io/github/license/fsantibanezleal/CAOS_SEISMIC)](LICENSE)
 [![Live demo](https://img.shields.io/badge/demo-live-2ea44f)](https://seismic.fasl-work.com)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.21508362-blue)](https://doi.org/10.5281/zenodo.21508362)
 
-> **Earthquakes cannot be predicted, but their probability can be forecast — reported honestly, with
+> **Earthquakes cannot be predicted, but their probability can be forecast, reported honestly, with
 > uncertainty, evaluated against reality, never as an alarm and never as a promise of safety.**
 
 CAOS_SEISMIC ingests decades of seismic (and complementary geophysical) data and produces **bounded,
-calibrated, conditional probability forecasts** of seismic events over short horizons — **1 day, 2 days,
-7 days** — for a region and magnitude band. It runs **one inference per day** and publishes a compact
+calibrated, conditional probability forecasts** of seismic events over short horizons, **1 day, 2 days,
+7 days**, for a region and magnitude band. It runs **one inference per day** and publishes a compact
 forecast artifact that a static web app visualizes.
 
-This is **Operational Earthquake Forecasting (OEF)**, the mainstream scientific framing — *not*
+This is **Operational Earthquake Forecasting (OEF)**, the mainstream scientific framing, *not*
 earthquake prediction. The output is a *conditional estimator*: given the recent state of seismicity, it
 bounds the probability of events in the near term. Every number is a probability strictly in (0, 1),
 scoped to a region × magnitude band × horizon, shown **next to its long-term baseline**, with an
 uncertainty band, and **scored prospectively** against what actually happens.
 
-⚠️ **Not an alarm. Not life-safety.** This is an independent research/education tool that *complements*
+**Not an alarm. Not life-safety.** This is an independent research/education tool that *complements*
 official agencies (in Chile, the **Centro Sismológico Nacional, CSN**; civil protection: **SENAPRED**).
 It never issues an alarm, a countdown, or a "safe" state. See [The honest limits](#the-honest-limits).
 
 - **Project page:** https://github.com/fsantibanezleal/CAOS_SEISMIC
-- **Author:** Felipe Santibáñez-Leal — https://fsantibanezleal.github.io
+- **Author:** Felipe Santibáñez-Leal: https://fsantibanezleal.github.io
 
 ---
 
 ## What makes a forecast honest here
 
-1. **A defensible baseline.** The core is a maximum-likelihood **space–time ETAS** model (Ogata 1998) —
-   the de-facto operational benchmark — plus the mandatory **stationary smoothed-seismicity Poisson
+1. **A defensible baseline.** The core is a maximum-likelihood **space–time ETAS** model (Ogata 1998), 
+   the de-facto operational benchmark, plus the mandatory **stationary smoothed-seismicity Poisson
    null** that any time-dependent model must beat. A transparent **Reasenberg–Jones** aftershock model
    is the sanity-check fallback.
 2. **Skill is *proven*, not asserted.** Every model is scored with the community-standard **CSEP**
@@ -55,7 +55,7 @@ It never issues an alarm, a countdown, or a "safe" state. See [The honest limits
   physics).
 - **Absolute probabilities stay small.** Even during an active sequence, the absolute probability of a
   large event in the next day is usually well under a few percent. The *relative* gain over background can
-  be large (1–3 orders of magnitude); the *absolute* number stays low — so we always show it next to the
+  be large (1–3 orders of magnitude); the *absolute* number stays low, so we always show it next to the
   baseline.
 - **A single outcome neither validates nor invalidates a probabilistic forecast.** During the 2019
   Ridgecrest sequence an operational model gave ≈3 % chance of a larger event in the first week; the
@@ -84,7 +84,7 @@ Heavy compute is **offline**; the web app is a **pure static viewer with no proc
   is made in a dedicated job checkout, then fast-forward pushed to `main`, the only branch that
   receives data.
 - **Web:** a Vite + React + TypeScript SPA (i18n EN→ES, light/dark, dark-technical palette) renders the
-  committed artifact. **No server computes anything** — the "API" is static JSON assets.
+  committed artifact. **No server computes anything**, the "API" is static JSON assets.
 
 ## Repository layout
 
@@ -105,17 +105,17 @@ CAOS_SEISMIC/
 ├── docs/                    # deep technical docs: methodology (equations), model, data, evaluation, web
 ├── manifests/               # provenance (VERSIONED): what was fetched, Mc grid, decluster, model, params
 ├── results/                 # compact daily artifacts (VERSIONED): forecast-*.json.gz + index.json
-├── data/  models/           # raw data, features, weights — NEVER versioned (.gitignore; rebuildable)
+├── data/  models/           # raw data, features, weights, NEVER versioned (.gitignore; rebuildable)
 ├── requirements.txt  pyproject.toml  .env.example  .gitignore  LICENSE
 ```
 
 **Versioned:** code, configs, manifests, the compact daily results.
-**Never versioned:** raw catalogs, processed features, model weights — rebuildable from manifests + code.
+**Never versioned:** raw catalogs, processed features, model weights, rebuildable from manifests + code.
 
 ## Data sources & attribution
 
 Catalog spine: **USGS ComCat** (FDSN event service; public domain). Regional driver (short-horizon
-skill): **CSN — Centro Sismológico Nacional, Chile** (attribution required). Long-term homogeneous
+skill): **CSN, Centro Sismológico Nacional, Chile** (attribution required). Long-term homogeneous
 anchor: **ISC-GEM** (CC-BY-SA 3.0). Mechanisms: **Global CMT**. Cross-check: **EMSC**. Enrichers:
 **Slab2** (USGS), **GEM Global Active Faults**, **Bird (2003) PB2002** plate model, **Nevada Geodetic
 Lab** GNSS, and a physically-motivated **tidal** stress covariate. Each source's license and required
@@ -154,12 +154,12 @@ Every number in it is backed by a committed artifact in `results/`.
 
 ## Documentation
 
-- [`docs/methodology.md`](docs/methodology.md) — the models and their equations (Gutenberg–Richter,
+- [`docs/methodology.md`](docs/methodology.md): the models and their equations (Gutenberg–Richter,
   Omori–Utsu, ETAS, Reasenberg–Jones, smoothed seismicity, …) and the CSEP evaluation framework.
-- [`docs/model.md`](docs/model.md) — the conditional estimator, target definition, features, calibration.
-- [`docs/data-and-pipelines.md`](docs/data-and-pipelines.md) — sources, licenses, the pipeline DAG.
-- [`docs/evaluation.md`](docs/evaluation.md) — the back-analysis protocol and how skill is established.
-- [`docs/deploy.md`](docs/deploy.md) — the local-compute + git-as-data + static-web deployment.
+- [`docs/model.md`](docs/model.md): the conditional estimator, target definition, features, calibration.
+- [`docs/data-and-pipelines.md`](docs/data-and-pipelines.md): sources, licenses, the pipeline DAG.
+- [`docs/evaluation.md`](docs/evaluation.md): the back-analysis protocol and how skill is established.
+- [`docs/deploy.md`](docs/deploy.md): the local-compute + git-as-data + static-web deployment.
 
 ## Disclaimer
 

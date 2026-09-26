@@ -3,14 +3,14 @@ import { useId } from "react";
 import type { ReliabilityPoint } from "@/data/types";
 
 /**
- * Reliability (calibration) diagram — the product's central credibility artifact
+ * Reliability (calibration) diagram: the product's central credibility artifact
  * (evaluation-plan.md §6.4, web-app-spec.md §7.3). Plots observed frequency against forecast
  * probability; a well-calibrated forecast sits on the diagonal ("when we said X%, it happened
  * ~X%"). Point area scales with the per-bin sample count `n` so the eye weights the
- * well-supported bins (the quiet, cold-start bins dominate the diagram — their honesty is the
+ * well-supported bins (the quiet, cold-start bins dominate the diagram: their honesty is the
  * product's honesty).
  *
- * Hand-rolled SVG — zero charting-library cost, follows the theme via CSS variables, and works
+ * Hand-rolled SVG: zero charting-library cost, follows the theme via CSS variables, and works
  * with no WebGL (the accessibility / no-map path). Both axes are on a shared [0,1] linear
  * scale by default; a perfectly-calibrated model lies on y = x.
  */

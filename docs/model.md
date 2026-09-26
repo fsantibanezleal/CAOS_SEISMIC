@@ -5,7 +5,7 @@
 > model emits **bounded, calibrated conditional probabilities** scoped to a region × magnitude band
 > × horizon, always shown next to a long-term baseline and scored CSEP-style. No deterministic call,
 > no alarm, no countdown, no "safe" state. The equations behind the field are in
-> [`methodology.md`](methodology.md); this page is the *implementation* of the estimator — what it
+> [`methodology.md`](methodology.md); this page is the *implementation* of the estimator, what it
 > targets, what feeds it, how it is calibrated, and the honest verdict on ETAS *vs.* machine
 > learning.
 
@@ -19,8 +19,8 @@ the prose and the code cannot drift.
 
 ## 1. Target definition (the binding decision)
 
-A forecast is meaningless without a precisely-defined target. CAOS_SEISMIC fixes four axes —
-space, magnitude, horizon, and the public scalar — and pins each to a config value.
+A forecast is meaningless without a precisely-defined target. CAOS_SEISMIC fixes four axes, 
+space, magnitude, horizon, and the public scalar, and pins each to a config value.
 
 ### 1.1 The public scalar: an exceedance probability
 
@@ -43,7 +43,7 @@ $$\Phi(M^*) = \frac{10^{-b(M^* - M_c)} - 10^{-b(M_{\max} - M_c)}}{1 - 10^{-b(M_{
 > to its long-term baseline, so a user reads "X % vs Y % baseline," never an unanchored figure.
 
 In code this is exactly `poisson_p_at_least_one()` and `gr_exceedance_fraction()` in
-[`model/_common.py`](../src/caos_seismic/model/_common.py) — the single shared implementation reused
+[`model/_common.py`](../src/caos_seismic/model/_common.py), the single shared implementation reused
 by every forecaster, so there are not three subtly-different copies of the exceedance integral.
 
 ### 1.2 Forecast the *distribution*, threshold for display
@@ -58,18 +58,18 @@ that offers multiple thresholds.
 
 $M_{\max}$ is an explicit, documented per-region assumption that bounds the exceedance integral and
 sets the tail probability of the rare, high-impact events. For Chile, `region.chile.yaml` sets
-`m_max: 9.5` — the 1960 Valdivia event, the largest instrumentally recorded earthquake. Its
+`m_max: 9.5`, the 1960 Valdivia event, the largest instrumentally recorded earthquake. Its
 sensitivity is reported, not hidden.
 
 ### 1.3 Spatial cell: fit fine, render coarse
 
-- **Fit & score on a fine grid** — regular $0.1° \times 0.1°$ space cells with $0.1$-magnitude bins
+- **Fit & score on a fine grid**: regular $0.1° \times 0.1°$ space cells with $0.1$-magnitude bins
   (`configs/grid.yaml: fit.cell_deg = 0.1`, `fit.mag_bin = 0.1`), the CSEP California convention, so
   the **S-test** can resolve *where* and the **M-test** *what size*. This is the resolution at which
   ETAS is fit and CSEP-tested.
-- **Render at region granularity** — the UI aggregates the fine grid into H3 hexbins
+- **Render at region granularity**: the UI aggregates the fine grid into H3 hexbins
   (`grid.yaml: display.h3_resolution_world = 3`, `…_region = 5`) for display.
-- **Couple cell size to data density** — events-per-cell-per-horizon must support fitting and
+- **Couple cell size to data density**: events-per-cell-per-horizon must support fitting and
   scoring; in sparse cells the model borrows strength from the smoothed-seismicity background and
   regional priors (§6) rather than shrinking cells until they are empty.
 
@@ -84,13 +84,13 @@ outside active sequences; quiet days correctly read near-climatology.
 
 ## 2. The estimator stack
 
-Every model in the system implements one port — the `Forecaster` protocol in
+Every model in the system implements one port, the `Forecaster` protocol in
 [`contracts.py`](../src/caos_seismic/contracts.py): `fit(catalog, region, t_issue)` then
 `expected_counts(region, cells, horizon_days, m_threshold, t_issue)`. That single seam lets the null,
 the reference, and any future challenger be swapped, fit on the identical conditioning slice, and
 scored against each other on identical bins.
 
-### 2.1 The mandatory null — adaptive smoothed seismicity
+### 2.1 The mandatory null: adaptive smoothed seismicity
 
 A stationary, time-independent Poisson estimate of *where* earthquakes occur, obtained by smoothing
 a **declustered** catalog with an adaptive power-law kernel (Helmstetter, Kagan & Jackson 2007,
@@ -99,9 +99,9 @@ a **declustered** catalog with an adaptive power-law kernel (Helmstetter, Kagan 
 $$\mu(x, y) = \sum_i K_{d_i}(r_i), \qquad K_d(r) = C(d)\,(r^2 + d^2)^{-s},$$
 
 where the bandwidth $d_i$ is the great-circle distance to event $i$'s $n$-th nearest neighbour
-(adaptive smoothing — dense regions sharpen, sparse regions broaden). This serves two roles: it is
+(adaptive smoothing, dense regions sharpen, sparse regions broaden). This serves two roles: it is
 (a) the spatial background field $\mu(x,y)$ that seeds ETAS and (b) the **stationary Poisson
-reference** — the null any time-dependent model must beat in comparison testing.
+reference**, the null any time-dependent model must beat in comparison testing.
 
 > **Do not hard-code the exponent.** The kernel exponent $s$ and normalization $C(d)$ vary across the
 > HKJ family (forms with $s = 1$ and $s = 3/2$ both appear). In the code these are *named reference
@@ -110,7 +110,7 @@ reference** — the null any time-dependent model must beat in comparison testin
 > so each per-event kernel integrates to exactly one earthquake; the neighbour count $n$
 > (`background_model.neighbors = 6`) is a region-tuned hyperparameter, not a universal constant.
 
-### 2.2 The primary estimator and reference — space–time ETAS
+### 2.2 The primary estimator and reference: space–time ETAS
 
 The Epidemic-Type Aftershock Sequence model is a self-exciting Hawkes point process: a stationary
 background plus the summed, decaying "offspring" of every past event. It is the de-facto operational
@@ -137,14 +137,14 @@ within the bounds in `etas.yaml: fit.bounds`.
 
 **Two distinct stability gates** (kept logically separate in `etas.yaml: stability`):
 
-1. **Finite branching** — `require_alpha_lt_beta`: the magnitude integral converges only if
+1. **Finite branching**: `require_alpha_lt_beta`: the magnitude integral converges only if
    $\alpha < \beta$ with $\beta = b\ln 10$. If $\alpha \ge \beta$ the productivity–magnitude integral
    diverges.
-2. **Subcriticality / stationarity** — `reject_supercritical`: *given* $\alpha < \beta$, the
+2. **Subcriticality / stationarity**: `reject_supercritical`: *given* $\alpha < \beta$, the
    branching ratio $n$ (expected direct offspring per event) must satisfy $n < 1$. A fit with
    $n \ge 1$ is supercritical (explosive), signals a mis-fit, and is rejected.
 
-### 2.3 The transparent fallback — Reasenberg–Jones
+### 2.3 The transparent fallback: Reasenberg–Jones
 
 The most transparent "tomorrow's earthquakes" model and the human-auditable cross-check. The rate of
 aftershocks $\ge M$ following a mainshock $M_m$ is a Gutenberg–Richter magnitude term times a
@@ -157,7 +157,7 @@ N = \int \lambda\, dt, \qquad P(\ge 1) = 1 - e^{-N} .$$
 In [`model/reasenberg_jones.py`](../src/caos_seismic/model/reasenberg_jones.py) this conditions on
 the single largest triggering event before `t_issue`, distributes the regional total over cells by a
 Wells–Coppersmith rupture-length spatial kernel, and **flags its constants as
-California-derived** — the methodology's hard rule *"do not reuse California parameters for Chile"* is
+California-derived**, the methodology's hard rule *"do not reuse California parameters for Chile"* is
 encoded in `params_used` and surfaced in the manifest. R-J is a sanity check, not the primary spatial
 forecaster: where ETAS is the production estimator, R-J answers "does ETAS roughly agree with the
 textbook Omori extrapolation?".
@@ -168,14 +168,14 @@ textbook Omori extrapolation?".
 
 The "stronger model" is delivered in two layers, and the second is **gated**, not default.
 
-**Layer 1 — region-refit space–time ETAS with the full hygiene pipeline** the simplistic baselines
+**Layer 1, region-refit space–time ETAS with the full hygiene pipeline** the simplistic baselines
 omit: per-region rolling $M_c$, Mw homogenization, dual-catalog declustering, propagated parameter
 uncertainty, and full CSEP testability on a fine grid. This alone is *materially stronger by design*
 than any hand-binned Hawkes / coarse-rectangle approach, because it is likelihood-fit, calibrated,
 and S-testable.
 
-**Layer 2 — a gated neural challenger** (feature-flagged, never the default): a conditional
-spatio-temporal Neural Point Process with a **Hawkes inductive bias** — keep the additive background
+**Layer 2, a gated neural challenger** (feature-flagged, never the default): a conditional
+spatio-temporal Neural Point Process with a **Hawkes inductive bias**, keep the additive background
 + summed-triggering skeleton, replace the fixed kernels with small MLPs/attention, and **model
 magnitude explicitly** (a real gap in most NPPs). The challenger reaches the public map **only if**
 it beats ETAS in *our* prospective CSEP harness (positive information gain, T-test CI excluding zero)
@@ -192,10 +192,10 @@ gate against, not a claim that ML can never add skill.
 The decisive evidence is the **EarthquakeNPP** benchmark (Stockman, Lawson & Werner, *TMLR* 2026,
 arXiv:[2410.08226](https://arxiv.org/abs/2410.08226)): five modern neural point processes (NSTPP,
 DeepSTPP, AutoSTPP, DSTPP, SMASH) on California 1971–2021 with **strict chronological splits** and
-**CSEP consistency tests** — **none outperformed ETAS**. On the ComCat dataset, ETAS passes the
+**CSEP consistency tests**, **none outperformed ETAS**. On the ComCat dataset, ETAS passes the
 consistency tests at roughly 95.8 % (N-test), **92.0 % (spatial)**, 93.8 % (magnitude), and 97.6 %
 (pseudo-likelihood); the best NPP reaches ~86–88 % on the number / pseudo-likelihood tests but only
-**~68.6 % on the spatial test** — exactly the dimension that matters for a map. The crucial
+**~68.6 % on the spatial test**, exactly the dimension that matters for a map. The crucial
 methodological fix was repairing a **data-leakage flaw** in earlier neural-TPP-for-earthquakes work
 (non-chronological splits inflate metrics via triggering; excluding the 2011 Tohoku sequence makes
 the benchmark irrelevant). Once temporal splits and the big sequences are restored, the apparent
@@ -203,18 +203,18 @@ neural advantage evaporates. This is *the* evaluation lesson.
 
 > **Scope caveat.** This "NPPs do not beat ETAS" result is established on the California benchmark to
 > date (1971–2021), not proven globally. It justifies shipping ETAS-class only for v0 and gating any
-> neural model behind a CSEP win — stated as *"on the benchmark to date,"* not as an unconditional
+> neural model behind a CSEP win, stated as *"on the benchmark to date,"* not as an unconditional
 > law. Some hybrid/neural models match or beat plain ETAS on information gain *in specific settings*.
 
-**Where learned value genuinely comes from.** The honest exemplars — RECAST (Dascher-Cousineau et
+**Where learned value genuinely comes from.** The honest exemplars, RECAST (Dascher-Cousineau et
 al. 2023, *GRL* 50, e2023GL103909,
 doi:[10.1029/2023GL103909](https://doi.org/10.1029/2023GL103909)) and FERN (Zlydenko et al. 2023,
-*Sci. Rep.* 13, doi:[10.1038/s41598-023-38033-9](https://doi.org/10.1038/s41598-023-38033-9)) — gain
+*Sci. Rep.* 13, doi:[10.1038/s41598-023-38033-9](https://doi.org/10.1038/s41598-023-38033-9)), gain
 from two *ETAS gaps*, not from network depth: (1) **multivariate covariate ingestion** ETAS cannot
 easily absorb (sub-$M_c$ events, geodesy, multiple catalogs), and (2) **learned spatial anisotropy**.
 RECAST improves on temporal ETAS only when the training catalog is large ($\gtrsim 10^4$ events) and
 merely matches on smaller ones. FERN+'s reported 4–12 % information-gain improvement came mostly from
-ingesting sub-$M_c$ events and learning fault-aligned anisotropy — and the authors' own caveats are
+ingesting sub-$M_c$ events and learning fault-aligned anisotropy, and the authors' own caveats are
 release-blockers for us: it was *not* CSEP-tested, gave *no* uncertainty quantification, and its test
 period ended *before* Tohoku $M_w$ 9.0.
 
@@ -224,14 +224,14 @@ aftershock spatial pattern from a deep net (~13,451 free parameters); Mignan & B
 *Nature* 575, E1–E3, doi:[10.1038/s41586-019-1582-8](https://doi.org/10.1038/s41586-019-1582-8))
 matched it with a **2-parameter logistic regression** on a single feature. The guardrails we keep
 from it: assume overfitting whenever parameters $\gg$ effective samples; never inflate sample size
-with correlated per-cell framing; and **AUC / accuracy are banned as primary forecasting metrics** —
+with correlated per-cell framing; and **AUC / accuracy are banned as primary forecasting metrics**, 
 AUC is invariant to monotone rescaling, hence blind to the calibration of the very probabilities a
 forecast publishes.
 
 **Detection is not forecasting.** ML waveform models (PhaseNet, EQTransformer, SeisBench, the SeisLM
 foundation model, arXiv:[2410.15765](https://arxiv.org/abs/2410.15765)) are mature for phase-picking,
-detection, and characterization. They build **better, more complete catalogs** — which helps both
-ETAS and any neural forecaster, the single biggest realizable near-term lever — but they **do not
+detection, and characterization. They build **better, more complete catalogs**, which helps both
+ETAS and any neural forecaster, the single biggest realizable near-term lever, but they **do not
 forecast**. This line stays explicit in product copy so detection branding never implies prediction.
 
 ---
@@ -242,7 +242,7 @@ forecast**. This line stays explicit in product copy so detection branding never
 
 The public probability is **recalibrated** (isotonic regression; `forecast.yaml: calibration.method =
 isotonic`) and validated with a **reliability diagram per horizon** ("when we said 5 %, it happened
-~5 % of the time"). Calibration is a **release blocker** (`calibration.release_blocker = true`) — an
+~5 % of the time"). Calibration is a **release blocker** (`calibration.release_blocker = true`), an
 uncalibrated probability does not ship. The number is always rendered next to the climatological /
 Poisson baseline so a user reads "X % vs Y % baseline." The reliability diagram is computed by
 `reliability_diagram()` in [`eval/csep.py`](../src/caos_seismic/eval/csep.py) and emitted in the
@@ -252,18 +252,18 @@ artifact's `calibration.reliability` field exactly as
 ### 5.2 Uncertainty bounds must be *real*
 
 The UI ships an **optimistic (P10) · expected (median) · pessimistic (P90)** triad
-(`forecast.yaml: bounds.quantiles = [0.10, 0.50, 0.90]`) — the empirically best uncertainty design
+(`forecast.yaml: bounds.quantiles = [0.10, 0.50, 0.90]`), the empirically best uncertainty design
 (Schneider et al. 2022, *NHESS* 22, 1499–1518,
 doi:[10.5194/nhess-22-1499-2022](https://doi.org/10.5194/nhess-22-1499-2022)). The bounds are a
 genuine epistemic+aleatory decomposition, sourced from:
 
-1. **ETAS parameter uncertainty** — MLE covariance / bootstrap (or a Bayesian posterior).
+1. **ETAS parameter uncertainty**: MLE covariance / bootstrap (or a Bayesian posterior).
 2. **$M_c$ / $b$-value estimation uncertainty** propagated through the exceedance integral. The
    Shi & Bolt (1982) $\sigma_b$ from `aki_utsu_b_value()` in
    [`catalog/completeness.py`](../src/caos_seismic/catalog/completeness.py) is a first-class input
    here, not a decoration.
 3. **Structural / model-selection uncertainty** (ETAS variant choice).
-4. **Over-dispersion** — regional seismicity is over-dispersed relative to Poisson (variance $\gg$
+4. **Over-dispersion**: regional seismicity is over-dispersed relative to Poisson (variance $\gg$
    mean, because of clustering), so the pessimistic bound is **wider than a naive Poisson quantile**
    (`bounds.overdispersion = negative_binomial`; cf. Kagan 2017, *GJI* 211(1), 335–345,
    doi:[10.1093/gji/ggx300](https://doi.org/10.1093/gji/ggx300)). A pessimistic bound that is just a
@@ -281,13 +281,13 @@ there.
 
 - **Floor to a principled background, not an arbitrary constant.** Where recent seismicity is
   sparse/zero, the conditional rate floors to the long-term smoothed-seismicity Poisson background
-  $\mu(x,y)$ (§2.1) — never a hard-coded per-day floor.
+  $\mu(x,y)$ (§2.1), never a hard-coded per-day floor.
 - **Borrow strength spatially.** Hierarchical / empirical-Bayes pooling and regionalized priors let
   cells with few events inherit a sensible prior from their tectonic neighbourhood rather than
   producing noisy or fake rates.
-- **Three honest UI states, visually distinct:** (a) *low but nonzero, poorly constrained* — wide
-  bounds, near-baseline expected value; (b) *genuinely quiescent* — near-baseline with tight bounds;
-  (c) *no data / out-of-coverage* — an explicit hatch/mask (the artifact's `coverage_mask`). **Blank
+- **Three honest UI states, visually distinct:** (a) *low but nonzero, poorly constrained*: wide
+  bounds, near-baseline expected value; (b) *genuinely quiescent*, near-baseline with tight bounds;
+  (c) *no data / out-of-coverage*, an explicit hatch/mask (the artifact's `coverage_mask`). **Blank
   must never read as "safe."**
 
 Because the reliability diagram is dominated by these quiet cells, calibration is validated
@@ -297,10 +297,10 @@ Because the reliability diagram is dominated by these quiet cells, calibration i
 
 ## 7. Short-term aftershock incompleteness (the highest-stakes window)
 
-Immediately after a large mainshock — exactly when the forecast matters most and is most consumed —
+Immediately after a large mainshock, exactly when the forecast matters most and is most consumed, 
 the catalog is grossly incomplete: $M_c$ spikes for hours-to-days while small events are buried in
 the coda. A naive ETAS fit then **under-forecasts productivity** precisely when a large aftershock is
-most likely. The daily job therefore uses an **incompleteness-aware likelihood** — a time-dependent
+most likely. The daily job therefore uses an **incompleteness-aware likelihood**, a time-dependent
 $M_c(t)$ post-mainshock (`completeness.yaml: short_term_incompleteness.method =
 time_dependent_mc`, triggered above `trigger_magnitude`) rather than a flat threshold. This is a
 decided method, not an open question; under-forecasting at this moment is both a credibility and an

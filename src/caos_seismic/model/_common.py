@@ -56,7 +56,7 @@ def bvalue_aki_utsu(
     Returns
     -------
     (b, b_err):
-        Estimate and its standard error. Never hard-coded to 1.0 — this is the estimator the
+        Estimate and its standard error. Never hard-coded to 1.0, this is the estimator the
         completeness config mandates (``aki_utsu_mle``).
 
     References
@@ -75,7 +75,7 @@ def bvalue_aki_utsu(
     if denom <= 0:
         raise ValueError(
             f"mean magnitude ({mean_m:.3f}) not above corrected Mc ({mc - delta_m / 2.0:.3f}); "
-            "cannot estimate b — check Mc"
+            "cannot estimate b, check Mc"
         )
     b = float(np.log10(np.e) / denom)
     var_m = float(np.sum((m - mean_m) ** 2) / (n * (n - 1)))

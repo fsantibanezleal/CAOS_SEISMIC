@@ -1,4 +1,4 @@
-# CAOS_SEISMIC — forecast output + daily run config.
+# CAOS_SEISMIC: forecast output + daily run config.
 horizons_days: [1, 2, 7]   # re-issued daily; 7-day gain is near-zero outside active sequences (honest copy)
 
 # The model produces the FULL conditional magnitude distribution (GR/b-value term); the public scalar is
@@ -13,7 +13,7 @@ ensemble:
   emit_catalog_based: true       # over-dispersion-honest tests
 
 bounds:
-  # Optimistic / expected / pessimistic — a REAL epistemic+aleatory decomposition (NOT a cosmetic
+  # Optimistic / expected / pessimistic: a REAL epistemic+aleatory decomposition (NOT a cosmetic
   # Poisson interval): ETAS parameter uncertainty + Mc/b uncertainty + structural + over-dispersion.
   quantiles: [0.10, 0.50, 0.90]
   overdispersion: negative_binomial

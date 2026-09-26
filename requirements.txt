@@ -1,7 +1,7 @@
-# CAOS_SEISMIC — Python dependencies (Python 3.12 recommended; matches the CAOS science family).
+# CAOS_SEISMIC: Python dependencies (Python 3.12 recommended; matches the CAOS science family).
 # Pinned loosely with lower bounds; `scripts/setup` creates the .venv and installs this file.
 # Heavy science packages (obspy, pycsep, geopandas, pygtide) are grouped at the bottom and may be
-# installed on demand — the catalog spine works without them (raw FDSN over requests).
+# installed on demand: the catalog spine works without them (raw FDSN over requests).
 
 # ── Core (always) ─────────────────────────────────────────────────────────
 numpy>=1.26

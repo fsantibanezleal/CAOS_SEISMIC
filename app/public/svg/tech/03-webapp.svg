@@ -23,7 +23,7 @@
 
   <!-- pages -->
   <rect class="bx bx-hi" x="14" y="20" width="236" height="252" rx="10"/>
-  <text class="ttl" x="26" y="42">SPA pages — 8 routes</text>
+  <text class="ttl" x="26" y="42">SPA pages, 8 routes</text>
   <text class="sub mono" x="26" y="57">router.tsx · components/Layout.tsx</text>
   <rect class="bx" x="26" y="68" width="212" height="58" rx="6"/>
   <text class="it" x="36" y="86">Narrative + docs</text>
@@ -33,7 +33,7 @@
   <text class="it" x="36" y="152">Evaluation</text>
   <text class="mu" x="36" y="167">Back-analysis (real CSEP results)</text>
   <rect class="bx bx-web" x="26" y="184" width="212" height="42" rx="6"/>
-  <text class="it" x="36" y="202">Monitoring — 1–7 day field</text>
+  <text class="it" x="36" y="202">Monitoring, 1–7 day field</text>
   <text class="cd mono" x="36" y="217">pages/Monitoring.tsx</text>
   <rect class="bx bx-web" x="26" y="234" width="212" height="30" rx="6"/>
   <text class="cd mono" x="36" y="253">pages/Outlook.tsx · 30-day</text>
@@ -57,7 +57,7 @@
 
   <!-- render -->
   <rect class="bx bx-web" x="596" y="48" width="270" height="92" rx="10"/>
-  <text class="ttl" x="608" y="70">Render — deck.gl + MapLibre</text>
+  <text class="ttl" x="608" y="70">Render, deck.gl + MapLibre</text>
   <text class="sub" x="608" y="85">interleaved WebGL overlay</text>
   <text class="it" x="608" y="104">H3 hexbin / heatmap field layer</text>
   <text class="mu" x="608" y="120">perceptually-uniform ramp · value</text>
@@ -72,7 +72,7 @@
 
   <!-- deploy strip -->
   <rect class="bx" x="14" y="296" width="852" height="78" rx="10"/>
-  <text class="ttl" x="26" y="318">Deploy — static, no server</text>
+  <text class="ttl" x="26" y="318">Deploy, static, no server</text>
   <rect class="bx" x="26" y="328" width="250" height="36" rx="6"/>
   <text class="cd mono" x="36" y="350">npm run build</text>
   <rect class="bx" x="300" y="328" width="280" height="36" rx="6"/>

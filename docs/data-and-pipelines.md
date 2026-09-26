@@ -24,7 +24,7 @@ carried in each region config (`region.<id>.yaml: attribution`).
 
 | Source | Role | Access | License | Cadence |
 |---|---|---|---|---|
-| **USGS ComCat** | the daily spine | FDSN `event` web service (`requests` only — no ObsPy) | US Government work, public domain | real-time |
+| **USGS ComCat** | the daily spine | FDSN `event` web service (`requests` only, no ObsPy) | US Government work, public domain | real-time |
 | **ISC-GEM v12.1** | Mw-homogenized long-term anchor (1904–2021, $M \ge 5.5$) | CSV download from ISC | **CC-BY-SA 3.0** (share-alike) | versioned (DOI [10.31905/d808b825](https://doi.org/10.31905/d808b825)) |
 | **ISC Bulletin (REVIEWED)** | cleanest retrospective hypocenters (~24-month lag) | ISC catalogue web service / `ObsPy Client("ISC")` | open for research with attribution | ~24-month lag |
 | **GCMT** | moment-tensor / mechanism enricher + Mw anchor | `.ndk` from globalcmt.org, parsed via ObsPy | free for research with citation | monthly |
@@ -35,14 +35,14 @@ carried in each region config (`region.<id>.yaml: attribution`).
 bisects the time window until each tile is under a safe target before stitching the results
 (`fetch_comcat()` in [`data/fetch.py`](../src/caos_seismic/data/fetch.py)). The `updatedafter`
 parameter drives daily incremental deltas (only events whose origin/magnitude was revised since the
-last run — ComCat continuously revises *and retracts* events). `magType` is a **first-class field**:
+last run, ComCat continuously revises *and retracts* events). `magType` is a **first-class field**:
 it is read and kept (mixing mb/Ms/Mw silently distorts the Gutenberg–Richter tail and the Mw
 homogenization depends on it). Every call carries a polite `User-Agent` and retries with exponential
 backoff on transient (429/503) and over-large (400/413 → "tile smaller") responses.
 
 > **ISC-GEM is CC-BY-SA 3.0.** Internal training is unaffected, but any *redistributed* ISC-GEM-derived
 > catalog must keep the license and attribution. `download_isc_gem()` only fetches the raw file to the
-> gitignored store and requires an explicit, versioned URL — it never assumes a mirror and never
+> gitignored store and requires an explicit, versioned URL, it never assumes a mirror and never
 > redistributes.
 
 ### 1.2 Regional networks (the source of short-horizon skill)
@@ -52,26 +52,26 @@ local network; ComCat is global context and EMSC is an independent cross-check.
 
 | Region | Network | Access | License / attribution |
 |---|---|---|---|
-| **Chile** (v0) | CSN — Centro Sismológico Nacional | EarthScope/IRIS FDSN (`Client("EARTHSCOPE")`, net `C`/`C1`) | public use with **mandatory CSN attribution** |
+| **Chile** (v0) | CSN, Centro Sismológico Nacional | EarthScope/IRIS FDSN (`Client("EARTHSCOPE")`, net `C`/`C1`) | public use with **mandatory CSN attribution** |
 | California | SCEDC (Caltech) + NCEDC (Berkeley) | `Client("SCEDC")` / `Client("NCEDC")`, AWS open data `s3://scedc-pds` (`--no-sign-request`) | open research use with attribution |
 | New Zealand | GeoNet | `service.geonet.org.nz/fdsnws` / `Client("GEONET")` | **CC-BY 3.0 NZ** ("Earth Sciences New Zealand") |
 | Italy | INGV ISIDe | `webservices.ingv.it/fdsnws` / `Client("INGV")` | CC-BY (confirm version per dataset) |
-| Japan | JMA / NIED Hi-net | registration + agreement gated | **NOT redistributable — internal use only** |
+| Japan | JMA / NIED Hi-net | registration + agreement gated | **NOT redistributable, internal use only** |
 
 All regional access goes through `fetch_fdsn_obspy()` in
 [`data/fetch.py`](../src/caos_seismic/data/fetch.py): one `obspy.clients.fdsn.Client` API across every
-FDSN provider, imported **lazily** with an actionable error if ObsPy is absent — the ComCat spine does
+FDSN provider, imported **lazily** with an actionable error if ObsPy is absent, the ComCat spine does
 not need it. `get_events()` has no bulk analogue, so callers loop time windows and respect each
 provider's 20k cap.
 
-> **Hard flag — Japan.** JMA / NIED Hi-net raw files, credentials, and unvetted derived products are
+> **Hard flag, Japan.** JMA / NIED Hi-net raw files, credentials, and unvetted derived products are
 > **internal-only and never shipped** in the public repo or app. Check the agreement before exposing
 > any derivative.
 
 ### 1.3 Enrichers (geophysical context covariates)
 
 Ranked by *expected* lift for a conditional short-term forecast (the ranking is inferred, not
-measured — each enricher's marginal information gain over a catalog-only ETAS is quantified on
+measured, each enricher's marginal information gain over a catalog-only ETAS is quantified on
 held-out data *before* it touches a public number). None substitutes for the catalog.
 
 | Enricher | What it gives | License | Cadence |
@@ -81,18 +81,18 @@ held-out data *before* it touches a public number). None substitutes for the cat
 | **Bird (2003) PB2002** plate model | distance-to-boundary, boundary type | open research | static |
 | **NGL GNSS / MIDAS** | strain-rate field (feeds the *background* term) | open + attribution | daily–weekly |
 | **Focal-mechanism stress** | rake, P/T axes, $\Delta\mathrm{CFS}$ triggering | open + cite | event-driven |
-| **InSAR — COMET LiCSAR** *(deferred)* | surface deformation | products free + attribution | per-acquisition |
+| **InSAR, COMET LiCSAR** *(deferred)* | surface deformation | products free + attribution | per-acquisition |
 | **Heat flow** *(skip v1)* | crustal background | open | static |
 
 For Chile the relevant enrichers are `enrichers: [slab2, gem_faults, bird_pb2002, ngl_gnss]`
 (`region.chile.yaml`), and the region notes record that subduction megathrusts violate the
-isotropic-kernel / point-source assumptions of generic ETAS for great earthquakes — Slab2 geometry
+isotropic-kernel / point-source assumptions of generic ETAS for great earthquakes, Slab2 geometry
 and anisotropic/finite-fault triggering are needed, and California generic parameters must **not** be
 reused.
 
 ### 1.4 Tidal stress (a computed feature, not a downloaded catalog)
 
-Tides are useless as a standalone predictor — tidal stresses on faults (~0.1–10 kPa) are ~$10^{-3}$–
+Tides are useless as a standalone predictor, tidal stresses on faults (~0.1–10 kPa) are ~$10^{-3}$–
 $10^{-4}$ of earthquake stress drops (~1–10 MPa), so they can only *advance/retard* a rupture already
 near failure, never cause one. The effect is real but small and regime-dependent (~0.5–1 % global
 rate excess; up to a factor ~3 only for shallow ocean-loaded thrusts). It is defensible solely as a
@@ -104,11 +104,11 @@ $$\frac{R}{r} = \exp\!\left(\frac{\Delta\mathrm{CFS}(t)}{A\,\sigma}\right),
 
 with a learnable, regularizable coefficient allowed to go to ~0. Body tide via `pygtide`
 (ETERNA PREDICT), ocean tidal loading via SPOTL with a global ocean-tide model (TPXO/GOT/FES). **For
-Chilean / subduction / coastal targets ocean loading dominates — skipping it is the single biggest
+Chilean / subduction / coastal targets ocean loading dominates, skipping it is the single biggest
 tidal-modeling error.** Honest expectation: for most regions the gain is negligible and the near-null
 is reported openly; only shallow ocean-loaded thrust/ridge regions and a separate tremor/slow-slip
 channel show measurable (still few-percent) lift, validated with-vs-without in the CSEP harness on
-declustered catalogs out-of-sample — never from in-sample Schuster p-values (huge $N$ makes tiny
+declustered catalogs out-of-sample, never from in-sample Schuster p-values (huge $N$ makes tiny
 effects "significant").
 
 ---
@@ -118,7 +118,7 @@ effects "significant").
 A model trained on a dirty catalog learns the network's detection changes, not the Earth. The order
 is load-bearing.
 
-1. **$M_c(x, y, t)$** — estimate the magnitude of completeness **per spatial cell and time epoch**,
+1. **$M_c(x, y, t)$**: estimate the magnitude of completeness **per spatial cell and time epoch**,
    never globally (a single $M_c$ injects fake non-stationarity). Primary estimator: maximum-curvature
    (MAXC) with a configurable correction, cross-checked with the goodness-of-fit test and EMR for
    uncertainty (Wiemer & Wyss 2000, *BSSA* 90(4), 859–869,
@@ -135,14 +135,14 @@ is load-bearing.
    > catalog/network breakage. The $M_c$ grid is a **first-class versioned artifact** stored next to
    > each catalog snapshot.
 
-2. **Magnitude homogenization to Mw** — catalogs mix ML/mb/Ms/Md/Mw (different saturation, different
+2. **Magnitude homogenization to Mw**: catalogs mix ML/mb/Ms/Md/Mw (different saturation, different
    physics). Where Mw is missing for small events, a regional **total-least-squares** conversion
-   (both axes have error — not OLS) is fit and anchored on the ISC-GEM / GCMT overlap. Both the native
+   (both axes have error, not OLS) is fit and anchored on the ISC-GEM / GCMT overlap. Both the native
    value+type and the Mw-homogenized value are stored (the `mag` / `mag_type` / `mw` columns of
-   `CATALOG_COLUMNS`). The conversion is versioned — a wrong conversion shifts the whole GR tail and
+   `CATALOG_COLUMNS`). The conversion is versioned, a wrong conversion shifts the whole GR tail and
    every rate forecast.
 
-3. **Declustering — the dual-catalog rule** (the most common pipeline mistake, made explicit in
+3. **Declustering: the dual-catalog rule** (the most common pipeline mistake, made explicit in
    `declustering.yaml`):
    - **Declustered catalog** (Gardner–Knopoff windows, OpenQuake hmtk coefficients
      $L(M) = 10^{0.1238M + 0.983}$ km, $T(M) = 10^{0.032M + 2.7389}$ d for $M \ge 6.5$ else
@@ -157,7 +157,7 @@ is load-bearing.
      (`declustering.yaml: features`).
 
 > **Target-side consequence.** Because the forecast deliberately includes clustering, the *scored*
-> target events are mostly aftershocks — so a trivial "aftershocks follow mainshocks" model already
+> target events are mostly aftershocks, so a trivial "aftershocks follow mainshocks" model already
 > passes *consistency* tests. Scoring is therefore on the **non-declustered** catalog, and skill is
 > established **only** by winning comparison tests against a real ETAS baseline (both capture Omori).
 > See [`evaluation.md`](evaluation.md).
@@ -169,7 +169,7 @@ is load-bearing.
 The pipeline is a deterministic DAG: each stage reads a versioned input manifest, writes an output
 manifest, and is fully re-runnable from manifests + code + configs. Raw data is rebuildable and never
 committed. Every stage stamps provenance (source catalog versions, $M_c$ grid version, declustering
-choice, config hash, code git SHA, issue timestamp) — see
+choice, config hash, code git SHA, issue timestamp), see
 [`inference/provenance.py`](../src/caos_seismic/inference/provenance.py) and the `Manifest` schema in
 [`contracts.py`](../src/caos_seismic/contracts.py). A rendered version of this DAG is in
 [`diagrams/pipeline-flow.svg`](diagrams/pipeline-flow.svg).
@@ -212,7 +212,7 @@ choice, config hash, code git SHA, issue timestamp) — see
  (G) COMPACT ARTIFACT ─────────────────────────────▼──────────────────────────────────────────────────────
    sparsity floor + H3 binning + quantize + gzip → ONE artifact (few hundred KB – few MB)
    per-cell rates + baseline + bounds + calibration summary + provenance + coverage mask + timestamp
-        → results/forecast-<region>-YYYY-MM-DD.json.gz           [VERSIONED — compact only]
+        → results/forecast-<region>-YYYY-MM-DD.json.gz           [VERSIONED, compact only]
         → results/index.json (latest pointer + rolling CSEP calibration)   [VERSIONED]
 ```
 
@@ -227,7 +227,7 @@ production `daily` job; see [`cli.py`](../src/caos_seismic/cli.py)).
   [`inference/clock.py`](../src/caos_seismic/inference/clock.py)).
 - **Cold-start floor.** The conditional rate floors to the long-term smoothed-seismicity background
   (not a hard floor); the UI distinguishes "low but poorly-constrained," "genuinely quiescent," and
-  "no data / out-of-coverage" (the `coverage_mask` — blank ≠ safe).
+  "no data / out-of-coverage" (the `coverage_mask`, blank ≠ safe).
 - **Input-state snapshots.** ComCat continuously revises magnitudes/locations and retracts events, so
   the fetch manifest snapshots the *exact* catalog state per issue (`snapshot_id()` content-hashes the
   conditioning catalog). A past forecast must be byte-reproducible months later; otherwise
@@ -243,7 +243,7 @@ production `daily` job; see [`cli.py`](../src/caos_seismic/cli.py)).
 - Pipeline code (`src/caos_seismic/`, `scripts/`, the static web app under `app/`).
 - Configs (`configs/*.yaml`: region, grid/H3 resolution, $M_c$ method, declustering params, ETAS,
   horizons, magnitude thresholds, $M_{\max}$, publish allowlist).
-- **Manifests** (`manifests/`) — the provenance / reproducibility record: source URLs, query params,
+- **Manifests** (`manifests/`): the provenance / reproducibility record: source URLs, query params,
   retrieved-at timestamps, row counts, checksums, conversion coefficients, model params, CSEP scores,
   code SHA.
 - **Compact daily results** (`results/forecast-<region>-YYYY-MM-DD.json.gz`) + `results/index.json`
@@ -259,7 +259,7 @@ production `daily` job; see [`cli.py`](../src/caos_seismic/cli.py)).
 - The `.venv/`, caches, the working `.env`, and all secrets.
 - JMA / NIED Hi-net raw files and any agreement-gated derived products.
 
-The git repo stays **small** — only configs, manifests, code, and compact gzipped results are
+The git repo stays **small**, only configs, manifests, code, and compact gzipped results are
 committed, growing by a few-hundred-KB-to-few-MB artifact per day. The working set on the build host
 is ~1–5 GB for a focused region (mostly raw + features, all rebuildable). No GPU is needed for the
 ETAS baseline; a single modest host runs the daily job (ETAS fitting is seconds-to-minutes of CPU).
@@ -281,7 +281,7 @@ This repo is **public**. The following is non-negotiable.
   attribution-required sources **CSN-Chile, GeoNet / Earth Sciences NZ, EMSC, GCMT, NGL, Slab2/USGS,
   GEM faults**; TPXO academic-use terms. These are not redistribution blockers but the app **must**
   display the credits (`region.<id>.yaml: attribution`).
-- **The product stands alone** — it cites only canonical literature and never positions against, tears
+- **The product stands alone**: it cites only canonical literature and never positions against, tears
   down, or copies the implementation fingerprints of any specific third-party project.
 
 ---

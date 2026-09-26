@@ -18,7 +18,7 @@ import Outlook from "@/pages/Outlook";
  * and the router can never drift. The basename is the Vite deploy base so the app works
  * under a sub-path (e.g. GitHub Pages `/CAOS_SEISMIC/`).
  *
- * Pages are imported eagerly for now — every route is a light text scaffold. When the real
+ * Pages are imported eagerly for now: every route is a light text scaffold. When the real
  * Monitoring content lands (MapLibre + deck.gl), it is code-split behind that route per the
  * bundle discipline in web-app-spec.md §7.2.
  */

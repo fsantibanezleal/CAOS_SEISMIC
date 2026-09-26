@@ -4,9 +4,9 @@ import { useTranslation } from "react-i18next";
 import type { Language } from "@/i18n/config";
 
 /**
- * Route — Experiments / the route we are taking. An honest, append-only journey of the experiments
+ * Route: Experiments / the route we are taking. An honest, append-only journey of the experiments
  * (including the dead ends and the negative results), read from the committed `data/experiments.json`
- * (mirrors the repo experiment register). The point is that the *path* — not just the final numbers —
+ * (mirrors the repo experiment register). The point is that the *path*: not just the final numbers, 
  * is visible: what we tried, what it showed, and why we changed direction. Bilingual via the `lang` prop.
  */
 

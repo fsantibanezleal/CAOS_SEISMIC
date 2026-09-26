@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
  *
  * The diagram itself is expected to be theme-aware SVG that reads the CSS palette variables
  * (fills/strokes via the `.figure-svg` classes in globals.css), so it follows light/dark
- * automatically — see PipelineDiagram for the pattern. `Figure` only owns the framing
+ * automatically: see PipelineDiagram for the pattern. `Figure` only owns the framing
  * (centering, max-width, the caption line and accessible labelling).
  *
  * Pass `title` for a short bold lead-in and `caption` for the descriptive line; either may

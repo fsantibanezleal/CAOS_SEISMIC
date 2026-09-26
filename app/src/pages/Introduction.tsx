@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { Callout } from "@/components/content/Callout";
 
 /**
- * Route 1 — Introduction. Above-the-fold framing (web-app-spec.md §2):
+ * Route 1: Introduction. Above-the-fold framing (web-app-spec.md §2):
  *  - what the product IS (an independent, honest, calibrated research/education tool);
  *  - what it IS NOT (an authoritative civil-protection alarm; a predictor; a "safe" signal);
  *  - that it COMPLEMENTS official Operational Earthquake Forecasting (USGS, INGV, CSN,

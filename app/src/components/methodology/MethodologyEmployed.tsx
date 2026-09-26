@@ -6,23 +6,23 @@ import { Cite } from "@/components/content/Cite";
 import { BlockEquation, Inline } from "@/components/content/Equation";
 
 /**
- * Methodology — Tab 3: "The version employed" (model-design.md).
+ * Methodology: Tab 3: "The version employed" (model-design.md).
  *
  * This tab fixes WHAT WE ACTUALLY BUILD/SELECT, distinct from the field survey (Tab 1) and the
  * ML survey (Tab 2). It maps model-design.md faithfully:
  *
- *  · the chosen two-layer architecture — region-refit space–time ETAS as the core estimator AND
+ *  · the chosen two-layer architecture: region-refit space–time ETAS as the core estimator AND
  *    the mandatory reference, the smoothed-seismicity Poisson null it must beat, the transparent
  *    Reasenberg–Jones fallback, and a gated context-conditioned neural TPP (Hawkes inductive
- *    bias) with a CNN spatial-context encoder — and WHY the CNN is an encoder, not a standalone;
- *  · the target definition — the full conditional magnitude distribution, exceedance at a
+ *    bias) with a CNN spatial-context encoder: and WHY the CNN is an encoder, not a standalone;
+ *  · the target definition: the full conditional magnitude distribution, exceedance at a
  *    region-appropriate M*, the 1d/2d/7d horizons, and a per-region Mmax that bounds the tail;
  *  · the data spine + the static geophysical context covariates the encoder ingests;
  *  · calibration (a release blocker) + real optimistic/expected/pessimistic bounds + cold-start
  *    flooring to the principled background;
  *  · the HONEST MODEL-CLASS VERDICT, rendered here as OUR verdict (not in the theory tabs): no
  *    NPP reliably beats ETAS in CSEP to date, the spatial-test gap, state-dependent info-gain in
- *    nats, and the gate-not-ban rule — the reason v0 ships ETAS-class only.
+ *    nats, and the gate-not-ban rule: the reason v0 ships ETAS-class only.
  *
  * Copy is in i18n under `method.employed.*` and the shared `impl.*` / `method.*` keys; equations
  * are KaTeX; the architecture SVG follows light/dark via the `.arch-*` palette classes. Nothing
@@ -159,7 +159,7 @@ export function MethodologyEmployed() {
         </div>
       </section>
 
-      {/* ── 5. The honest model-class verdict (OURS — belongs in this tab) ──── */}
+      {/* ── 5. The honest model-class verdict (OURS, belongs in this tab) ──── */}
       <section>
         <h2>{t("method.employed.verdict.title")}</h2>
         <Callout tone="honest" title={t("method.employed.verdict.leadTitle")}>

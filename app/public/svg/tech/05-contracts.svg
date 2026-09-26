@@ -76,7 +76,7 @@
   <text class="mu" x="666" y="166">stable interiors (≈ 0 skill)</text>
   <text class="it" x="666" y="190">+ Italy · Greece · Mexico</text>
   <text class="it" x="666" y="206">Peru · Türkiye · Indonesia · …</text>
-  <text class="mu" x="666" y="232">a view never re-computes — it</text>
+  <text class="mu" x="666" y="232">a view never re-computes, it</text>
   <text class="mu" x="666" y="247">narrows which cells are shown</text>
   <text class="mu" x="666" y="271">pre-registered seismicity class</text>
   <text class="mu" x="666" y="286">→ the high-vs-low bias is fixed</text>
@@ -93,9 +93,9 @@
 
   <!-- honest framing -->
   <rect class="bx bx-hi" x="14" y="338" width="852" height="74" rx="10"/>
-  <text class="ttl" x="26" y="360">Design discipline — honest framing, enforced everywhere</text>
+  <text class="ttl" x="26" y="360">Design discipline, honest framing, enforced everywhere</text>
   <text class="it" x="26" y="382">forecasts not predictions · no alarms · null/negative results recorded · numbers sourced (labeled if synthetic)</text>
-  <text class="mu" x="26" y="400">the experiment register E1→E14 (docs/experiments.md + the in-app Experiments page) is the day-by-day audit trail — what proves the work is real</text>
+  <text class="mu" x="26" y="400">the experiment register E1→E14 (docs/experiments.md + the in-app Experiments page) is the day-by-day audit trail, what proves the work is real</text>
 
   <text class="mu" x="14" y="438">Bad/incomplete data is handled explicitly at Contract 1, never silently coerced; the artifact is the single source of truth for every number the SPA shows.</text>
 </svg>

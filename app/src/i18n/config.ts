@@ -29,7 +29,7 @@ function readPersistedLanguage(): Language {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === "en" || saved === "es") return saved;
   } catch {
-    // ignore — storage disabled
+    // ignore, storage disabled
   }
   // Hard default English: the site is research/methodology in English by intent;
   // users opt into Spanish and the choice persists. We do NOT auto-detect
@@ -64,7 +64,7 @@ export function persistLanguage(lng: Language): void {
   try {
     localStorage.setItem(STORAGE_KEY, lng);
   } catch {
-    // ignore — storage disabled
+    // ignore, storage disabled
   }
 }
 

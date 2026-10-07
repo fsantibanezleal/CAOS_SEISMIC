@@ -1,0 +1,3736 @@
+{
+  "code_git_sha": "5d32450c07060471d7101d13c8ccbcd4ec10a81d",
+  "config_hash": "78815cd8b804",
+  "created_at": "2026-10-07T06:12:58Z",
+  "inputs": {
+    "b_value": 1.3371536075975667,
+    "catalog_snapshot_id": "cat-b95b6d059988c162",
+    "declustering": "none(fallback)",
+    "mc": 5.35,
+    "mc_grid_version": "maxc+0.2/maxc",
+    "n_background_events": 97230,
+    "n_conditioning_events": 97230,
+    "t_issue": "2026-10-07T00:00:00Z"
+  },
+  "outputs": {
+    "horizons_days": [
+      1,
+      2,
+      7
+    ],
+    "magnitude_thresholds": [
+      5.0,
+      6.0,
+      7.0
+    ],
+    "model": {
+      "name": "tiled_etas",
+      "params": {
+        "gates": {
+          "reject_supercritical": true,
+          "require_alpha_lt_beta": true
+        },
+        "n_tiles_empty_skipped": 152,
+        "n_tiles_etas": 194,
+        "n_tiles_fit": 460,
+        "n_tiles_null_fallback": 266,
+        "n_tiles_unfit_degenerate": 84,
+        "regimes": {
+          "r0_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r0_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r0_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r10_c10": {
+            "branching_ratio": 0.3288332739980831,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 114,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c11": {
+            "branching_ratio": 0.21493490867885204,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 288,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 68,
+            "regime": "subduction_interface",
+            "rejection": "ETAS supercritical: branching ratio n=5.9763 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r10_c13": {
+            "branching_ratio": 0.29473033514664293,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 231,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "ridge",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r10_c2": {
+            "branching_ratio": 0.3989399184802381,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 77,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c21": {
+            "branching_ratio": 0.3796543654225778,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 49,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 34,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=55.0082 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r10_c23": {
+            "branching_ratio": 0.3363131467593716,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 118,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c24": {
+            "branching_ratio": 0.2386036672880123,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 78,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c25": {
+            "branching_ratio": 0.36004306772050165,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 49,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 21,
+            "regime": "crustal",
+            "rejection": "thin tile (21 < 30); null carries it"
+          },
+          "r10_c27": {
+            "branching_ratio": 0.25615363973204114,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 483,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c28": {
+            "branching_ratio": 0.2697989731621553,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 90,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c29": {
+            "branching_ratio": 0.39895949845940065,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 563,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c30": {
+            "branching_ratio": 0.3107691034776783,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2092,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "subduction_interface",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r10_c32": {
+            "branching_ratio": 0.23336831122107676,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1475,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r10_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r10_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r10_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r10_c6": {
+            "branching_ratio": 0.2820003684719163,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 109,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r10_c7": {
+            "branching_ratio": 0.15951746853097387,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 507,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c8": {
+            "branching_ratio": 0.1498448105531556,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 996,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r10_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 141,
+            "regime": "subduction_interface",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r11_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r11_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r11_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r11_c13": {
+            "branching_ratio": 0.2487246540632047,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 256,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r11_c14": {
+            "branching_ratio": 0.22686456192161983,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 114,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r11_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r11_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "ridge",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r11_c17": {
+            "branching_ratio": 0.2905198258236145,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 41,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 18,
+            "regime": "crustal",
+            "rejection": "thin tile (18 < 30); null carries it"
+          },
+          "r11_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 17,
+            "regime": "crustal",
+            "rejection": "thin tile (17 < 30); null carries it"
+          },
+          "r11_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r11_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 223,
+            "regime": "subduction_interface",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r11_c21": {
+            "branching_ratio": 0.3381084333242066,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 83,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c22": {
+            "branching_ratio": 0.5522323886259093,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 243,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c23": {
+            "branching_ratio": 0.48638143753782365,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 635,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c24": {
+            "branching_ratio": 0.3475994352974463,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 399,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c25": {
+            "branching_ratio": 0.36532869143370694,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 382,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c26": {
+            "branching_ratio": 0.34931285640596027,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 488,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c27": {
+            "branching_ratio": 0.313017648406432,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 610,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c28": {
+            "branching_ratio": 0.45736383486727666,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 410,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 21,
+            "regime": "crustal",
+            "rejection": "thin tile (21 < 30); null carries it"
+          },
+          "r11_c30": {
+            "branching_ratio": 0.3068021333397032,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1306,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r11_c31": {
+            "branching_ratio": 0.30661262761586683,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1701,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r11_c32": {
+            "branching_ratio": 0.417708051014166,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1999,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r11_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r11_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r11_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r11_c6": {
+            "branching_ratio": 0.21956358091086373,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 248,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c7": {
+            "branching_ratio": 0.24612130886656083,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 109,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r11_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r11_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r12_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r12_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r12_c14": {
+            "branching_ratio": 0.4483642874457168,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 180,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r12_c15": {
+            "branching_ratio": 0.7048321614819045,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 171,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r12_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 13,
+            "regime": "ridge",
+            "rejection": "thin tile (13 < 30); null carries it"
+          },
+          "r12_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 54,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=2.3430 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r12_c18": {
+            "branching_ratio": 0.2752251350317853,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 76,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 324,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=1.0318 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r12_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r12_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 806,
+            "regime": "subduction_interface",
+            "rejection": "ETAS supercritical: branching ratio n=5.5924 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r12_c21": {
+            "branching_ratio": 0.3223772181033603,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 267,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c22": {
+            "branching_ratio": 0.37131531680860846,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 331,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c23": {
+            "branching_ratio": 0.16160158326090035,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 170,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c24": {
+            "branching_ratio": 0.2391658312494451,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 457,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c25": {
+            "branching_ratio": 0.2281985799990328,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1281,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c26": {
+            "branching_ratio": 0.26791830626960716,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 316,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c27": {
+            "branching_ratio": 0.5167728952799973,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 260,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c28": {
+            "branching_ratio": 0.4133101106751379,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 111,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 25,
+            "regime": "crustal",
+            "rejection": "thin tile (25 < 30); null carries it"
+          },
+          "r12_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 48,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=2.8411 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r12_c31": {
+            "branching_ratio": 0.4165033676607759,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1053,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r12_c32": {
+            "branching_ratio": 0.40159126810217516,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 5368,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r12_c33": {
+            "branching_ratio": 0.5326333373177555,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 802,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r12_c4": {
+            "branching_ratio": 0.7001108126930979,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 63,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c5": {
+            "branching_ratio": 0.19628231342819435,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 269,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c6": {
+            "branching_ratio": 0.31141906264023594,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 107,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r12_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r12_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r12_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r13_c0": {
+            "branching_ratio": 0.39617317042375694,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1098,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c1": {
+            "branching_ratio": 0.36226687501308047,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 666,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r13_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r13_c14": {
+            "branching_ratio": 0.3512882717322213,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 182,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r13_c15": {
+            "branching_ratio": 0.05693016926064318,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 109,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r13_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r13_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 20,
+            "regime": "crustal",
+            "rejection": "thin tile (20 < 30); null carries it"
+          },
+          "r13_c19": {
+            "branching_ratio": 0.7749991370911566,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 51,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c2": {
+            "branching_ratio": 0.23384080040490512,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 154,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r13_c20": {
+            "branching_ratio": 0.9930368395146876,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 42,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r13_c21": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r13_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r13_c24": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r13_c25": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 13,
+            "regime": "crustal",
+            "rejection": "thin tile (13 < 30); null carries it"
+          },
+          "r13_c26": {
+            "branching_ratio": 0.46499597153068817,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 94,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c27": {
+            "branching_ratio": 0.386370384813223,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 92,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c28": {
+            "branching_ratio": 0.49357585401945603,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 63,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 35,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=464.4671 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r13_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "subduction_interface",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r13_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 13,
+            "regime": "crustal",
+            "rejection": "thin tile (13 < 30); null carries it"
+          },
+          "r13_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 27,
+            "regime": "intraslab",
+            "rejection": "thin tile (27 < 30); null carries it"
+          },
+          "r13_c32": {
+            "branching_ratio": 0.3564257574827573,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 952,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r13_c33": {
+            "branching_ratio": 0.552579730496881,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 3426,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r13_c34": {
+            "branching_ratio": 0.6533645037137334,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1546,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r13_c35": {
+            "branching_ratio": 0.2880532981453698,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 526,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r13_c4": {
+            "branching_ratio": 0.3415737885431978,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 194,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c5": {
+            "branching_ratio": 0.3189051313245875,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 207,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r13_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r14_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 16,
+            "regime": "crustal",
+            "rejection": "thin tile (16 < 30); null carries it"
+          },
+          "r14_c1": {
+            "branching_ratio": 0.30580902288704725,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 186,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r14_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c14": {
+            "branching_ratio": 0.3713191921925533,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 194,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r14_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 84,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=5.3414 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r14_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 112,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r14_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c2": {
+            "branching_ratio": 0.12348408988867361,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 358,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r14_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r14_c27": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r14_c28": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 22,
+            "regime": "crustal",
+            "rejection": "thin tile (22 < 30); null carries it"
+          },
+          "r14_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 63,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=494.2413 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r14_c3": {
+            "branching_ratio": 0.239817956793795,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 168,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r14_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 12,
+            "regime": "crustal",
+            "rejection": "thin tile (12 < 30); null carries it"
+          },
+          "r14_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r14_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 14,
+            "regime": "crustal",
+            "rejection": "thin tile (14 < 30); null carries it"
+          },
+          "r14_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 76,
+            "regime": "intraslab",
+            "rejection": "ETAS supercritical: branching ratio n=1.3173 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r14_c34": {
+            "branching_ratio": 0.41099643541982744,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 551,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r14_c35": {
+            "branching_ratio": 0.3115459301687863,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 32,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r14_c4": {
+            "branching_ratio": 0.4884579472176337,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 65,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r14_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r14_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r14_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r15_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r15_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r15_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r15_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c14": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 19,
+            "regime": "ridge",
+            "rejection": "thin tile (19 < 30); null carries it"
+          },
+          "r15_c16": {
+            "branching_ratio": 0.6069805414273484,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 165,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r15_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 60,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=23.7483 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r15_c18": {
+            "branching_ratio": 0.08360774670849999,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 73,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r15_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r15_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r15_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r15_c28": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r15_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 22,
+            "regime": "crustal",
+            "rejection": "thin tile (22 < 30); null carries it"
+          },
+          "r15_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r15_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 15,
+            "regime": "crustal",
+            "rejection": "thin tile (15 < 30); null carries it"
+          },
+          "r15_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 29,
+            "regime": "crustal",
+            "rejection": "thin tile (29 < 30); null carries it"
+          },
+          "r15_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 17,
+            "regime": "crustal",
+            "rejection": "thin tile (17 < 30); null carries it"
+          },
+          "r15_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r15_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r15_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r15_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r16_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r16_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r16_c14": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r16_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r16_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r16_c17": {
+            "branching_ratio": 0.2634488512992727,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 45,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r16_c18": {
+            "branching_ratio": 0.2378708670666038,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 84,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r16_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 17,
+            "regime": "crustal",
+            "rejection": "thin tile (17 < 30); null carries it"
+          },
+          "r16_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r16_c21": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r16_c24": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r16_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 33,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=2.3560 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r16_c27": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 26,
+            "regime": "crustal",
+            "rejection": "thin tile (26 < 30); null carries it"
+          },
+          "r16_c28": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r16_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 16,
+            "regime": "crustal",
+            "rejection": "thin tile (16 < 30); null carries it"
+          },
+          "r16_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 20,
+            "regime": "crustal",
+            "rejection": "thin tile (20 < 30); null carries it"
+          },
+          "r16_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r16_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r16_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r16_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 12,
+            "regime": "crustal",
+            "rejection": "thin tile (12 < 30); null carries it"
+          },
+          "r16_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r16_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r16_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 21,
+            "regime": "crustal",
+            "rejection": "thin tile (21 < 30); null carries it"
+          },
+          "r1_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r1_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r1_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r1_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r1_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r1_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 76,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=6.3831 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r1_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r1_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r2_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 23,
+            "regime": "crustal",
+            "rejection": "thin tile (23 < 30); null carries it"
+          },
+          "r2_c1": {
+            "branching_ratio": 0.4997737016247164,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 69,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c10": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r2_c11": {
+            "branching_ratio": 0.4462036528623827,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 127,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c12": {
+            "branching_ratio": 0.4887135346686167,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 157,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c13": {
+            "branching_ratio": 0.4815001527013848,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 117,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c14": {
+            "branching_ratio": 0.4972730742826289,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 277,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r2_c15": {
+            "branching_ratio": 0.5509547969428988,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2724,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r2_c16": {
+            "branching_ratio": 0.18918424734093073,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 93,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r2_c17": {
+            "branching_ratio": 0.12535515061020805,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 86,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c18": {
+            "branching_ratio": 0.1450189270996533,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 64,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r2_c2": {
+            "branching_ratio": 0.4335847139751707,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 111,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r2_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r2_c3": {
+            "branching_ratio": 0.14693971393604674,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 280,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r2_c32": {
+            "branching_ratio": 0.17766099812755407,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 196,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c33": {
+            "branching_ratio": 0.16075446759159476,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 268,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c34": {
+            "branching_ratio": 0.09164456475820702,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 116,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c35": {
+            "branching_ratio": 0.093408124879887,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 111,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c4": {
+            "branching_ratio": 0.13076772951825666,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 243,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c5": {
+            "branching_ratio": 0.1744466580037387,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 296,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r2_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 39,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r3_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r3_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r3_c10": {
+            "branching_ratio": 0.28631867216677026,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 158,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r3_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r3_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 29,
+            "regime": "crustal",
+            "rejection": "thin tile (29 < 30); null carries it"
+          },
+          "r3_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 19,
+            "regime": "crustal",
+            "rejection": "thin tile (19 < 30); null carries it"
+          },
+          "r3_c14": {
+            "branching_ratio": 0.6070314705473695,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 178,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r3_c15": {
+            "branching_ratio": 0.5748061227938529,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 579,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r3_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 107,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=1.6656 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r3_c17": {
+            "branching_ratio": 0.3083026334033119,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 139,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c18": {
+            "branching_ratio": 0.11239848939344418,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 113,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 127,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=95.8842 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r3_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 151,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=4.7007 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r3_c21": {
+            "branching_ratio": 0.09517242487030193,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 111,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r3_c24": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r3_c25": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 19,
+            "regime": "crustal",
+            "rejection": "thin tile (19 < 30); null carries it"
+          },
+          "r3_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r3_c27": {
+            "branching_ratio": 0.1866962025354845,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 98,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c28": {
+            "branching_ratio": 0.12459694660060368,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 90,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 124,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=142.6984 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r3_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 29,
+            "regime": "crustal",
+            "rejection": "thin tile (29 < 30); null carries it"
+          },
+          "r3_c30": {
+            "branching_ratio": 0.4434438072581965,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 121,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c31": {
+            "branching_ratio": 0.16598350558536834,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 123,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c32": {
+            "branching_ratio": 0.13821528482067588,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 164,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c33": {
+            "branching_ratio": 0.0357469946339157,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 71,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c34": {
+            "branching_ratio": 0.22993457114978905,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 245,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r3_c4": {
+            "branching_ratio": 0.15600727456489763,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 218,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c5": {
+            "branching_ratio": 0.19105399208185825,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 270,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r3_c6": {
+            "branching_ratio": 0.12257160913771724,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 141,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r3_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "ridge",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r3_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r3_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 60,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=120.1402 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r4_c0": {
+            "branching_ratio": 0.47276551203345535,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 264,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r4_c10": {
+            "branching_ratio": 0.44484232471019575,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 999,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r4_c11": {
+            "branching_ratio": 0.19765557558937544,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 40,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r4_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c14": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "ridge",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r4_c16": {
+            "branching_ratio": 0.19494830064168386,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 243,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r4_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r4_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c21": {
+            "branching_ratio": 0.271514925542777,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 66,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c22": {
+            "branching_ratio": 0.1920248434243739,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 144,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c23": {
+            "branching_ratio": 0.09898241108650291,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 117,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c25": {
+            "branching_ratio": 0.1613956082100908,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 203,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c26": {
+            "branching_ratio": 0.17772992654261338,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 126,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c27": {
+            "branching_ratio": 0.08336713959464633,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 52,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c28": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r4_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 16,
+            "regime": "crustal",
+            "rejection": "thin tile (16 < 30); null carries it"
+          },
+          "r4_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r4_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r4_c34": {
+            "branching_ratio": 0.2036829737454523,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 76,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c35": {
+            "branching_ratio": 0.41557645268591775,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 750,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r4_c6": {
+            "branching_ratio": 0.3757691251739253,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 85,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r4_c7": {
+            "branching_ratio": 0.11437803713927003,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 323,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r4_c8": {
+            "branching_ratio": 0.0747501091544809,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 286,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r4_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 243,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=3.5383 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r5_c0": {
+            "branching_ratio": 0.42571919758117005,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 4597,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r5_c10": {
+            "branching_ratio": 0.4329253136799099,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1596,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r5_c11": {
+            "branching_ratio": 0.10133077476848078,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 769,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r5_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r5_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r5_c16": {
+            "branching_ratio": 0.3083864736088572,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 241,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r5_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r5_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r5_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 49,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=46.5702 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r5_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r5_c23": {
+            "branching_ratio": 0.3794863614844897,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 188,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c24": {
+            "branching_ratio": 0.5165652339655037,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 226,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c25": {
+            "branching_ratio": 0.3018824638710776,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 218,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 12,
+            "regime": "crustal",
+            "rejection": "thin tile (12 < 30); null carries it"
+          },
+          "r5_c27": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r5_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r5_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r5_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r5_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r5_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r5_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r5_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r5_c35": {
+            "branching_ratio": 0.08960874188927956,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 565,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r5_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r5_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "thin tile (6 < 30); null carries it"
+          },
+          "r5_c6": {
+            "branching_ratio": 0.355027600226986,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 350,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c7": {
+            "branching_ratio": 0.1782417857383845,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 279,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r5_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r6_c0": {
+            "branching_ratio": 0.1819914393406333,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 7333,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r6_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 8,
+            "regime": "subduction_interface",
+            "rejection": "thin tile (8 < 30); null carries it"
+          },
+          "r6_c10": {
+            "branching_ratio": 0.24431026672415904,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1458,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r6_c11": {
+            "branching_ratio": 0.136198778305571,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1582,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r6_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r6_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r6_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "ridge",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r6_c16": {
+            "branching_ratio": 0.34376953043089564,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 251,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r6_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "ridge",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r6_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r6_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 10,
+            "regime": "crustal",
+            "rejection": "thin tile (10 < 30); null carries it"
+          },
+          "r6_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r6_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 11,
+            "regime": "crustal",
+            "rejection": "thin tile (11 < 30); null carries it"
+          },
+          "r6_c21": {
+            "branching_ratio": 0.24955412455121562,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 40,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r6_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 17,
+            "regime": "crustal",
+            "rejection": "thin tile (17 < 30); null carries it"
+          },
+          "r6_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "ridge",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r6_c24": {
+            "branching_ratio": 0.19597462511524075,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 350,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r6_c25": {
+            "branching_ratio": 0.7559454582821906,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 105,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r6_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 14,
+            "regime": "crustal",
+            "rejection": "thin tile (14 < 30); null carries it"
+          },
+          "r6_c27": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 10,
+            "regime": "crustal",
+            "rejection": "thin tile (10 < 30); null carries it"
+          },
+          "r6_c29": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 15,
+            "regime": "crustal",
+            "rejection": "thin tile (15 < 30); null carries it"
+          },
+          "r6_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r6_c30": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 16,
+            "regime": "crustal",
+            "rejection": "thin tile (16 < 30); null carries it"
+          },
+          "r6_c31": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 14,
+            "regime": "crustal",
+            "rejection": "thin tile (14 < 30); null carries it"
+          },
+          "r6_c32": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r6_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r6_c34": {
+            "branching_ratio": 0.4005324152790633,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 3901,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r6_c35": {
+            "branching_ratio": 0.35240928041253466,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2800,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r6_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 21,
+            "regime": "crustal",
+            "rejection": "thin tile (21 < 30); null carries it"
+          },
+          "r6_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 8,
+            "regime": "crustal",
+            "rejection": "thin tile (8 < 30); null carries it"
+          },
+          "r6_c6": {
+            "branching_ratio": 0.36673506955732393,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 221,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r6_c7": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "ridge",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r6_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r6_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c0": {
+            "branching_ratio": 0.18455741058808448,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1242,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c10": {
+            "branching_ratio": 0.11247851902036321,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1136,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c11": {
+            "branching_ratio": 0.013370386442507617,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 67,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r7_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r7_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c14": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c16": {
+            "branching_ratio": 0.18271009497643934,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 356,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r7_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "ridge",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r7_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r7_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 64,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=2.2819 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r7_c21": {
+            "branching_ratio": 0.3437299978439977,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 108,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r7_c22": {
+            "branching_ratio": 0.4978594671520484,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 75,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r7_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r7_c24": {
+            "branching_ratio": 0.13662781930763318,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 284,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r7_c25": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 28,
+            "regime": "crustal",
+            "rejection": "thin tile (28 < 30); null carries it"
+          },
+          "r7_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 15,
+            "regime": "crustal",
+            "rejection": "thin tile (15 < 30); null carries it"
+          },
+          "r7_c27": {
+            "branching_ratio": 0.21253927728302785,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 55,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r7_c28": {
+            "branching_ratio": 0.27021711292766587,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1713,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c29": {
+            "branching_ratio": 0.3400620503788146,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1267,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c30": {
+            "branching_ratio": 0.14809472702086227,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2596,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r7_c31": {
+            "branching_ratio": 0.12781178471930352,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1412,
+            "regime": "intraslab",
+            "rejection": null
+          },
+          "r7_c32": {
+            "branching_ratio": 0.21519680875528166,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2082,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r7_c33": {
+            "branching_ratio": 0.3518498796722788,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 4457,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c34": {
+            "branching_ratio": 0.3476465713179831,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 3602,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c35": {
+            "branching_ratio": 0.29619291706882334,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 134,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r7_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r7_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 9,
+            "regime": "crustal",
+            "rejection": "thin tile (9 < 30); null carries it"
+          },
+          "r7_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 96,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=18.9665 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r7_c7": {
+            "branching_ratio": 0.15637728806787415,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 213,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r7_c8": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "ridge",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r7_c9": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 169,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r8_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r8_c10": {
+            "branching_ratio": 0.33641460528611866,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 680,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c11": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r8_c12": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r8_c13": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c14": {
+            "branching_ratio": 0.2469181766906131,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 172,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r8_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 257,
+            "regime": "ridge",
+            "rejection": "ETAS supercritical: branching ratio n=4934.0658 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r8_c16": {
+            "branching_ratio": 0.2337443135462708,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 389,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r8_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "ridge",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r8_c18": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r8_c19": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 7,
+            "regime": "crustal",
+            "rejection": "thin tile (7 < 30); null carries it"
+          },
+          "r8_c2": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c20": {
+            "branching_ratio": 0.35916975636826254,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 79,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c21": {
+            "branching_ratio": 0.5366802221418547,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 144,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c22": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r8_c23": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 5,
+            "regime": "crustal",
+            "rejection": "thin tile (5 < 30); null carries it"
+          },
+          "r8_c24": {
+            "branching_ratio": 0.3644113005528519,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 322,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c25": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 25,
+            "regime": "crustal",
+            "rejection": "thin tile (25 < 30); null carries it"
+          },
+          "r8_c26": {
+            "branching_ratio": 0.5290882149926235,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 97,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c27": {
+            "branching_ratio": 0.37259988061640503,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2333,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c28": {
+            "branching_ratio": 0.29558182102557284,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1559,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c29": {
+            "branching_ratio": 0.31793435927270414,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 356,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c3": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c30": {
+            "branching_ratio": 0.28781803242315834,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 5783,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c31": {
+            "branching_ratio": 0.28065310662895915,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2042,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c32": {
+            "branching_ratio": 0.18311424461045583,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2140,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c33": {
+            "branching_ratio": 0.3026216168957594,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 2491,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r8_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r8_c7": {
+            "branching_ratio": 0.15166543062894994,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 177,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r8_c8": {
+            "branching_ratio": 0.337644071304824,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 87,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r8_c9": {
+            "branching_ratio": 0.23982515378399644,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 535,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c0": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c1": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r9_c10": {
+            "branching_ratio": 0.20504442415409135,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 423,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c11": {
+            "branching_ratio": 0.23533615472147817,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 212,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c12": {
+            "branching_ratio": 0.6498888171696963,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 80,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c13": {
+            "branching_ratio": 0.17203265080147315,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 203,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r9_c14": {
+            "branching_ratio": 0.17259991664533156,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 259,
+            "regime": "ridge",
+            "rejection": null
+          },
+          "r9_c15": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c16": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "ridge",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c17": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c20": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c21": {
+            "branching_ratio": 0.6372931949650072,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 135,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c22": {
+            "branching_ratio": 0.4125438792801934,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 256,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c23": {
+            "branching_ratio": 0.1758592983309534,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 283,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c24": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 91,
+            "regime": "crustal",
+            "rejection": "ETAS supercritical: branching ratio n=1.5148 >= 1 (explosive cascade, rejected as a mis-fit)."
+          },
+          "r9_c25": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 3,
+            "regime": "crustal",
+            "rejection": "thin tile (3 < 30); null carries it"
+          },
+          "r9_c26": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 16,
+            "regime": "crustal",
+            "rejection": "thin tile (16 < 30); null carries it"
+          },
+          "r9_c27": {
+            "branching_ratio": 0.6261845506410049,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1634,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c28": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 6,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c29": {
+            "branching_ratio": 0.20083075308598045,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 381,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c30": {
+            "branching_ratio": 0.38298493114013255,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 4093,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c31": {
+            "branching_ratio": 0.3160555595170014,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 182,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c32": {
+            "branching_ratio": 0.27537802009733164,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1408,
+            "regime": "crustal",
+            "rejection": null
+          },
+          "r9_c33": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 4,
+            "regime": "crustal",
+            "rejection": "thin tile (4 < 30); null carries it"
+          },
+          "r9_c34": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "thin tile (1 < 30); null carries it"
+          },
+          "r9_c35": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c4": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 1,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c5": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "crustal",
+            "rejection": "null-fit-failed: no events at or above Mc=5.35 in the fit catalog"
+          },
+          "r9_c6": {
+            "branching_ratio": null,
+            "is_etas": false,
+            "model": "smoothed_seismicity",
+            "n_events": 2,
+            "regime": "ridge",
+            "rejection": "thin tile (2 < 30); null carries it"
+          },
+          "r9_c7": {
+            "branching_ratio": 0.17185804064811822,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 106,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c8": {
+            "branching_ratio": 0.20398037744707634,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 927,
+            "regime": "subduction_interface",
+            "rejection": null
+          },
+          "r9_c9": {
+            "branching_ratio": 0.2068184601349062,
+            "is_etas": true,
+            "model": "etas",
+            "n_events": 1336,
+            "regime": "subduction_interface",
+            "rejection": null
+          }
+        },
+        "tiling": {
+          "halo_deg": 1.0,
+          "tile_deg": 10.0
+        }
+      },
+      "version": "0.1.0"
+    },
+    "n_cells": 120026,
+    "n_synthetic_catalogs": 10000,
+    "qa_passed": true
+  },
+  "region_id": "global",
+  "stage": "inference",
+  "stats": {
+    "qa_reasons": []
+  }
+}

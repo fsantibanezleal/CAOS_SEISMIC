@@ -1,7 +1,7 @@
 {
   "code_git_sha": null,
   "config_hash": "bbd2082eb91f",
-  "created_at": "2026-10-07T06:00:16.869132+00:00",
+  "created_at": "2026-10-08T06:00:11.366141+00:00",
   "inputs": {
     "bbox": {
       "lat_max": 85.0,
@@ -9,7 +9,7 @@
       "lon_max": 180.0,
       "lon_min": -180.0
     },
-    "endtime": "2026-10-07T06:00:16",
+    "endtime": "2026-10-08T06:00:11",
     "fdsn_base": "https://earthquake.usgs.gov/fdsnws/event/1/",
     "incremental": false,
     "minmagnitude": 3.5,
@@ -29,13 +29,13 @@
       "Md": 457,
       "Ml": 19,
       "m": 344,
-      "mb": 224867,
+      "mb": 224907,
       "mb_lg": 93,
       "mblg": 90,
       "mc": 12,
-      "md": 5198,
+      "md": 5199,
       "mh": 13,
-      "ml": 12523,
+      "ml": 12525,
       "ml(texnet)": 14,
       "mlg": 10,
       "mlr": 217,
@@ -44,14 +44,14 @@
       "ms_20": 4,
       "ms_vx": 4,
       "mw": 2117,
-      "mwb": 1041,
+      "mwb": 1042,
       "mwc": 3612,
       "mwp": 9,
-      "mwr": 7643,
-      "mww": 14230
+      "mwr": 7644,
+      "mww": 14235
     },
-    "n_events": 272538,
-    "time_max": "2026-10-07T04:39:26.324000+00:00",
+    "n_events": 272588,
+    "time_max": "2026-10-08T05:35:56.016000+00:00",
     "time_min": "2010-01-01T02:08:21.900000+00:00"
   }
 }
